@@ -8,7 +8,7 @@ import Image from "next/image"
 const TRUST = [
   { icon: Package,     text: "PEÇAS RARAS",          sub: "itens difíceis de encontrar" },
   { icon: Percent,     text: "5% OFF NO PIX",         sub: "em todo o site" },
-  { icon: CreditCard,  text: "3X SEM JUROS",          sub: "parcele sem acréscimo" },
+  { icon: CreditCard,  text: "6X SEM JUROS",          sub: "parcele sem acréscimo" },
   { icon: Shield,      text: "30 DIAS DE GARANTIA",   sub: "devolução sem burocracia" },
   { icon: Truck,       text: "ENVIO NACIONAL",         sub: "Correios e transportadora" },
 ]
@@ -128,7 +128,7 @@ export default function Home() {
 
           <div className="border-t border-zinc-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
             <p className="font-inter text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
-            <p className="font-inter text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 3x sem juros</p>
+            <p className="font-inter text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 6x sem juros</p>
           </div>
         </div>
       </footer>

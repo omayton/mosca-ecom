@@ -23,7 +23,7 @@ const SLIDES = [
     title: "5% OFF",
     sub1: "Pagando",
     sub2: "com PIX",
-    badge: "Parcele em até 3x sem juros",
+    badge: "Parcele em até 6x sem juros",
     cta: "Aproveitar",
     bg: "bg-gradient-to-r from-zinc-950 via-red-950/40 to-zinc-900",
     iconColor: "#EF4444",

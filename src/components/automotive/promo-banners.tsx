@@ -20,7 +20,7 @@ const BANNERS = [
     ctaClass: "bg-red-600 hover:bg-red-700",
     eyebrow: "Peças raras, soluções únicas",
     title: "PARCELAMOS",
-    subtitle: "em até 3x sem juros",
+    subtitle: "em até 6x sem juros",
     footnote: "Garantia de devolução em 30 dias",
     cta: "COMPRE AGORA",
     shapes: [
