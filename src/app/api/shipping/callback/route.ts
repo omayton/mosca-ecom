@@ -35,16 +35,19 @@ export async function GET(req: NextRequest) {
 
   // Exchange authorization code for access_token + refresh_token
   try {
+    // Melhor Envio OAuth token endpoint requires form-urlencoded (not JSON)
+    const params = new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      redirect_uri: REDIRECT_URI,
+      code,
+    })
+
     const tokenRes = await fetch("https://melhorenvio.com.br/oauth/token", {
       method: "POST",
-      headers: { "Accept": "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({
-        grant_type: "authorization_code",
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        redirect_uri: REDIRECT_URI,
-        code,
-      }),
+      headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
     })
 
     const tokenData = await tokenRes.json()
