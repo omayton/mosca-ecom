@@ -53,7 +53,15 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data?.error || "Erro ao calcular frete")
+        const errMsg = data?.error || "Erro ao calcular frete"
+        // Show debug info in development
+        const debug = data?.debug as { status?: number; body?: string } | undefined
+        if (debug?.body) {
+          console.error("[frete-debug]", debug)
+          setError(`${errMsg} (código ${debug.status})`)
+        } else {
+          setError(errMsg)
+        }
         return
       }
 

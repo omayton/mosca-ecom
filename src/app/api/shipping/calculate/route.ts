@@ -1,5 +1,35 @@
 import { NextRequest, NextResponse } from "next/server"
 
+const URLs = {
+  production: "https://melhorenvio.com.br/api/v2/me/shipment/calculate",
+  sandbox:    "https://sandbox.melhorenvio.com.br/api/v2/me/shipment/calculate",
+}
+
+async function tryApi(url: string, token: string, body: Record<string, any>) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 10000)
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "User-Agent": "mosca-branca-ecom/1.0",
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
+    const text = await res.text()
+    return { ok: res.ok, status: res.status, body: text }
+  } catch (err: unknown) {
+    clearTimeout(timeout)
+    throw err
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { cep, weight, width, height, length, price } = await req.json()
@@ -14,11 +44,9 @@ export async function POST(req: NextRequest) {
     const from = process.env.MELHOR_ENVIO_CEP_ORIGEM
 
     if (!token || !from) {
-      console.error("Missing env: MELHOR_ENVIO_TOKEN or MELHOR_ENVIO_CEP_ORIGEM")
       return NextResponse.json({ error: "Serviço de frete não configurado." }, { status: 500 })
     }
 
-    // Don't allow same origin/destination
     if (cleanCep === from) {
       return NextResponse.json({ error: "Digite um CEP de destino diferente da origem." }, { status: 400 })
     }
@@ -45,54 +73,43 @@ export async function POST(req: NextRequest) {
       ],
     }
 
-    const apiUrl =
-      process.env.NODE_ENV === "production"
-        ? "https://melhorenvio.com.br/api/v2/me/shipment/calculate"
-        : "https://sandbox.melhorenvio.com.br/api/v2/me/shipment/calculate"
+    // Try sandbox first (most tokens are sandbox), then production
+    const env = process.env.NODE_ENV === "production" ? "production" : "sandbox"
+    const primaryUrl   = URLs[env as keyof typeof URLs]
+    const fallbackUrl  = env === "production" ? URLs.sandbox : URLs.production
 
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 10000)
+    console.log(`[frete] Trying ${primaryUrl} first (env=${env})`)
 
-    const res = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "User-Agent": "mosca-branca-ecom/1.0",
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    })
+    let result = await tryApi(primaryUrl, token, body)
 
-    clearTimeout(timeout)
+    // If primary fails with auth error, try fallback
+    if (!result.ok && (result.status === 401 || result.status === 403)) {
+      console.log(`[frete] Primary failed (${result.status}), trying ${fallbackUrl}`)
+      result = await tryApi(fallbackUrl, token, body)
+    }
 
-    const resText = await res.text()
+    const { ok, status, body: resText } = result
 
-    if (!res.ok) {
-      console.error("Melhor Envio API error:", {
-        status: res.status,
-        statusText: res.statusText,
-        body: resText.slice(0, 500),
-      })
+    if (!ok) {
+      console.error("[frete] API error:", { url: primaryUrl, status, body: resText.slice(0, 500) })
+      // Return details in development, generic message in production
+      const isDev = process.env.NODE_ENV !== "production"
       return NextResponse.json(
         {
-          error: "Não foi possível calcular o frete. Tente novamente em instantes.",
-          details: resText.slice(0, 200),
+          error: "Não foi possível calcular o frete.",
+          ...(isDev ? { debug: { status, body: resText.slice(0, 500), tried: [primaryUrl, fallbackUrl] } } : {}),
         },
         { status: 502 }
       )
     }
 
-    let data
+    let data: any
     try {
       data = JSON.parse(resText)
     } catch {
-      console.error("Failed to parse Melhor Envio response:", resText.slice(0, 200))
       return NextResponse.json({ error: "Resposta inválida do serviço de frete." }, { status: 502 })
     }
 
-    // Handle both array and object responses
     const results = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []
 
     const options = results
@@ -113,7 +130,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(options)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error("Shipping calculate error:", message)
+    console.error("[frete] Error:", message)
 
     if (message.includes("abort") || message.includes("timeout")) {
       return NextResponse.json({ error: "O serviço de frete demorou para responder. Tente novamente." }, { status: 504 })
