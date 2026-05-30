@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 
 const CLIENT_ID = process.env.MELHOR_ENVIO_CLIENT_ID || "25510"
 const CLIENT_SECRET = process.env.MELHOR_ENVIO_CLIENT_SECRET || ""
-const REDIRECT_URI = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/api/shipping/callback`
+
+function getRedirectUri(req: NextRequest) {
+  const url = new URL(req.url)
+  return `${url.origin}/api/shipping/callback`
+}
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code")
@@ -35,16 +39,18 @@ export async function GET(req: NextRequest) {
 
   // Exchange authorization code for access_token + refresh_token
   try {
+    const redirectUri = getRedirectUri(req)
+
     // Melhor Envio OAuth token endpoint requires form-urlencoded (not JSON)
     const params = new URLSearchParams({
       grant_type: "authorization_code",
       client_id: CLIENT_ID,
       client_secret: CLIENT_SECRET,
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: redirectUri,
       code,
     })
 
-    const tokenRes = await fetch("https://sandbox.melhorenvio.com.br/oauth/token", {
+    const tokenRes = await fetch("https://melhorenvio.com.br/oauth/token", {
       method: "POST",
       headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
       body: params.toString(),
