@@ -34,12 +34,12 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const dims      = parseDimensions(product.dimensions)
 
   return (
-    <div className="min-h-screen bg-zinc-100">
+    <div className="min-h-screen bg-zinc-50/50">
       <TopHeader />
 
       {/* Breadcrumb */}
-      <nav aria-label="Localização" className="bg-white border-b border-zinc-200">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-2 text-xs font-inter text-zinc-500 flex-wrap">
+      <nav aria-label="Localização" className="bg-white/80 border-b border-zinc-100 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-3.5 flex items-center gap-2 text-xs font-inter text-zinc-500 flex-wrap">
           <a href="/" className="hover:text-red-600 transition-colors">Início</a>
           <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           <a href={`/categoria/${product.categorySlug}`} className="hover:text-red-600 transition-colors">
@@ -52,12 +52,12 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 
       {/* Main content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="bg-white border border-zinc-200 p-6 md:p-8">
+        <div className="bg-white border border-zinc-100 shadow-sm p-6 md:p-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
             {/* ── IMAGEM ─────────────────────────────────────── */}
             <div>
-              <div className="relative aspect-square bg-zinc-50 border border-zinc-100 overflow-hidden">
+              <div className="relative aspect-square bg-zinc-50/80 border border-zinc-100 overflow-hidden rounded-xl">
                 <Image
                   src={imgUrl(product.imageFile)}
                   alt={product.name}
@@ -69,10 +69,10 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 
                 {/* Rare badge */}
                 <div className="absolute top-4 left-4 flex flex-col gap-1.5">
-                  <span className="bg-red-600 text-white font-inter font-black text-xs px-3 py-1.5 uppercase tracking-wide">
+                  <span className="bg-red-50 text-red-700 font-inter font-semibold text-xs px-3 py-1.5 uppercase tracking-wide rounded-md">
                     Peça Rara
                   </span>
-                  <span className="bg-green-600 text-white font-inter font-black text-xs px-3 py-1.5">
+                  <span className="bg-green-50 text-green-700 font-inter font-semibold text-xs px-3 py-1.5 rounded-md">
                     5% OFF no PIX
                   </span>
                 </div>
@@ -82,7 +82,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               <div className="flex items-center gap-3 mt-4">
                 <button
                   aria-label="Salvar na lista de desejos"
-                  className="flex items-center gap-2 border border-zinc-300 text-zinc-600 hover:border-red-500 hover:text-red-600 font-inter text-sm px-4 py-2.5 min-h-[44px] transition-colors duration-200 flex-1 justify-center"
+                  className="flex items-center gap-2 border border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:text-zinc-800 hover:bg-zinc-50 font-inter text-sm px-4 py-2.5 min-h-[44px] transition-all duration-200 rounded-lg flex-1 justify-center"
                 >
                   <Heart className="h-4 w-4" aria-hidden="true" />
                   Salvar
@@ -91,7 +91,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                   href={`https://wa.me/5518997696952?text=Olá! Tenho interesse no produto: ${encodeURIComponent(product.name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 border border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-inter text-sm px-4 py-2.5 min-h-[44px] transition-colors duration-200 flex-1 justify-center"
+                  className="flex items-center gap-2 border border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 font-inter text-sm px-4 py-2.5 min-h-[44px] transition-all duration-200 rounded-lg flex-1 justify-center"
                 >
                   <MessageCircle className="h-4 w-4" aria-hidden="true" />
                   Tirar dúvida
@@ -115,13 +115,13 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               </h1>
 
               {/* Price block */}
-              <div className="bg-zinc-50 border border-zinc-200 p-5 mb-6">
+              <div className="bg-zinc-50/80 border border-zinc-100 p-6 mb-6 rounded-xl">
                 {/* PIX price */}
                 <div className="flex items-baseline gap-2 mb-2">
                   <span className="font-barlow font-black text-zinc-900 leading-none" style={{ fontSize: "2.2rem" }}>
                     R$ {fmt(pix)}
                   </span>
-                  <span className="font-inter text-green-700 font-semibold text-sm bg-green-100 px-2 py-0.5">
+                  <span className="font-inter text-green-700 font-semibold text-sm bg-green-50 px-2.5 py-1 rounded-full">
                     5% OFF no PIX
                   </span>
                 </div>
@@ -161,7 +161,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               </div>
 
               {/* Shipping / guarantees */}
-              <ul className="space-y-3">
+              <ul className="space-y-3.5">
                 {[
                   { icon: Truck,      text: "Frete grátis para SP em compras acima de R$ 430" },
                   { icon: Shield,     text: "Garantia de devolução em 30 dias" },
@@ -185,7 +185,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 
               {/* Specs */}
               {(product.weight || product.dimensions) && (
-                <div className="mt-6 pt-6 border-t border-zinc-100">
+                <div className="mt-8 pt-6 border-t border-zinc-100">
                   <h2 className="font-inter font-semibold text-zinc-900 text-sm mb-3 uppercase tracking-wide">
                     Especificações
                   </h2>
@@ -213,7 +213,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           </div>
 
           {/* Description */}
-          <div className="mt-10 pt-8 border-t border-zinc-100">
+          <div className="mt-12 pt-8 border-t border-zinc-100">
             <h2 className="font-inter font-bold text-zinc-900 text-lg mb-4">Descrição</h2>
             <p className="font-inter text-zinc-600 leading-relaxed max-w-3xl">{product.description}</p>
             <p className="font-inter text-zinc-500 text-sm mt-4 italic">
@@ -226,29 +226,29 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
         {related.length > 0 && (
           <section aria-label="Produtos relacionados" className="mt-8">
             <h2 className="font-inter font-bold text-zinc-900 text-lg mb-5">Você também pode gostar</h2>
-            <ul className="grid grid-cols-2 md:grid-cols-4 gap-4" role="list">
+            <ul className="grid grid-cols-2 md:grid-cols-4 gap-5" role="list">
               {related.map((rel) => (
                 <li key={rel.id} role="listitem">
                   <a
                     href={`/produto/${rel.slug}`}
-                    className="block bg-white border border-zinc-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group"
+                    className="block bg-white border border-zinc-100 hover:shadow-md hover:border-zinc-200 transition-all duration-300 rounded-xl group"
                     aria-label={rel.name}
                   >
-                    <div className="relative aspect-square bg-zinc-50 overflow-hidden">
+                    <div className="relative aspect-square bg-zinc-50/80 overflow-hidden rounded-t-xl">
                       <Image
                         src={imgUrl(rel.imageFile)}
                         alt={rel.name}
                         fill
-                        className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                        className="object-contain p-4 group-hover:scale-103 transition-transform duration-500 ease-out"
                         sizes="(max-width: 768px) 50vw, 25vw"
                       />
                     </div>
                     <div className="p-3">
-                      <p className="font-inter text-xs text-zinc-500 mb-1">{rel.category}</p>
+                      <p className="font-inter text-xs text-zinc-400 uppercase tracking-wider mb-1" style={{ fontSize: "10px" }}>{rel.category}</p>
                       <h3 className="font-inter text-sm text-zinc-800 font-medium leading-snug line-clamp-2 mb-2">
                         {rel.name}
                       </h3>
-                      <p className="font-barlow font-black text-zinc-900 text-xl">
+                      <p className="font-barlow font-black text-zinc-900 text-lg">
                         R$ {fmt(rel.price)}
                       </p>
                     </div>
@@ -261,7 +261,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
       </main>
 
       {/* Footer mini */}
-      <footer className="bg-zinc-950 border-t border-zinc-800 mt-8 py-6" role="contentinfo">
+      <footer className="bg-zinc-950 border-t border-zinc-800/50 mt-10 py-8" role="contentinfo">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="font-inter text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
           <a

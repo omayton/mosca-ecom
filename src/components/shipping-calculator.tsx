@@ -72,7 +72,7 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
   }
 
   return (
-    <div className="mt-5 border-t border-zinc-200 pt-5">
+    <div className="mt-6 border-t border-zinc-100 pt-5">
       {/* Header - clickable to expand/collapse */}
       <button
         type="button"
@@ -105,14 +105,14 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
                 value={cep}
                 onChange={(e) => setCep(formatCep(e.target.value))}
                 onKeyDown={(e) => e.key === "Enter" && calculate()}
-                className="w-full border border-zinc-300 pl-10 pr-3 py-2.5 text-sm font-inter text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all duration-200 rounded-lg min-h-[44px]"
+                className="w-full border border-zinc-200 pl-10 pr-3 py-2.5 text-sm font-inter text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all duration-200 rounded-xl min-h-[44px]"
                 aria-label="CEP de destino"
               />
             </div>
             <button
               onClick={calculate}
               disabled={loading}
-              className="bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-zinc-400 disabled:cursor-not-allowed text-white font-inter font-semibold text-sm px-5 min-h-[44px] transition-all duration-200 flex items-center justify-center gap-2 rounded-lg cursor-pointer shadow-sm hover:shadow-md disabled:shadow-none select-none"
+              className="bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-zinc-300 disabled:cursor-not-allowed text-white font-inter font-semibold text-sm px-5 min-h-[44px] transition-all duration-200 flex items-center justify-center gap-2 rounded-xl cursor-pointer hover:shadow-sm disabled:shadow-none select-none"
             >
               {loading ? (
                 <>
@@ -127,7 +127,7 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
 
           {/* Error message */}
           {error && (
-            <div className="mt-3 flex items-start gap-2 bg-red-50 border border-red-200 px-4 py-3 rounded-lg animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="mt-3 flex items-start gap-2 bg-red-50/80 border border-red-200 px-4 py-3 rounded-xl animate-in fade-in slide-in-from-top-1 duration-200">
               <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
               <p className="font-inter text-sm text-red-700 leading-snug">{error}</p>
             </div>
@@ -139,18 +139,18 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
               {options.map((opt, index) => (
                 <li
                   key={opt.id}
-                  className={`flex items-center justify-between px-4 py-3.5 rounded-lg border transition-all duration-200 cursor-default ${
+                  className={`flex items-center justify-between px-4 py-3.5 rounded-xl border transition-all duration-200 cursor-default ${
                     index === 0
-                      ? "bg-green-50 border-green-200 shadow-sm"
-                      : "bg-white border-zinc-200 hover:border-zinc-300 hover:shadow-sm"
+                      ? "bg-green-50/80 border-green-200"
+                      : "bg-white border-zinc-100 hover:border-zinc-200"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Company badge */}
                     <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold uppercase tracking-wide ${
                       index === 0
-                        ? "bg-green-100 text-green-700"
-                        : "bg-zinc-100 text-zinc-600"
+                        ? "bg-green-50 text-green-700 ring-1 ring-green-200"
+                        : "bg-zinc-50 text-zinc-600 ring-1 ring-zinc-200"
                     }`}>
                       {opt.company?.slice(0, 2) || "??"}
                     </div>
@@ -164,7 +164,7 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
                           ? `${opt.delivery_time} dia${opt.delivery_time > 1 ? "s" : ""} útil${opt.delivery_time > 1 ? "s" : ""}`
                           : "Prazo a confirmar"}
                         {index === 0 && (
-                          <span className="inline-flex items-center ml-1.5 bg-green-100 text-green-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                          <span className="inline-flex items-center ml-1.5 bg-green-50 text-green-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ring-1 ring-green-200">
                             Melhor opção
                           </span>
                         )}

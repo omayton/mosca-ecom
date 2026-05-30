@@ -22,10 +22,10 @@ export function TopHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-zinc-950 shadow-lg">
+      <header className="sticky top-0 z-50 bg-zinc-950 shadow-sm">
 
         {/* Utility bar */}
-        <div className="hidden lg:block bg-zinc-900 border-b border-zinc-800">
+        <div className="hidden lg:block bg-zinc-950/60 border-b border-zinc-800/50">
           <div className="container mx-auto px-4 flex items-center justify-end gap-6 h-8">
             {TOP_LINKS.map((link) => (
               <a key={link} href="#" className="text-zinc-400 text-xs hover:text-zinc-100 transition-colors duration-150">
@@ -142,7 +142,7 @@ export function TopHeader() {
         </div>
 
         {/* Category nav */}
-        <nav aria-label="Categorias" className="bg-zinc-900 border-t border-zinc-800">
+        <nav aria-label="Categorias" className="bg-zinc-900/80 border-t border-zinc-800/50 backdrop-blur-sm">
           <div className="container mx-auto px-4">
             <div className="flex items-center h-11 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
               <button
@@ -157,14 +157,14 @@ export function TopHeader() {
                 <a
                   key={cat}
                   href="#"
-                  className="text-zinc-400 hover:text-white text-sm px-4 h-full flex items-center flex-shrink-0 hover:bg-zinc-800 transition-colors duration-150 whitespace-nowrap"
+                  className="text-zinc-400 hover:text-white text-sm px-5 h-full flex items-center flex-shrink-0 hover:bg-zinc-800 transition-colors duration-150 whitespace-nowrap"
                 >
                   {cat}
                 </a>
               ))}
               <a
                 href="#"
-                className="ml-auto bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-5 h-full flex items-center flex-shrink-0 transition-colors duration-150 whitespace-nowrap"
+                className="ml-auto bg-red-600/90 hover:bg-red-600 text-white text-sm font-semibold px-6 h-full flex items-center flex-shrink-0 transition-colors duration-200 whitespace-nowrap"
               >
                 Ofertas
               </a>
@@ -179,7 +179,7 @@ export function TopHeader() {
           <div className="fixed inset-0 z-40 bg-zinc-950/70 lg:hidden" onClick={() => setMobileMenuOpen(false)} aria-hidden="true" />
           <nav
             aria-label="Menu mobile"
-            className="fixed top-0 left-0 bottom-0 z-50 w-72 bg-zinc-950 border-r border-zinc-800 flex flex-col lg:hidden"
+            className="fixed top-0 left-0 bottom-0 z-50 w-72 bg-zinc-950 border-r border-zinc-800/50 flex flex-col lg:hidden"
           >
             <div className="flex items-center justify-between px-4 h-16 border-b border-zinc-800">
               <Image

@@ -16,10 +16,10 @@ export function AddToCart({ name, price }: { name: string; price: number }) {
       onClick={handleClick}
       disabled={state === "added"}
       aria-label={state === "added" ? `${name} adicionado ao carrinho` : `Adicionar ${name} ao carrinho`}
-      className={`w-full flex items-center justify-center gap-2.5 font-inter font-bold text-base px-8 py-4 min-h-[56px] transition-all duration-300 ${
+      className={`w-full flex items-center justify-center gap-2.5 font-inter font-semibold text-sm px-8 py-3.5 min-h-[52px] transition-all duration-300 rounded-xl ${
         state === "added"
           ? "bg-green-600 text-white cursor-default"
-          : "bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+          : "bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white cursor-pointer"
       }`}
     >
       {state === "added" ? (

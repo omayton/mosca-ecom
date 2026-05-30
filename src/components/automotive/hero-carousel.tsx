@@ -47,7 +47,7 @@ const SLIDES = [
 
 function GearGraphic({ color }: { color: string }) {
   return (
-    <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-2xl" aria-hidden="true">
+    <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-lg" aria-hidden="true">
       {/* Outer gear */}
       {Array.from({ length: 12 }).map((_, i) => {
         const angle = (i * 30 * Math.PI) / 180
@@ -115,27 +115,27 @@ export function HeroCarousel() {
       onMouseLeave={() => setPaused(false)}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center min-h-[320px] md:min-h-[380px] py-10 gap-8">
+        <div className="flex items-center min-h-[340px] md:min-h-[400px] py-12 gap-10">
 
           {/* Text */}
           <div className="flex-1 min-w-0">
-            <p className="inline-flex items-center border border-white/30 text-white/80 font-inter text-xs px-4 py-1.5 rounded-full mb-5">
+            <p className="inline-flex items-center border border-white/20 text-white/70 font-inter text-xs px-5 py-1.5 rounded-full mb-6 tracking-wide">
               {slide.eyebrow}
             </p>
 
             <h2
               className="font-barlow font-black text-white leading-none mb-3"
-              style={{ fontSize: "clamp(3rem, 9vw, 7rem)" }}
+              style={{ fontSize: "clamp(2.5rem, 7vw, 5.5rem)" }}
             >
               {slide.title}
             </h2>
 
             <div className="mb-6">
-              <p className="text-white/80 font-inter text-lg">{slide.sub1}</p>
-              <p className="font-barlow font-black text-white text-4xl leading-tight">{slide.sub2}</p>
+              <p className="text-white/70 font-inter text-base">{slide.sub1}</p>
+              <p className="font-barlow font-bold text-white text-3xl leading-tight">{slide.sub2}</p>
             </div>
 
-            <div className={`hidden sm:inline-flex items-center gap-2 bg-gradient-to-r ${slide.accentFrom} ${slide.accentTo} text-white font-inter font-semibold text-sm px-4 py-2.5 rounded-sm mb-6`}>
+            <div className={`hidden sm:inline-flex items-center gap-2 bg-gradient-to-r ${slide.accentFrom} ${slide.accentTo} text-white font-inter font-semibold text-sm px-5 py-2 rounded-full mb-6`}>
               <span className="text-lg">+</span>
               {slide.badge}
             </div>
@@ -143,7 +143,7 @@ export function HeroCarousel() {
             <div className="block">
               <a
                 href="#"
-                className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-inter font-semibold text-base px-7 py-3.5 min-h-[52px] transition-colors duration-200"
+                className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-inter font-semibold text-sm px-8 py-3 min-h-[48px] transition-all duration-200 rounded-lg"
                 aria-label={`${slide.cta}`}
               >
                 {slide.cta}
@@ -153,7 +153,7 @@ export function HeroCarousel() {
           </div>
 
           {/* Graphic */}
-          <div className="hidden sm:block flex-shrink-0 w-56 h-56 md:w-72 md:h-72 relative">
+          <div className="hidden sm:block flex-shrink-0 w-48 h-52 md:w-64 md:h-64 relative opacity-80">
             <div className="absolute inset-0 rounded-full opacity-10 blur-3xl scale-125" style={{ background: slide.iconColor }} aria-hidden="true" />
             <GearGraphic color={slide.iconColor} />
           </div>
@@ -161,10 +161,10 @@ export function HeroCarousel() {
       </div>
 
       {/* Prev / Next */}
-      <button onClick={prev} aria-label="Slide anterior" className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 min-w-[44px] min-h-[44px] bg-zinc-950/60 hover:bg-zinc-950/90 text-white flex items-center justify-center transition-colors">
+      <button onClick={prev} aria-label="Slide anterior" className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 min-w-[44px] min-h-[44px] bg-zinc-950/40 hover:bg-zinc-950/70 text-white flex items-center justify-center transition-all duration-200 rounded-full">
         <ChevronLeft className="h-6 w-6" aria-hidden="true" />
       </button>
-      <button onClick={next} aria-label="Próximo slide" className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 min-w-[44px] min-h-[44px] bg-zinc-950/60 hover:bg-zinc-950/90 text-white flex items-center justify-center transition-colors">
+      <button onClick={next} aria-label="Próximo slide" className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 min-w-[44px] min-h-[44px] bg-zinc-950/40 hover:bg-zinc-950/70 text-white flex items-center justify-center transition-all duration-200 rounded-full">
         <ChevronRight className="h-6 w-6" aria-hidden="true" />
       </button>
 

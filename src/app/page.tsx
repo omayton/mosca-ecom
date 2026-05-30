@@ -15,20 +15,20 @@ const TRUST = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-zinc-100">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <TopHeader />
       <HeroCarousel />
 
       {/* Trust bar */}
-      <div className="bg-zinc-950 border-t border-zinc-800">
-        <div className="container mx-auto px-4">
-          <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x divide-zinc-800">
+      <div className="bg-zinc-950 border-t border-zinc-800/50">
+        <div className="container mx-auto px-4 py-5">
+          <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x divide-zinc-800/50">
             {TRUST.map(({ icon: Icon, text, sub }) => (
-              <li key={text} className="flex items-center gap-3 py-4 px-3">
+              <li key={text} className="flex items-center gap-3 py-4 px-4">
                 <Icon className="h-5 w-5 text-red-500 flex-shrink-0" aria-hidden="true" />
                 <div>
-                  <p className="font-inter font-bold text-white text-xs uppercase tracking-wide leading-tight">{text}</p>
-                  <p className="font-inter text-zinc-500 text-[10px] leading-tight mt-0.5">{sub}</p>
+                  <p className="font-inter font-semibold text-white text-xs uppercase tracking-wide leading-tight">{text}</p>
+                  <p className="font-inter text-zinc-500 text-[11px] leading-tight mt-0.5">{sub}</p>
                 </div>
               </li>
             ))}
@@ -40,8 +40,8 @@ export default function Home() {
       <ProductSection />
 
       {/* Footer */}
-      <footer className="bg-zinc-950 border-t border-zinc-800 mt-2" role="contentinfo">
-        <div className="container mx-auto px-4 py-12">
+      <footer className="bg-zinc-950 border-t border-zinc-800/50 mt-4" role="contentinfo">
+        <div className="container mx-auto px-4 py-14">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
 
             {/* Brand */}
@@ -71,7 +71,7 @@ export default function Home() {
                     key={label}
                     href={href}
                     aria-label={label}
-                    className="w-9 h-9 min-w-[44px] min-h-[44px] flex items-center justify-center bg-zinc-800 hover:bg-red-600 text-zinc-400 hover:text-white transition-colors duration-200 rounded-sm"
+                    className="w-9 h-9 min-w-[44px] min-h-[44px] flex items-center justify-center bg-zinc-800/80 hover:bg-red-600 text-zinc-400 hover:text-white transition-all duration-200 rounded-full"
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </a>
@@ -110,7 +110,7 @@ export default function Home() {
           </div>
 
           {/* WhatsApp CTA */}
-          <div className="mb-8 p-4 bg-zinc-900 border border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="mb-8 p-5 bg-zinc-900/80 border border-zinc-800/50 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl">
             <div>
               <p className="font-inter font-semibold text-white text-sm">Não achou a peça que precisa?</p>
               <p className="font-inter text-zinc-400 text-xs mt-0.5">Fale com nossos especialistas pelo WhatsApp</p>
@@ -126,7 +126,7 @@ export default function Home() {
             </a>
           </div>
 
-          <div className="border-t border-zinc-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="border-t border-zinc-800/50 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
             <p className="font-inter text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
             <p className="font-inter text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 6x sem juros</p>
           </div>
