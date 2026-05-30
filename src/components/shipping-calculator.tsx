@@ -83,27 +83,39 @@ export function ShippingCalculator({ weight, width, height, length }: Props) {
           value={cep}
           onChange={(e) => setCep(formatCep(e.target.value))}
           onKeyDown={(e) => e.key === "Enter" && calculate()}
-          className="flex-1 border border-zinc-300 px-3 py-2.5 text-sm font-inter text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 transition-colors"
+          className="flex-1 border border-zinc-300 px-3 py-2.5 text-sm font-inter text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-colors duration-200"
           aria-label="CEP de destino"
+          aria-invalid={error ? "true" : "false"}
         />
         <button
           onClick={calculate}
           disabled={loading}
-          className="bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 text-white font-inter font-semibold text-sm px-5 py-2.5 min-h-[44px] transition-colors duration-200 flex items-center gap-2"
+          className="cursor-pointer bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-400 disabled:cursor-not-allowed text-white font-inter font-semibold text-sm px-5 py-2.5 min-h-[44px] transition-colors duration-200 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-          {loading ? "Calculando..." : "Calcular"}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-[spin_1s_linear_infinite]" aria-hidden="true" />
+              Calculando...
+            </>
+          ) : (
+            "Calcular"
+          )}
         </button>
       </div>
 
       {error && (
-        <p className="mt-3 font-inter text-sm text-red-600">{error}</p>
+        <p role="alert" className="mt-3 font-inter text-sm text-red-600" aria-live="polite">
+          {error}
+        </p>
       )}
 
       {options.length > 0 && (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-3 space-y-2" role="list" aria-label="Opções de frete disponíveis">
           {options.map((opt) => (
-            <li key={opt.id} className="flex items-center justify-between bg-zinc-50 border border-zinc-200 px-4 py-3">
+            <li
+              key={opt.id}
+              className="flex items-center justify-between bg-zinc-50 border border-zinc-200 px-4 py-3 hover:border-red-500/50 hover:bg-red-50/50 transition-colors duration-200 cursor-default"
+            >
               <div>
                 <p className="font-inter text-sm font-medium text-zinc-800">
                   {opt.company} — {opt.name}
