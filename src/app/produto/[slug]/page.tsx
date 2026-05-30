@@ -4,9 +4,10 @@ import { TopHeader } from "@/components/automotive/top-header"
 import { AddToCart } from "@/components/automotive/add-to-cart"
 import {
   getProductBySlug, getRelated, imgUrl, pixPrice, installmentPrice, fmt,
-  PRODUCTS,
+  PRODUCTS, parseWeight, parseDimensions,
 } from "@/lib/products"
 import { Heart, Truck, Shield, RefreshCw, ChevronRight, MessageCircle, Package } from "lucide-react"
+import { ShippingCalculator } from "@/components/shipping-calculator"
 
 export async function generateStaticParams() {
   return PRODUCTS.map((p) => ({ slug: p.slug }))
@@ -29,6 +30,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
   const parcel3  = installmentPrice(product.price, 3)
   const parcel12 = installmentPrice(product.price, 12)
   const related  = getRelated(product, 4)
+  const weightNum = parseWeight(product.weight)
+  const dims      = parseDimensions(product.dimensions)
 
   return (
     <div className="min-h-screen bg-zinc-100">
@@ -170,6 +173,14 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                   </li>
                 ))}
               </ul>
+
+              {/* Shipping calculator */}
+              <ShippingCalculator
+                weight={weightNum}
+                width={dims.width}
+                height={dims.height}
+                length={dims.length}
+              />
 
               {/* Specs */}
               {(product.weight || product.dimensions) && (

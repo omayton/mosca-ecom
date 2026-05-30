@@ -238,6 +238,21 @@ export const PRODUCTS: Product[] = [
   },
 ]
 
+export function parseWeight(w?: string): number {
+  if (!w) return 0.3
+  const n = parseFloat(w.replace(",", "."))
+  return isNaN(n) ? 0.3 : n
+}
+
+export function parseDimensions(d?: string): { width: number; height: number; length: number } {
+  if (!d) return { width: 16, height: 10, length: 10 }
+  const parts = d.replace(/\s*cm\s*/i, "").split(/[×x]/i).map((s) => parseFloat(s.trim()))
+  if (parts.length >= 3 && parts.every((n) => !isNaN(n))) {
+    return { width: parts[0], height: parts[1], length: parts[2] }
+  }
+  return { width: 16, height: 10, length: 10 }
+}
+
 export function getProductBySlug(slug: string): Product | undefined {
   return PRODUCTS.find((p) => p.slug === slug)
 }
