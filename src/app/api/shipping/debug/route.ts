@@ -1,17 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
-export async function POST(req: NextRequest) {
-  const { cep } = await req.json()
-
+export async function GET() {
   const token = process.env.MELHOR_ENVIO_TOKEN
   const from = process.env.MELHOR_ENVIO_CEP_ORIGEM
 
-  const cleanCep = cep?.replace(/\D/g, "")
-
-  // Test 1: Simplest possible request
   const body = {
     from: { postal_code: from },
-    to: { postal_code: cleanCep || "01001000" },
+    to: { postal_code: "01001000" },
     products: [
       {
         id: "1",
@@ -25,7 +20,8 @@ export async function POST(req: NextRequest) {
     ],
   }
 
-  // Try production URL
+  // Try production URL first
+  let prodResult
   try {
     const res = await fetch("https://melhorenvio.com.br/api/v2/me/shipment/calculate", {
       method: "POST",
@@ -37,25 +33,49 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify(body),
     })
-
-    const text = await res.text()
-
-    return NextResponse.json({
-      url: "https://melhorenvio.com.br/api/v2/me/shipment/calculate",
+    prodResult = {
+      url: "PRODUCTION: https://melhorenvio.com.br/api/v2/me/shipment/calculate",
       status: res.status,
       statusText: res.statusText,
-      requestBody: body,
-      responseBody: text.slice(0, 2000),
-      tokenPrefix: token?.slice(0, 20) + "...",
-      fromCep: from,
-      toCep: cleanCep,
-      nodeEnv: process.env.NODE_ENV,
-    })
-  } catch (err: unknown) {
-    return NextResponse.json({
-      error: String(err),
-      message: err instanceof Error ? err.message : "Unknown error",
-      stack: err instanceof Error ? err.stack : undefined,
-    })
+      body: (await res.text()).slice(0, 2000),
+    }
+  } catch (err) {
+    prodResult = { error: String(err), message: err instanceof Error ? err.message : "?" }
   }
+
+  // Try sandbox URL
+  let sandboxResult
+  try {
+    const res = await fetch("https://sandbox.melhorenvio.com.br/api/v2/me/shipment/calculate", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "User-Agent": "mosca-branca-ecom/1.0",
+      },
+      body: JSON.stringify(body),
+    })
+    sandboxResult = {
+      url: "SANDBOX: https://sandbox.melhorenvio.com.br/api/v2/me/shipment/calculate",
+      status: res.status,
+      statusText: res.statusText,
+      body: (await res.text()).slice(0, 2000),
+    }
+  } catch (err) {
+    sandboxResult = { error: String(err), message: err instanceof Error ? err.message : "?" }
+  }
+
+  return NextResponse.json({
+    env: process.env.NODE_ENV,
+    tokenExists: !!token,
+    tokenPrefix: token?.slice(0, 30) + "...",
+    tokenLength: token?.length,
+    fromCep: from,
+    toCep: "01001000 (São Paulo - teste)",
+    requestBody: body,
+    production: prodResult,
+    sandbox: sandboxResult,
+    timestamp: new Date().toISOString(),
+  })
 }
