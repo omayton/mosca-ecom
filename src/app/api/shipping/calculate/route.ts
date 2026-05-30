@@ -73,12 +73,11 @@ export async function POST(req: NextRequest) {
       ],
     }
 
-    // Try sandbox first (most tokens are sandbox), then production
-    const env = process.env.NODE_ENV === "production" ? "production" : "sandbox"
-    const primaryUrl   = URLs[env as keyof typeof URLs]
-    const fallbackUrl  = env === "production" ? URLs.sandbox : URLs.production
+    // Try sandbox first (most dev tokens are from sandbox), then production
+    const primaryUrl   = URLs.sandbox
+    const fallbackUrl  = URLs.production
 
-    console.log(`[frete] Trying ${primaryUrl} first (env=${env})`)
+    console.log(`[frete] Trying ${primaryUrl} first, fallback: ${fallbackUrl}`)
 
     let result = await tryApi(primaryUrl, token, body)
 
@@ -93,11 +92,10 @@ export async function POST(req: NextRequest) {
     if (!ok) {
       console.error("[frete] API error:", { url: primaryUrl, status, body: resText.slice(0, 500) })
       // Return details in development, generic message in production
-      const isDev = process.env.NODE_ENV !== "production"
       return NextResponse.json(
         {
-          error: "Não foi possível calcular o frete.",
-          ...(isDev ? { debug: { status, body: resText.slice(0, 500), tried: [primaryUrl, fallbackUrl] } } : {}),
+          error: `Erro ao consultar frete (HTTP ${status}).`,
+          details: resText.slice(0, 300),
         },
         { status: 502 }
       )
