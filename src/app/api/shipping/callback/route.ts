@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       code,
     })
 
-    const tokenRes = await fetch("https://melhorenvio.com.br/oauth/token", {
+    const tokenRes = await fetch("https://sandbox.melhorenvio.com.br/oauth/token", {
       method: "POST",
       headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
       body: params.toString(),
