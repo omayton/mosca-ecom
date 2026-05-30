@@ -73,9 +73,9 @@ export async function POST(req: NextRequest) {
       ],
     }
 
-    // Try sandbox first (most dev tokens are from sandbox), then production
-    const primaryUrl   = URLs.sandbox
-    const fallbackUrl  = URLs.production
+    // Try production first (token is from production OAuth), fallback to sandbox
+    const primaryUrl   = URLs.production
+    const fallbackUrl  = URLs.sandbox
 
     console.log(`[frete] Trying ${primaryUrl} first, fallback: ${fallbackUrl}`)
 
