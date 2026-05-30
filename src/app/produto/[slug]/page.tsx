@@ -180,6 +180,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                 width={dims.width}
                 height={dims.height}
                 length={dims.length}
+                price={product.price}
               />
 
               {/* Specs */}
