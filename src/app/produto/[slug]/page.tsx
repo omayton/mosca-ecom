@@ -52,7 +52,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 
       {/* Main content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="bg-white border border-zinc-100 shadow-sm p-6 md:p-10">
+        <div className="bg-white border border-zinc-100 shadow-sm p-6 md:p-10 rounded-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
             {/* ── IMAGEM ─────────────────────────────────────── */}
