@@ -30,7 +30,13 @@ export async function POST(req: NextRequest) {
     ],
   }
 
-  const res = await fetch("https://melhorenvio.com.br/api/v2/me/shipment/calculate", {
+  const apiUrl = process.env.NODE_ENV === 'production'
+    ? 'https://melhorenvio.com.br/api/v2/me/shipment/calculate'
+    : 'https://sandbox.melhorenvio.com.br/api/v2/me/shipment/calculate'
+
+  console.log('Using API URL:', apiUrl)
+
+  const res = await fetch(apiUrl, {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -42,7 +48,17 @@ export async function POST(req: NextRequest) {
   })
 
   if (!res.ok) {
-    return NextResponse.json({ error: "Erro ao consultar frete" }, { status: 502 })
+    const errorText = await res.text()
+    console.error("Melhor Envio API error:", {
+      status: res.status,
+      statusText: res.statusText,
+      body: errorText,
+      requestBody: body,
+    })
+    return NextResponse.json(
+      { error: "Erro ao consultar frete", details: errorText },
+      { status: 502 }
+    )
   }
 
   const data = await res.json()

@@ -50,6 +50,7 @@ export function ShippingCalculator({ weight, width, height, length }: Props) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => null)
+        console.error("Shipping calc error:", data)
         setError(data?.error || "Erro ao calcular frete")
         return
       }
