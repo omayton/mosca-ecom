@@ -58,30 +58,70 @@ function setCachedResults(query: string, vehicles: Vehicle[]): void {
 
 function getFallbackVehicles(query: string): Vehicle[] {
   const normalizedQuery = normalizeText(query)
-  const commonBrands = [
-    { code: '21', name: 'Volkswagen' },
-    { code: '23', name: 'Fiat' },
-    { code: '25', name: 'Chevrolet' },
-    { code: '28', name: 'Ford' },
-    { code: '31', name: 'Honda' },
-    { code: '33', name: 'Toyota' },
-    { code: '45', name: 'Peugeot' },
-    { code: '52', name: 'Renault' },
-    { code: '59', name: 'Hyundai' },
-    { code: '95', name: 'BMW' },
-    { code: '101', name: 'Mercedes-Benz' },
-    { code: '112', name: 'Audi' },
+
+  const brazilianVehicles = [
+    { brand: 'Volkswagen', model: 'Gol', year: '2020-2024' },
+    { brand: 'Volkswagen', model: 'Polo', year: '2020-2024' },
+    { brand: 'Volkswagen', model: 'Virtus', year: '2020-2024' },
+    { brand: 'Volkswagen', model: 'Nivus', year: '2020-2024' },
+    { brand: 'Volkswagen', model: 'T-Cross', year: '2020-2024' },
+    { brand: 'Volkswagen', model: 'Tiguan', year: '2020-2024' },
+    { brand: 'Volkswagen', model: 'Jetta', year: '2020-2024' },
+    { brand: 'Volkswagen', model: 'Saveiro', year: '2020-2024' },
+    { brand: 'Volkswagen', model: 'Amarok', year: '2020-2024' },
+    { brand: 'Volkswagen', model: 'Golf', year: '2010-2021' },
+    { brand: 'Fiat', model: 'Uno', year: '2010-2024' },
+    { brand: 'Fiat', model: 'Mobi', year: '2016-2024' },
+    { brand: 'Fiat', model: 'Argo', year: '2017-2024' },
+    { brand: 'Fiat', model: 'Cronos', year: '2018-2024' },
+    { brand: 'Fiat', model: 'Toro', year: '2016-2024' },
+    { brand: 'Fiat', model: 'Strada', year: '2020-2024' },
+    { brand: 'Chevrolet', model: 'Onix', year: '2012-2024' },
+    { brand: 'Chevrolet', model: 'Prisma', year: '2013-2019' },
+    { brand: 'Chevrolet', model: 'Tracker', year: '2020-2024' },
+    { brand: 'Chevrolet', model: 'Spin', year: '2012-2024' },
+    { brand: 'Chevrolet', model: 'Cruze', year: '2011-2024' },
+    { brand: 'Chevrolet', model: 'Cobalt', year: '2012-2020' },
+    { brand: 'Chevrolet', model: 'Sonic', year: '2012-2017' },
+    { brand: 'Chevrolet', model: 'Montana', year: '2023-2024' },
+    { brand: 'Ford', model: 'Ka', year: '2014-2024' },
+    { brand: 'Ford', model: 'EcoSport', year: '2014-2024' },
+    { brand: 'Ford', model: 'Focus', year: '2014-2019' },
+    { brand: 'Ford', model: 'Fiesta', year: '2014-2019' },
+    { brand: 'Ford', model: 'Ranger', year: '2012-2024' },
+    { brand: 'Honda', model: 'Fit', year: '2014-2022' },
+    { brand: 'Honda', model: 'Civic', year: '2012-2024' },
+    { brand: 'Honda', model: 'City', year: '2014-2024' },
+    { brand: 'Honda', model: 'HR-V', year: '2015-2024' },
+    { brand: 'Toyota', model: 'Corolla', year: '2014-2024' },
+    { brand: 'Toyota', model: 'Yaris', year: '2018-2024' },
+    { brand: 'Toyota', model: 'Etios', year: '2012-2021' },
+    { brand: 'Toyota', model: 'Hilux', year: '2016-2024' },
+    { brand: 'Hyundai', model: 'HB20', year: '2012-2024' },
+    { brand: 'Hyundai', model: 'Creta', year: '2016-2024' },
+    { brand: 'Hyundai', model: 'Tucson', year: '2015-2024' },
+    { brand: 'Renault', model: 'Sandero', year: '2014-2024' },
+    { brand: 'Renault', model: 'Kwid', year: '2015-2024' },
+    { brand: 'Renault', model: 'Duster', year: '2011-2024' },
+    { brand: 'Renault', model: 'Captur', year: '2017-2024' },
+    { brand: 'Peugeot', model: '208', year: '2013-2024' },
+    { brand: 'Peugeot', model: '2008', year: '2013-2024' },
+    { brand: 'Peugeot', model: '3008', year: '2010-2024' },
   ]
 
-  return commonBrands
-    .filter(brand => normalizeText(brand.name).includes(normalizedQuery))
-    .map(brand => ({
-      brand: brand.name,
-      model: '',
-      year: '',
-      fipeCode: brand.code,
-      displayText: brand.name
+  return brazilianVehicles
+    .filter(vehicle => {
+      const text = `${vehicle.brand} ${vehicle.model} ${vehicle.year}`
+      return normalizeText(text).includes(normalizedQuery)
+    })
+    .map(vehicle => ({
+      brand: vehicle.brand,
+      model: vehicle.model,
+      year: vehicle.year,
+      fipeCode: 'fallback',
+      displayText: `${vehicle.brand} ${vehicle.model} ${vehicle.year}`
     }))
+    .slice(0, 8)
 }
 
 async function fetchVehiclesFromFipe(query: string): Promise<Vehicle[]> {

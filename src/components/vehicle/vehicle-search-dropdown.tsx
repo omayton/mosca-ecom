@@ -109,13 +109,19 @@ export function VehicleSearchDropdown({
   if (!isOpen) return null
 
   return (
-    <div
-      ref={dropdownRef}
-      className="absolute top-full right-0 mt-2 w-[min(calc(100vw-2rem),600px)] bg-white border border-zinc-200 rounded-lg shadow-lg z-50 overflow-hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Buscar por veículo"
-    >
+    <>
+      <div
+        className="fixed inset-0 z-50"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
+        ref={dropdownRef}
+        className="fixed right-4 top-20 w-[min(calc(100vw-2rem),600px)] max-h-[80vh] bg-white border border-zinc-200 rounded-lg shadow-lg z-[100] overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Buscar por veículo"
+      >
       <div className="sticky top-0 bg-white border-b border-zinc-200 px-4 py-3 flex items-center justify-between">
         <h2 className="font-semibold text-zinc-900">
           {step === 'search' ? 'Buscar por veículo' : 'Peças compatíveis'}
@@ -158,6 +164,7 @@ export function VehicleSearchDropdown({
           )
         )}
       </div>
-    </div>
+      </div>
+    </>
   )
 }
