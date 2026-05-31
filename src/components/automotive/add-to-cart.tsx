@@ -2,11 +2,22 @@
 
 import { useState } from "react"
 import { ShoppingCart, Check } from "lucide-react"
+import { useCart } from "@/contexts/cart-context"
 
-export function AddToCart({ name, price }: { name: string; price: number }) {
+interface AddToCartProps {
+  productId: number
+  name: string
+  price: number
+  imageFile: string
+  slug: string
+}
+
+export function AddToCart({ productId, name, price, imageFile, slug }: AddToCartProps) {
   const [state, setState] = useState<"idle" | "added">("idle")
+  const { addItem } = useCart()
 
   function handleClick() {
+    addItem({ productId, name, price, imageFile, slug })
     setState("added")
     setTimeout(() => setState("idle"), 2500)
   }

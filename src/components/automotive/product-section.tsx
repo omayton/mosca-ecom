@@ -3,7 +3,7 @@
 import { useRef } from "react"
 import Image from "next/image"
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react"
-import { FEATURED, RECENT, type Product, imgUrl, pixPrice, installmentPrice, fmt } from "@/lib/products"
+import { type Product, imgUrl, pixPrice, installmentPrice, fmt } from "@/lib/products"
 
 function ProductCard({ p }: { p: Product }) {
   const pix    = pixPrice(p.price)
@@ -151,11 +151,11 @@ function Carousel({ products, label }: { products: Product[]; label: string }) {
   )
 }
 
-export function ProductSection() {
+export function ProductSection({ featured, recent }: { featured: Product[]; recent: Product[] }) {
   return (
     <>
-      <Carousel products={FEATURED} label="Peças em destaque" />
-      <Carousel products={RECENT}   label="Mais recentes" />
+      <Carousel products={featured} label="Peças em destaque" />
+      <Carousel products={recent}   label="Mais recentes" />
     </>
   )
 }

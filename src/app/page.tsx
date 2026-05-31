@@ -2,6 +2,7 @@ import { TopHeader }    from "@/components/automotive/top-header"
 import { HeroCarousel } from "@/components/automotive/hero-carousel"
 import { PromoBanners } from "@/components/automotive/promo-banners"
 import { ProductSection } from "@/components/automotive/product-section"
+import { getFeaturedProducts, getRecentProducts } from "@/lib/products-db"
 import { MessageCircle, Instagram, Facebook, Youtube, Truck, CreditCard, Shield, Package, Percent } from "lucide-react"
 import Image from "next/image"
 
@@ -13,7 +14,14 @@ const TRUST = [
   { icon: Truck,       text: "ENVIO NACIONAL",         sub: "Correios e transportadora" },
 ]
 
-export default function Home() {
+export const revalidate = 60
+
+export default async function Home() {
+  const [featured, recent] = await Promise.all([
+    getFeaturedProducts(),
+    getRecentProducts(),
+  ])
+
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <TopHeader />
@@ -37,7 +45,7 @@ export default function Home() {
       </div>
 
       <PromoBanners />
-      <ProductSection />
+      <ProductSection featured={featured} recent={recent} />
 
       {/* Footer */}
       <footer className="bg-zinc-950 border-t border-zinc-800/50 mt-4" role="contentinfo">

@@ -2,19 +2,20 @@ import { notFound } from "next/navigation"
 import Image from "next/image"
 import { TopHeader } from "@/components/automotive/top-header"
 import { AddToCart } from "@/components/automotive/add-to-cart"
-import {
-  getProductBySlug, getRelated, imgUrl, pixPrice, installmentPrice, fmt,
-  PRODUCTS, parseWeight, parseDimensions,
-} from "@/lib/products"
+import { imgUrl, pixPrice, installmentPrice, fmt, parseWeight, parseDimensions } from "@/lib/products"
+import { getProductBySlug, getRelatedProducts, getAllSlugs } from "@/lib/products-db"
 import { Heart, Truck, Shield, RefreshCw, ChevronRight, MessageCircle, Package } from "lucide-react"
 import { ShippingCalculator } from "@/components/shipping-calculator"
 
+export const revalidate = 60
+
 export async function generateStaticParams() {
-  return PRODUCTS.map((p) => ({ slug: p.slug }))
+  const slugs = await getAllSlugs()
+  return slugs.map((slug) => ({ slug }))
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const product = getProductBySlug(params.slug)
+  const product = await getProductBySlug(params.slug)
   if (!product) return {}
   return {
     title: `${product.name} | Mosca Branca Parts`,
@@ -22,14 +23,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
-  const product = getProductBySlug(params.slug)
+export default async function ProductPage({ params }: { params: { slug: string } }) {
+  const product = await getProductBySlug(params.slug)
   if (!product) notFound()
 
   const pix      = pixPrice(product.price)
   const parcel3  = installmentPrice(product.price, 3)
   const parcel12 = installmentPrice(product.price, 12)
-  const related  = getRelated(product, 4)
+  const related  = await getRelatedProducts(product, 4)
   const weightNum = parseWeight(product.weight)
   const dims      = parseDimensions(product.dimensions)
 
@@ -157,7 +158,13 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
 
               {/* Add to cart */}
               <div className="mb-4">
-                <AddToCart name={product.name} price={product.price} />
+                <AddToCart
+                  productId={product.id}
+                  name={product.name}
+                  price={product.price}
+                  imageFile={product.imageFile}
+                  slug={product.slug}
+                />
               </div>
 
               {/* Shipping / guarantees */}

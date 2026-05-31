@@ -12,7 +12,7 @@ import { ArrowLeft } from "lucide-react"
 
 export default function CheckoutClient() {
   const router = useRouter()
-  const { items, clearCart } = useCart()
+  const { items, clearCart, loaded } = useCart()
   const [step, setStep] = useState<CheckoutStep>("address")
   const [address, setAddress] = useState<AddressData | null>(null)
   const [saveAddress, setSaveAddress] = useState(true)
@@ -29,6 +29,14 @@ export default function CheckoutClient() {
       .then((data) => { if (data) setProfile(data) })
       .catch(() => {})
   }, [])
+
+  if (!loaded) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <p className="font-inter text-zinc-500 text-sm">Carregando...</p>
+      </div>
+    )
+  }
 
   if (items.length === 0 && !loading && !orderId) {
     return (

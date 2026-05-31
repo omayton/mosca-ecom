@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter, Barlow_Condensed } from 'next/font/google'
+import { CartProvider } from '@/contexts/cart-context'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -23,7 +24,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${barlow.variable}`}>
-      <body className="font-inter antialiased">{children}</body>
+      <body className="font-inter antialiased">
+        <CartProvider>{children}</CartProvider>
+      </body>
     </html>
   )
 }

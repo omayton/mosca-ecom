@@ -1,8 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Search, MapPin, User, ShoppingCart, ChevronDown, Car, Menu, X, Phone, MessageCircle } from "lucide-react"
+import { Search, MapPin, ShoppingCart, ChevronDown, Car, Menu, X, Phone, MessageCircle } from "lucide-react"
 import Image from "next/image"
+import { AuthStatus } from "@/components/auth/auth-status"
+import { CartButton } from "@/components/cart/cart-button"
+import { CartDrawer } from "@/components/cart/cart-drawer"
 
 const TOP_LINKS = ["Conheça a Mosca Branca", "Atendimento", "Rastrear Pedido", "Meus Pedidos"]
 
@@ -104,31 +107,13 @@ export function TopHeader() {
                   <p className="font-semibold">seu CEP</p>
                 </div>
               </a>
-              <a href="#" className="flex items-center gap-2 text-zinc-300 hover:text-white px-3 py-2 min-h-[44px] transition-colors duration-150">
-                <User className="h-5 w-5 text-zinc-400 flex-shrink-0" aria-hidden="true" />
-                <div className="text-xs leading-tight">
-                  <p className="text-zinc-500">Bem-vindo!</p>
-                  <p className="font-semibold">Entre ou cadastre-se</p>
-                </div>
-              </a>
-              <a href="#" aria-label="Ver carrinho (0 itens)" className="flex items-center gap-2 text-zinc-300 hover:text-white px-3 py-2 min-h-[44px] transition-colors duration-150">
-                <div className="relative">
-                  <ShoppingCart className="h-5 w-5 text-zinc-400" aria-hidden="true" />
-                  <span aria-hidden="true" className="absolute -top-2 -right-2 bg-red-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
-                </div>
-                <div className="text-xs leading-tight">
-                  <p className="text-zinc-500">Ver meu</p>
-                  <p className="font-semibold">Carrinho</p>
-                </div>
-              </a>
+              <AuthStatus />
+              <CartButton />
             </nav>
 
             {/* Mobile icons */}
             <div className="flex lg:hidden items-center gap-1">
-              <a href="#" aria-label="Carrinho (0 itens)" className="relative p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-300">
-                <ShoppingCart className="h-5 w-5" aria-hidden="true" />
-                <span aria-hidden="true" className="absolute top-1 right-1 bg-red-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
-              </a>
+              <CartButton />
               <button
                 aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
                 aria-expanded={mobileMenuOpen}
@@ -220,6 +205,8 @@ export function TopHeader() {
           </nav>
         </>
       )}
+
+      <CartDrawer />
     </>
   )
 }
