@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 E-commerce de peças automotivas raras (Mosca Branca Parts). Single-store com catálogo no Supabase, autenticação, carrinho persistente e cálculo de frete via Melhor Envio.
 
-- **URL produção:** https://mosca-ecom.vercel.app
+- **URL produção:** https://www.moscabrancaparts.com.br
 - **Stack:** Next.js 14.2 (App Router) + Tailwind CSS 3.4 + TypeScript 5 + Supabase
 - **Deploy:** Vercel (auto-deploy on push to `main`)
 - **No test framework configured** — no jest/vitest/playwright in the project
@@ -127,6 +127,13 @@ Nota: o MASTER.md sugere Syncopate + Space Mono, mas o código usa Inter + Barlo
 - Ícones: Lucide React (nunca emojis como ícones)
 - `cursor-pointer` em todo elemento clicável
 
+### Header e Rodapé
+
+Todas as páginas (incluindo checkout, minha conta, pedido) incluem:
+- `TopHeader` — menu completo (logo, busca, categorias, carrinho, auth)
+- Footer — com copyright e opções de pagamento
+- Checkout tem adicionalmente uma barra verde "Compra Segura" abaixo do header (Compra Segura + Dados Protegidos + Pagamento Criptografado)
+
 ## Variáveis de ambiente
 
 ```
@@ -147,7 +154,7 @@ NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=...   # Public key para SDK JS (tokenização
 MERCADOPAGO_ACCESS_TOKEN=...             # Access token para API server-side
 
 # App
-NEXT_PUBLIC_APP_URL=https://mosca-ecom.vercel.app   # Base URL para webhooks e redirects
+NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br   # Base URL para webhooks e redirects (importante para MercadoPago IPN)
 ```
 
 ## Gotchas
@@ -169,6 +176,11 @@ NEXT_PUBLIC_APP_URL=https://mosca-ecom.vercel.app   # Base URL para webhooks e r
 - Cart state lives in localStorage only (no server sync for anonymous users) — the `CartProvider` in root layout hydrates on mount
 - O `CartDrawer` é renderizado dentro do `TopHeader` — qualquer página que precise do carrinho deve incluir `<TopHeader />`
 - Se o carrinho não responde a cliques em produção, verificar se há erro de hidratação (React não registra event handlers quando hidratação falha silenciosamente)
+- Badge do carrinho usa `loaded` do CartContext para evitar hydration mismatch — só mostra contador após hidratação do localStorage
+
+### RLS Supabase
+- A tabela `order_items` precisa de policy de INSERT (não apenas SELECT) para o checkout funcionar
+- SQL no `supabase/schema.sql`: policy "Users can insert own order items" on order_items for insert with check (exists select 1 from orders where orders.id = order_items.order_id and orders.user_id = auth.uid())
 
 ## Convenções
 
