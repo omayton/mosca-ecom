@@ -8,6 +8,7 @@ import { AddressForm, type AddressData } from "@/components/checkout/address-for
 import { ShippingSelector, type ShippingOption } from "@/components/checkout/shipping-selector"
 import { OrderSummary } from "@/components/checkout/order-summary"
 import { PaymentForm } from "@/components/checkout/payment-form"
+import { CheckoutHeader } from "@/components/checkout/checkout-header"
 import { ArrowLeft } from "lucide-react"
 
 export default function CheckoutClient() {
@@ -32,23 +33,29 @@ export default function CheckoutClient() {
 
   if (!loaded) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
-        <p className="font-inter text-zinc-500 text-sm">Carregando...</p>
+      <div className="min-h-screen bg-[#FAFAFA]">
+        <CheckoutHeader />
+        <div className="flex items-center justify-center py-32">
+          <p className="font-inter text-zinc-500 text-sm">Carregando...</p>
+        </div>
       </div>
     )
   }
 
   if (items.length === 0 && !loading && !orderId) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <p className="font-inter text-zinc-600">Seu carrinho está vazio.</p>
-          <button
-            onClick={() => router.push("/")}
-            className="font-inter text-sm text-red-600 hover:text-red-700 font-semibold cursor-pointer"
-          >
-            Voltar às compras
-          </button>
+      <div className="min-h-screen bg-[#FAFAFA]">
+        <CheckoutHeader />
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center space-y-4">
+            <p className="font-inter text-zinc-600">Seu carrinho está vazio.</p>
+            <button
+              onClick={() => router.push("/")}
+              className="font-inter text-sm text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+            >
+              Voltar às compras
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -117,6 +124,7 @@ export default function CheckoutClient() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
+      <CheckoutHeader />
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <button
           onClick={() => router.back()}
