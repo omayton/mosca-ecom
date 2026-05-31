@@ -108,6 +108,10 @@ create policy "Users can view own order items"
   on order_items for select using (
     exists (select 1 from orders where orders.id = order_items.order_id and orders.user_id = auth.uid())
   );
+create policy "Users can insert own order items"
+  on order_items for insert with check (
+    exists (select 1 from orders where orders.id = order_items.order_id and orders.user_id = auth.uid())
+  );
 
 -- ============================================
 -- Trigger: criar perfil automaticamente ao registrar
