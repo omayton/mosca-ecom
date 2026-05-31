@@ -8,8 +8,8 @@ import { AddressForm, type AddressData } from "@/components/checkout/address-for
 import { ShippingSelector, type ShippingOption } from "@/components/checkout/shipping-selector"
 import { OrderSummary } from "@/components/checkout/order-summary"
 import { PaymentForm } from "@/components/checkout/payment-form"
-import { CheckoutHeader } from "@/components/checkout/checkout-header"
-import { ArrowLeft } from "lucide-react"
+import { TopHeader } from "@/components/automotive/top-header"
+import { ArrowLeft, Lock, Shield, CreditCard } from "lucide-react"
 
 export default function CheckoutClient() {
   const router = useRouter()
@@ -34,7 +34,7 @@ export default function CheckoutClient() {
   if (!loaded) {
     return (
       <div className="min-h-screen bg-[#FAFAFA]">
-        <CheckoutHeader />
+        <TopHeader />
         <div className="flex items-center justify-center py-32">
           <p className="font-inter text-zinc-500 text-sm">Carregando...</p>
         </div>
@@ -45,7 +45,7 @@ export default function CheckoutClient() {
   if (items.length === 0 && !loading && !orderId) {
     return (
       <div className="min-h-screen bg-[#FAFAFA]">
-        <CheckoutHeader />
+        <TopHeader />
         <div className="flex items-center justify-center py-32">
           <div className="text-center space-y-4">
             <p className="font-inter text-zinc-600">Seu carrinho está vazio.</p>
@@ -124,7 +124,26 @@ export default function CheckoutClient() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      <CheckoutHeader />
+      <TopHeader />
+
+      {/* Barra de compra segura */}
+      <div className="bg-green-50 border-b border-green-100">
+        <div className="container mx-auto px-4 py-2.5 flex items-center justify-center gap-6">
+          <div className="flex items-center gap-1.5">
+            <Lock className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
+            <span className="font-inter text-xs text-green-700 font-medium">Compra Segura</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Shield className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
+            <span className="font-inter text-xs text-green-700 font-medium">Dados Protegidos</span>
+          </div>
+          <div className="flex items-center gap-1.5 hidden sm:flex">
+            <CreditCard className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
+            <span className="font-inter text-xs text-green-700 font-medium">Pagamento Criptografado</span>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <button
           onClick={() => router.back()}
@@ -192,6 +211,14 @@ export default function CheckoutClient() {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-zinc-950 border-t border-zinc-800/50 mt-10 py-8" role="contentinfo">
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="font-inter text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
+          <p className="font-inter text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 6x sem juros</p>
+        </div>
+      </footer>
     </div>
   )
 }
