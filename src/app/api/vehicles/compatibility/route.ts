@@ -177,7 +177,7 @@ Return ONLY valid JSON in this format:
         slug: product.slug,
         compatibilityScore: result.compatibilityScore,
         compatibilityReason: result.compatibilityReason,
-        inStock: product.in_stock
+        inStock: product.stock_quantity > 0 && product.status !== 'out_of_stock'
       }
     }).filter((p: CompatibleProduct | null): p is CompatibleProduct => p !== null)
 
@@ -216,7 +216,7 @@ function analyzeWithFallback(
       slug: product.slug,
       compatibilityScore: score,
       compatibilityReason: reason,
-      inStock: product.in_stock
+      inStock: product.stock_quantity > 0 && product.status !== 'out_of_stock'
     }
   }).filter(p => p.compatibilityScore > 0)
     .sort((a, b) => b.compatibilityScore - a.compatibilityScore)

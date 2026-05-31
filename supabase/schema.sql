@@ -18,6 +18,9 @@ create table products (
   dimensions text,
   in_stock boolean default true,
   featured boolean default false,
+  stock_quantity integer not null default 999,
+  stock_threshold integer not null default 10,
+  status text not null default 'available' check (status in ('available', 'low_stock', 'out_of_stock', 'discontinued')),
   created_at timestamptz default now()
 );
 

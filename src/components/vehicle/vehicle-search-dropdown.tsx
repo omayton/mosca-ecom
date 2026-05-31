@@ -117,7 +117,7 @@ export function VehicleSearchDropdown({
       />
       <div
         ref={dropdownRef}
-        className="fixed right-4 top-20 w-[min(calc(100vw-2rem),600px)] max-h-[80vh] bg-white border border-zinc-200 rounded-lg shadow-lg z-[100] overflow-hidden"
+        className="fixed left-0 right-0 mx-auto max-w-[600px] w-[min(calc(100vw-2rem),600px)] max-h-[80vh] bg-white border border-zinc-200 rounded-lg shadow-lg z-[100] overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label="Buscar por veículo"

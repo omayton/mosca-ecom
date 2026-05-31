@@ -12,6 +12,9 @@ export interface Product {
   dimensions?: string
   inStock: boolean
   featured: boolean
+  stockQuantity?: number
+  stockThreshold?: number
+  stockStatus?: 'available' | 'low_stock' | 'out_of_stock' | 'discontinued'
 }
 
 export const WP_IMG = "https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/"
