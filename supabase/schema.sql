@@ -128,3 +128,68 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- ============================================
+-- Cache de compatibilidade de veículos
+-- ============================================
+create table vehicle_compatibility_cache (
+  id serial primary key,
+  vehicle_brand text not null,
+  vehicle_model text not null,
+  vehicle_year text not null,
+  cached_results jsonb not null,
+  cache_key text unique not null,
+  total_products int not null,
+  created_at timestamptz default now(),
+  expires_at timestamptz not null default (now() + interval '7 days'),
+  hit_count int default 0
+);
+
+create index on vehicle_compatibility_cache(cache_key);
+create index on vehicle_compatibility_cache(expires_at);
+
+-- RLS: leitura pública, escrita apenas service role
+alter table vehicle_compatibility_cache enable row level security;
+create policy "Public can read cache"
+  on vehicle_compatibility_cache for select using (true);
+create policy "Service role can write cache"
+  on vehicle_compatibility_cache for all using (auth.role() = 'service_role');
+
+-- ============================================
+-- Analytics de uso de IA
+-- ============================================
+create table ai_analytics (
+  id serial primary key,
+  session_id text,
+  vehicle_brand text,
+  vehicle_model text,
+  vehicle_year text,
+  model_used text not null,
+  input_tokens int not null default 0,
+  output_tokens int not null default 0,
+  total_tokens int generated always as (input_tokens + output_tokens) stored,
+  estimated_cost_usd numeric(10,6),
+  response_time_ms int,
+  cache_hit boolean default false,
+  fallback_used boolean default false,
+  products_analyzed int,
+  created_at timestamptz default now()
+);
+
+create index on ai_analytics(created_at);
+create index on ai_analytics(vehicle_brand);
+create index on ai_analytics(cache_hit);
+
+-- RLS: leitura por service role, escrita por service role
+alter table ai_analytics enable row level security;
+create policy "Service role full access"
+  on ai_analytics for all using (auth.role() = 'service_role');
+
+-- Função para limpar cache expirado (rodar via pg_cron)
+create or replace function cleanup_expired_cache()
+returns void as $$
+begin
+  delete from vehicle_compatibility_cache
+  where expires_at < now();
+end;
+$$ language plpgsql;

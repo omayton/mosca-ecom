@@ -6,6 +6,9 @@ import Image from "next/image"
 import { AuthStatus } from "@/components/auth/auth-status"
 import { CartButton } from "@/components/cart/cart-button"
 import { CartDrawer } from "@/components/cart/cart-drawer"
+import { VehicleSearchButton } from "@/components/vehicle/vehicle-search-button"
+import { VehicleSearchDropdown } from "@/components/vehicle/vehicle-search-dropdown"
+import type { Vehicle } from "@/lib/vehicle-types"
 
 const TOP_LINKS = ["Conheça a Mosca Branca", "Atendimento", "Rastrear Pedido", "Meus Pedidos"]
 
@@ -22,6 +25,8 @@ const CATEGORIES = [
 export function TopHeader() {
   const [query, setQuery] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [vehicleSearchOpen, setVehicleSearchOpen] = useState(false)
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
 
   return (
     <>
@@ -52,7 +57,7 @@ export function TopHeader() {
         </div>
 
         {/* Main header */}
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 relative">
           <div className="flex items-center gap-3 h-16">
 
             {/* Logo */}
@@ -68,14 +73,18 @@ export function TopHeader() {
             </a>
 
             {/* Vehicle search — desktop */}
-            <button
-              aria-label="Buscar por veículo"
-              className="hidden md:flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 text-sm px-4 min-h-[44px] border border-zinc-700 transition-colors duration-150 whitespace-nowrap flex-shrink-0"
-            >
-              <Car className="h-4 w-4 text-red-500" aria-hidden="true" />
-              <span className="text-sm">Buscar com veículo</span>
-              <ChevronDown className="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
-            </button>
+            <div className="relative hidden md:block" id="vehicle-search-container">
+              <VehicleSearchButton
+                onClick={() => setVehicleSearchOpen(!vehicleSearchOpen)}
+                isActive={vehicleSearchOpen}
+                selectedVehicle={selectedVehicle}
+              />
+              <VehicleSearchDropdown
+                isOpen={vehicleSearchOpen}
+                onClose={() => setVehicleSearchOpen(false)}
+                initialVehicle={selectedVehicle}
+              />
+            </div>
 
             {/* Search bar */}
             <div className="flex flex-1 min-w-0 h-11">
