@@ -35,7 +35,7 @@ npm run start    # Serve o build de produção localmente
 
 ### Supabase clients (3 variantes — usar a correta)
 - `src/lib/supabase.ts` — singleton genérico sem auth. Usar em server components e `products-db.ts` queries.
-- `src/lib/supabase-browser.ts` — singleton `"use client"`. Usar em client components que precisam de Supabase diretamente.
+- `src/lib/supabase-browser.ts` — singleton `"use client"` (export: `supabaseBrowser`). Usar em client components que precisam de Supabase diretamente.
 - `src/lib/supabase-server.ts` — cria client com `cookies()` para ler sessão do usuário. Usar em API routes e server components que precisam do user autenticado (`getUser()`, `createServerSupabase()`).
 
 ### Catálogo — dual data source
@@ -48,7 +48,9 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 ### Autenticação
 - Login/registro via email+senha (Supabase Auth)
 - Sessão gerenciada via cookies httpOnly (`sb-access-token`, `sb-refresh-token`)
-- Middleware (`src/middleware.ts`) faz refresh automático de sessão; exclui `/api/shipping` do matcher
+- Middleware (`src/middleware.ts`) faz refresh automático de sessão; exclui `/api/shipping` e `/api/webhooks` do matcher
+- Auth guard: paths `/checkout` e `/minha-conta` redirecionam para `/login?redirect={path}` se não autenticado
+- Login form lê `?redirect=` e redireciona após sucesso
 - API routes: `/api/auth/login`, `/api/auth/register`, `/api/auth/logout`, `/api/auth/me`
 - Componente `AuthStatus` no header mostra estado de login
 - Pages de auth: `src/app/(auth)/login/`, `src/app/(auth)/registro/` (route group sem layout extra)
@@ -65,10 +67,30 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - Token expira em 30 dias — renovar via OAuth flow
 - Debug endpoint: `/api/shipping/debug`
 
+### Checkout (Transparente MercadoPago)
+- Página: `src/app/checkout/page.tsx` — server wrapper com `dynamic = "force-dynamic"`, importa `checkout-client.tsx`
+- Client: `src/app/checkout/checkout-client.tsx` — client component com 3 steps (endereço → frete → pagamento)
+- Step 1 (Endereço): `src/components/checkout/address-form.tsx` — CEP auto-fill via `/api/address/cep` (proxy ViaCEP), campos de endereço + telefone + CPF, salva no perfil
+- Step 2 (Frete): `src/components/checkout/shipping-selector.tsx` — reutiliza `/api/shipping/calculate`, agrega itens em pacote
+- Step 3 (Pagamento): `src/components/checkout/payment-form.tsx` — tabs Cartão/PIX inline
+  - Cartão: SDK JS do MercadoPago tokeniza no client → `POST /api/payments` processa
+  - PIX: `POST /api/payments` gera QR code → exibe na página
+- Flow: endereço → frete → `POST /api/checkout` (cria pedido) → mostra payment form → pagamento → redirect `/pedido/{id}`
+- `src/lib/mercadopago.ts` — helpers `createCardPayment`, `createPixPayment`, `getPayment` (REST API direta, sem SDK Node)
+
+### Pedidos e Conta do Usuário
+- Confirmação: `src/app/pedido/[id]/page.tsx` — server component, mostra status do pagamento
+- Área do usuário: `src/app/minha-conta/` com layout + sidebar
+  - Perfil: `src/app/minha-conta/page.tsx` — edita nome, telefone, endereço (via `PATCH /api/profile`)
+  - Histórico: `src/app/minha-conta/pedidos/page.tsx` — lista pedidos
+  - Detalhe: `src/app/minha-conta/pedidos/[id]/page.tsx` — pedido completo
+- Webhook: `POST /api/webhooks/mercadopago` — recebe IPN, atualiza status do pedido via service role key
+
 ### Componentes UI
 - `src/components/automotive/` — componentes de página (header, hero, product section, promo banners, add-to-cart)
 - `src/components/cart/` — drawer, button, item, summary
 - `src/components/auth/` — login-form, register-form, auth-status, user-menu
+- `src/components/checkout/` — address-form, checkout-steps, shipping-selector, order-summary, payment-form
 - `src/components/ui/` — primitivos base (button, card) usando class-variance-authority
 - `src/components/ui-ux-pro-max/` — componentes gerados pela skill UI/UX Pro Max (accordion, slider, toast, mega-menu, newsletter-form)
 
@@ -111,7 +133,7 @@ Nota: o MASTER.md sugere Syncopate + Space Mono, mas o código usa Inter + Barlo
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://mcaxtwztzfrytxtkgdxh.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...     # apenas server-side
+SUPABASE_SERVICE_ROLE_KEY=...     # apenas server-side (webhook usa)
 
 # Melhor Envio
 MELHOR_ENVIO_CLIENT_ID
@@ -119,7 +141,34 @@ MELHOR_ENVIO_CLIENT_SECRET
 MELHOR_ENVIO_TOKEN                # access_token JWT, expira em 30 dias
 MELHOR_ENVIO_REFRESH_TOKEN
 MELHOR_ENVIO_CEP_ORIGEM=38190000
+
+# MercadoPago
+NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=...   # Public key para SDK JS (tokenização client-side)
+MERCADOPAGO_ACCESS_TOKEN=...             # Access token para API server-side
+
+# App
+NEXT_PUBLIC_APP_URL=https://mosca-ecom.vercel.app   # Base URL para webhooks e redirects
 ```
+
+## Gotchas
+
+### Vercel build & env vars
+- **NUNCA** instanciar Supabase client no top-level de API routes — o Next.js avalia esses módulos em build time e as env vars podem não existir. Usar padrão lazy: `function getSupabase() { return createClient(...) }` e chamar dentro do handler.
+- `NEXT_PUBLIC_*` vars são inlined pelo bundler em server components/pages (funcionam no top-level de `src/lib/supabase.ts`), mas **não** em API routes durante "page data collection".
+- Todas as env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `MERCADOPAGO_ACCESS_TOKEN`, `NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY`, `MELHOR_ENVIO_*`, `NEXT_PUBLIC_APP_URL`) devem estar configuradas no Vercel dashboard (Settings → Environment Variables) para Production e Preview.
+- Pages que usam `useSearchParams()` precisam de `<Suspense>` boundary para evitar prerender errors (ex: `/login`).
+- Pages protegidas por auth que são `"use client"` precisam de wrapper server component com `export const dynamic = "force-dynamic"` (ex: `/checkout`).
+
+### Dados e APIs
+- `products.ts` has `parseWeight(str)` and `parseDimensions(str)` helpers that convert human-readable strings ("0,5 kg", "30×20×15 cm") to numeric values for the shipping API — always use these when building shipping payloads
+- Supabase columns use `snake_case`, TypeScript interfaces use `camelCase` — the `rowToProduct()` mapper in `products-db.ts` handles conversion
+- MercadoPago integration uses direct REST API calls (`src/lib/mercadopago.ts`), not the official Node SDK
+- The middleware matcher excludes `/api/shipping` and `/api/webhooks` — these must remain unauthenticated for external callbacks
+
+### Carrinho
+- Cart state lives in localStorage only (no server sync for anonymous users) — the `CartProvider` in root layout hydrates on mount
+- O `CartDrawer` é renderizado dentro do `TopHeader` — qualquer página que precise do carrinho deve incluir `<TopHeader />`
+- Se o carrinho não responde a cliques em produção, verificar se há erro de hidratação (React não registra event handlers quando hidratação falha silenciosamente)
 
 ## Convenções
 
