@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { LoginForm } from "@/components/auth/login-form"
 import { TopHeader } from "@/components/automotive/top-header"
 import Link from "next/link"
@@ -17,7 +18,9 @@ export default function LoginPage() {
             Acesse sua conta para acompanhar pedidos e favoritos.
           </p>
 
-          <LoginForm />
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
 
           <p className="font-inter text-sm text-zinc-500 text-center mt-6">
             Não tem conta?{" "}
