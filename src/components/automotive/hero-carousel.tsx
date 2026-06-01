@@ -115,7 +115,7 @@ export function HeroCarousel() {
 
             <h2
               className="font-barlow font-black leading-none mb-4"
-              style={{ fontSize: "clamp(2.2rem, 6vw, 4.5rem)", color: slide.text_color }}
+              style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)", color: slide.text_color }}
             >
               {slide.title}
             </h2>
@@ -142,11 +142,19 @@ export function HeroCarousel() {
           {/* Product Image or Gear Graphic */}
           <div className="hidden sm:flex flex-shrink-0 w-48 h-52 md:w-72 md:h-72 relative items-center justify-center">
             {slide.product_image_url ? (
-              <img
-                src={slide.product_image_url}
-                alt=""
-                className="max-w-full max-h-full object-contain drop-shadow-2xl"
-              />
+              <div className="relative w-full h-full flex items-center justify-center">
+                <img
+                  src={slide.product_image_url}
+                  alt=""
+                  className="max-w-full max-h-full object-contain drop-shadow-2xl rounded-xl"
+                  style={{ mixBlendMode: 'multiply' }}
+                />
+                {/* Glow effect behind product */}
+                <div
+                  className="absolute inset-0 rounded-full blur-3xl opacity-20 -z-10 scale-75"
+                  style={{ backgroundColor: slide.accent_color }}
+                />
+              </div>
             ) : (
               <div className="w-full h-full opacity-60">
                 <GearGraphic color={slide.accent_color} />

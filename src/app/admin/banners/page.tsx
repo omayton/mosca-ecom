@@ -347,7 +347,8 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
             <img
               src={form.productImageUrl}
               alt=""
-              className="h-[160px] w-auto object-contain drop-shadow-2xl"
+              className="h-[160px] w-auto object-contain drop-shadow-2xl rounded-lg"
+              style={{ mixBlendMode: 'multiply' }}
             />
           )}
           <div className="absolute top-3 right-3 px-2 py-1 bg-black/40 rounded text-[10px] text-white/60">
