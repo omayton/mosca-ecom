@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Search, Edit2, Trash2, Image as ImageIcon, Package } from 'lucide-react'
 import Link from 'next/link'
+import { ImageUpload } from '@/components/admin/image-upload'
 
 interface Product {
   id: number
@@ -181,7 +182,10 @@ export default function AdminProductsPage() {
                         <div className="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center overflow-hidden">
                           {product.image_file && product.image_file !== 'placeholder' ? (
                             <img
-                              src={`https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/${product.image_file}`}
+                              src={product.image_file.startsWith('http')
+                                ? product.image_file
+                                : `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/${product.image_file}`
+                              }
                               alt={product.name}
                               className="w-full h-full object-cover"
                             />
@@ -460,14 +464,14 @@ function ProductFormModal({ product, onClose, onSave }: {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">Imagem (nome do arquivo)</label>
-              <input
-                type="text"
-                value={form.imageFile}
-                onChange={(e) => setForm({ ...form, imageFile: e.target.value })}
-                placeholder="nome-do-arquivo.jpg"
-                className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-red-300"
+            <div className="md:col-span-2">
+              <ImageUpload
+                currentImage={form.imageFile && form.imageFile !== 'placeholder'
+                  ? (form.imageFile.startsWith('http') ? form.imageFile : `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/${form.imageFile}`)
+                  : undefined
+                }
+                productId={product?.id}
+                onUpload={(url) => setForm({ ...form, imageFile: url })}
               />
             </div>
 
