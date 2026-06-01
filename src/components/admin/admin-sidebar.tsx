@@ -12,12 +12,14 @@ import {
   Brain,
   ChevronLeft,
   Menu,
-  ExternalLink
+  ExternalLink,
+  Image
 } from 'lucide-react'
 import { useState } from 'react'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/banners', label: 'Banners', icon: Image },
   { href: '/admin/produtos', label: 'Produtos', icon: Package },
   { href: '/admin/estoque', label: 'Estoque', icon: Boxes },
   { href: '/admin/cupons', label: 'Cupons', icon: Tag },
