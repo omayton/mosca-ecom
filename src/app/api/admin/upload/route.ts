@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/require-admin'
 
 function getSupabase() {
   return createClient(
@@ -9,6 +10,9 @@ function getSupabase() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (auth.error) return auth.error
+
   try {
     const formData = await req.formData()
     const file = formData.get('file') as File | null
@@ -91,6 +95,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (auth.error) return auth.error
+
   try {
     const { searchParams } = new URL(req.url)
     const path = searchParams.get('path')

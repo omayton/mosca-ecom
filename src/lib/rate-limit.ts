@@ -10,14 +10,18 @@ interface RateLimitEntry {
 }
 
 const store = new Map<string, RateLimitEntry>()
+let lastCleanup = Date.now()
 
-// Cleanup old entries every 5 minutes
-setInterval(() => {
+/** Lazy cleanup: evict expired entries when store grows large */
+function cleanupIfNeeded() {
   const now = Date.now()
+  // Cleanup at most every 60s and only if store has >100 entries
+  if (store.size < 100 || now - lastCleanup < 60_000) return
+  lastCleanup = now
   store.forEach((entry, key) => {
     if (now > entry.resetAt) store.delete(key)
   })
-}, 5 * 60 * 1000)
+}
 
 interface RateLimitConfig {
   /** Max requests allowed in the window */
@@ -33,6 +37,7 @@ interface RateLimitResult {
 }
 
 export function rateLimit(identifier: string, config: RateLimitConfig): RateLimitResult {
+  cleanupIfNeeded()
   const now = Date.now()
   const windowMs = config.windowSeconds * 1000
   const key = identifier

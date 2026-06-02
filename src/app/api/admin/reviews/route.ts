@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/require-admin'
 
 function getSupabase() {
   return createClient(
@@ -10,6 +11,9 @@ function getSupabase() {
 
 // GET: list all reviews (pending and approved)
 export async function GET(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (auth.error) return auth.error
+
   try {
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status') // 'pending', 'approved', or null (all)
@@ -39,6 +43,9 @@ export async function GET(req: NextRequest) {
 
 // PATCH: approve or reject a review
 export async function PATCH(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (auth.error) return auth.error
+
   try {
     const body = await req.json()
     const { id, isApproved } = body
@@ -93,6 +100,9 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE: remove a review
 export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (auth.error) return auth.error
+
   try {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')

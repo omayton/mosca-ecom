@@ -7,6 +7,7 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.tr
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
+  const pathname = req.nextUrl.pathname
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -14,12 +15,17 @@ export async function middleware(req: NextRequest) {
   const accessToken = req.cookies.get("sb-access-token")?.value
   const refreshToken = req.cookies.get("sb-refresh-token")?.value
 
-  let hasValidSession = !!accessToken
-
+  // No tokens at all — skip auth logic for non-protected paths
   if (!accessToken && !refreshToken) {
-    if (isProtected(req.nextUrl.pathname)) {
+    if (isProtected(pathname)) {
       return redirectToLogin(req)
     }
+    return res
+  }
+
+  // For non-protected paths, only attempt a token refresh if access token is missing
+  // (avoid expensive getUser() call on every single page load)
+  if (!isProtected(pathname) && accessToken) {
     return res
   }
 
@@ -28,13 +34,21 @@ export async function middleware(req: NextRequest) {
     auth: { persistSession: false },
   })
 
-  const { data: { user } } = await supabase.auth.getUser(accessToken)
+  let hasValidSession = !!accessToken
+  let user = null
+
+  if (accessToken) {
+    const { data: { user: fetchedUser } } = await supabase.auth.getUser(accessToken)
+    user = fetchedUser
+    hasValidSession = !!user
+  }
 
   if (!user && refreshToken) {
     const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken })
 
     if (!error && data.session) {
       hasValidSession = true
+      user = data.user
       res.cookies.set("sb-access-token", data.session.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -52,17 +66,14 @@ export async function middleware(req: NextRequest) {
     } else {
       hasValidSession = false
     }
-  } else if (user) {
-    hasValidSession = true
   }
 
-  if (isProtected(req.nextUrl.pathname) && !hasValidSession) {
+  if (isProtected(pathname) && !hasValidSession) {
     return redirectToLogin(req)
   }
 
-  if (req.nextUrl.pathname.startsWith("/admin") && hasValidSession && ADMIN_EMAILS.length > 0) {
-    const currentUser = user || (await supabase.auth.getUser(accessToken)).data.user
-    const email = currentUser?.email?.toLowerCase() || ""
+  if (pathname.startsWith("/admin") && hasValidSession && ADMIN_EMAILS.length > 0) {
+    const email = user?.email?.toLowerCase() || ""
     if (!ADMIN_EMAILS.includes(email)) {
       return NextResponse.redirect(new URL("/", req.url))
     }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/require-admin'
 
 function getSupabaseClient() {
   return createClient(
@@ -9,6 +10,9 @@ function getSupabaseClient() {
 }
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (auth.error) return auth.error
+
   try {
     const { searchParams } = new URL(req.url)
     const productId = searchParams.get('id')
@@ -52,6 +56,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (auth.error) return auth.error
+
   try {
     const { productId, stockQuantity, stockThreshold, status } = await req.json()
 

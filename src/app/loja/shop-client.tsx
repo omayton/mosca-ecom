@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useState, Suspense } from "react"
 import { Search, X } from "lucide-react"
 
@@ -17,7 +17,6 @@ interface ShopClientProps {
 
 function ShopFilters({ categories, activeCategoria, activeBusca }: ShopClientProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [busca, setBusca] = useState(activeBusca)
 
   function navigate(categoria: string, search?: string) {

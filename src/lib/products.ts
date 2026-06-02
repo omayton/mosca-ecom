@@ -22,6 +22,7 @@ export const PLACEHOLDER = WP_IMG + "woocommerce-placeholder-400x400.png"
 
 export function imgUrl(file: string): string {
   if (!file || file === "placeholder") return PLACEHOLDER
+  if (file.startsWith("http")) return file
   return WP_IMG + file
 }
 

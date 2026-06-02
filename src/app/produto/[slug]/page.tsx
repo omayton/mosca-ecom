@@ -130,7 +130,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             <div className="flex flex-col">
               {/* Category */}
               <a
-                href={`/categoria/${product.categorySlug}`}
+                href={`/loja?categoria=${product.categorySlug}`}
                 className="inline-block font-inter text-xs font-semibold text-red-600 uppercase tracking-widest mb-3 hover:text-red-700 transition-colors"
               >
                 {product.category}
@@ -296,7 +296,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       {/* Footer mini */}
       <footer className="bg-zinc-950 border-t border-zinc-800/50 mt-10 py-8" role="contentinfo">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-inter text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
+          <p className="font-inter text-xs text-zinc-600">© 2025–2026 Mosca Branca Parts. Todos os direitos reservados.</p>
           <a
             href="https://wa.me/5534999365936"
             target="_blank"

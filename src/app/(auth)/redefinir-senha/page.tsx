@@ -12,14 +12,26 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const [sessionReady, setSessionReady] = useState(false)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     // Supabase automatically picks up the token from the URL hash
-    supabaseBrowser.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabaseBrowser.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setSessionReady(true)
+        setChecking(false)
       }
     })
+
+    // Give Supabase time to process the URL hash token
+    const timeout = setTimeout(() => {
+      setChecking(false)
+    }, 3000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -73,6 +85,21 @@ export default function ResetPasswordPage() {
             >
               Ir para o login
             </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!sessionReady && checking) {
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white border border-zinc-100 rounded-xl shadow-sm p-8 text-center">
+            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <Lock className="h-8 w-8 text-zinc-400" />
+            </div>
+            <p className="font-inter text-zinc-500 text-sm">Verificando link de recuperação...</p>
           </div>
         </div>
       </div>
