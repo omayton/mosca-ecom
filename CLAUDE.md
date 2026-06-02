@@ -73,7 +73,7 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - **Admin NÃO tem auth guard** — TODO: implementar proteção
 
 ### Carrinho
-- `CartProvider` (`src/contexts/cart-context.tsx`) wraps o app no root layout
+- `CartProvider` (`src/contexts/cart-context.tsx`) wraps o app no root layout (é o único provider no layout — não há header/footer compartilhado, cada page inclui `<TopHeader />` individualmente)
 - Persistência via localStorage (key: `mosca-cart`), apenas para anônimos
 - Drawer lateral abre automaticamente ao adicionar item (`setIsOpen(true)`)
 - Badge com contador no header (desktop e mobile)
@@ -266,6 +266,7 @@ NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br
 - [ ] Admin não tem autenticação (qualquer pessoa acessa `/admin`)
 - [ ] Busca do header não tem funcionalidade real (só captura texto)
 - [ ] Imagens de produtos apontam para URL WordPress que pode não existir
+- [ ] `next.config.js` remotePatterns falta hostname do Supabase Storage (`mcaxtwztzfrytxtkgdxh.supabase.co`)
 - [ ] Faturamento no admin mostra dados zerados se tabelas não existem no Supabase
 
 ## Gotchas
@@ -278,7 +279,7 @@ NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br
 - Pages protegidas por auth que são `"use client"` precisam de wrapper server component com `export const dynamic = "force-dynamic"`.
 
 ### Dados e APIs
-- `products.ts` has `parseWeight(str)` and `parseDimensions(str)` helpers that convert human-readable strings ("0,5 kg", "30×20×15 cm") to numeric values for the shipping API
+- `products.ts` has `parseWeight(str)` and `parseDimensions(str)` helpers that convert human-readable strings ("0,5 kg", "30×20×15 cm") to numeric values for the shipping API. Defaults when missing: weight=0.3kg, dimensions=16×10×10cm
 - Supabase columns use `snake_case`, TypeScript interfaces use `camelCase` — the `rowToProduct()` mapper in `products-db.ts` handles conversion
 - MercadoPago integration uses direct REST API calls (`src/lib/mercadopago.ts`), not the official Node SDK
 - The middleware matcher excludes `/api/shipping` and `/api/webhooks` — these must remain unauthenticated for external callbacks
@@ -299,6 +300,7 @@ NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br
   - Nome de arquivo legado (WordPress): prefixado com `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/`
 - Lógica: se `image_file.startsWith('http')` → usar direto, senão → prefixar com URL WordPress
 - Upload novo vai para Supabase Storage (bucket `product-images`)
+- **BUG:** `next.config.js` remotePatterns não inclui `mcaxtwztzfrytxtkgdxh.supabase.co` — imagens do Storage não funcionam com `next/image` otimizado (precisam de `unoptimized` ou adicionar o hostname)
 
 ### Proxy/Network (Desenvolvimento)
 - Ambiente local tem proxy HTTP em localhost:59454 que bloqueia `git push`
