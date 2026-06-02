@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { TopHeader } from "@/components/automotive/top-header"
+import { Footer } from "@/components/footer"
 import { AddToCart } from "@/components/automotive/add-to-cart"
 import { imgUrl, pixPrice, installmentPrice, fmt, parseWeight, parseDimensions } from "@/lib/products"
 import { getProductBySlug, getRelatedProducts, getAllSlugs } from "@/lib/products-db"
@@ -310,21 +311,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         )}
       </main>
 
-      {/* Footer mini */}
-      <footer className="bg-zinc-950 border-t border-zinc-800/50 mt-10 py-8" role="contentinfo">
-        <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-inter text-xs text-zinc-600">© 2025–2026 Mosca Branca Parts. Todos os direitos reservados.</p>
-          <a
-            href="https://wa.me/5534999365936"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-green-500 hover:text-green-400 font-inter text-sm transition-colors"
-          >
-            <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            (34) 99936-5936 — WhatsApp
-          </a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { TopHeader } from "@/components/automotive/top-header"
 import { Footer } from "@/components/footer"
 import { supabase } from "@/lib/supabase"
-import { type Product, imgUrl, pixPrice, fmt } from "@/lib/products"
+import { type Product, imgUrl, pixPrice, installmentPrice, fmt } from "@/lib/products"
 import { ShopClient } from "./shop-client"
 import { MessageCircle } from "lucide-react"
 import { Metadata } from "next"
@@ -155,6 +155,7 @@ export default async function LojaPage({ searchParams }: PageProps) {
                       </div>
                     </div>
                     <div className="p-3 flex flex-col flex-1">
+                      <p className="font-inter text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5">{p.category}</p>
                       <h3 className="font-inter text-xs text-zinc-800 font-medium line-clamp-2 mb-2 leading-tight">
                         {p.name}
                       </h3>
@@ -164,11 +165,14 @@ export default async function LojaPage({ searchParams }: PageProps) {
                             R$ {fmt(p.oldPrice)}
                           </p>
                         )}
-                        <p className="font-barlow font-bold text-zinc-900 text-lg leading-tight">
-                          R$ {fmt(p.price)}
+                        <p className="font-barlow font-black text-zinc-900 text-lg leading-tight">
+                          R$ {fmt(pixPrice(p.price))}
                         </p>
-                        <p className="text-green-600 text-[11px] font-inter font-medium mt-0.5">
-                          R$ {fmt(pixPrice(p.price))} no PIX
+                        <p className="text-green-700 text-[10px] font-inter font-semibold bg-green-50 inline-block px-1.5 py-0.5 rounded mt-0.5">
+                          5% OFF no PIX
+                        </p>
+                        <p className="text-zinc-500 text-[10px] font-inter mt-1">
+                          ou 3x de R$ {fmt(installmentPrice(p.price, 3))}
                         </p>
                       </div>
                     </div>
