@@ -24,6 +24,23 @@ npm run start    # Serve o build de produção localmente
 
 ## Arquitetura
 
+### Páginas Institucionais
+- `src/app/(institucional)/sobre/page.tsx` — Sobre a Mosca Branca (diferenciais, CTA WhatsApp)
+- `src/app/(institucional)/politica-de-privacidade/page.tsx` — placeholder (precisa conteúdo real)
+- `src/app/(institucional)/termos-de-uso/page.tsx` — placeholder (precisa conteúdo real)
+
+### Header (`src/components/automotive/top-header.tsx`)
+- Top bar com links funcionais: Sobre, Atendimento (WhatsApp), Rastrear Pedido, Meus Pedidos
+- Barra principal: logo, busca (redireciona p/ `/loja?busca=`), CEP modal, auth status, carrinho
+- Nav categorias: botão "Departamentos" com dropdown de todas as categorias + links rápidos p/ 6 primeiras + botão "Ofertas"
+- Dropdown de departamentos é toggle (estado `deptOpen`)
+- `categories` vem de DEFAULT_CATEGORIES ou fetch do Supabase
+
+### Footer
+- Footer global: `src/components/footer.tsx` — usado em `/loja`, `/produto/[slug]`, `/minha-conta`, `/sobre`
+- Home tem footer próprio mais rico com logo, social links, categorias
+- Todos os links no footer apontam para páginas reais (sem `href="#"`)
+
 ### Rendering strategy
 - Home (`src/app/page.tsx`) — async server component, busca produtos do Supabase com `revalidate = 60`
 - Product pages (`src/app/produto/[slug]/page.tsx`) — ISR via `generateStaticParams()` + `revalidate = 60`
@@ -61,16 +78,19 @@ O catálogo tem duas fontes de dados que coexistem:
 
 As pages usam `products-db.ts` para dados. Os helpers de formatação e a interface `Product` vivem em `products.ts`. O array estático `PRODUCTS` é legado/fallback — novos produtos vão apenas no Supabase.
 
+**`imgUrl(file)`:** Se `file.startsWith('http')` retorna direto (Supabase Storage), senão prefixa com URL WordPress. Se vazio/placeholder retorna imagem placeholder.
+
 ### Autenticação
 - Login/registro via email+senha (Supabase Auth)
 - Sessão gerenciada via cookies httpOnly (`sb-access-token`, `sb-refresh-token`)
-- Middleware (`src/middleware.ts`) faz refresh automático de sessão; exclui `/api/shipping` e `/api/webhooks` do matcher
+- Middleware (`src/middleware.ts`) faz refresh automático de sessão; skip getUser() em paths não-protegidos para performance
 - Auth guard: paths `/checkout` e `/minha-conta` redirecionam para `/login?redirect={path}` se não autenticado
 - Login form lê `?redirect=` e redireciona após sucesso
 - API routes: `/api/auth/login`, `/api/auth/register`, `/api/auth/logout`, `/api/auth/me`
-- Componente `AuthStatus` no header mostra estado de login
-- Pages de auth: `src/app/(auth)/login/`, `src/app/(auth)/registro/` (route group sem layout extra)
-- **Admin NÃO tem auth guard** — TODO: implementar proteção
+- Componente `AuthStatus` no header mostra estado de login com dropdown (Minha conta, Meus pedidos, Sair)
+- Pages de auth: `src/app/(auth)/login/`, `src/app/(auth)/registro/`, `src/app/(auth)/redefinir-senha/`
+- **Admin protegido:** `requireAdmin()` helper (`src/lib/require-admin.ts`) verifica cookie + ADMIN_EMAILS em TODAS as API routes admin
+- Middleware também bloqueia `/admin` UI para não-admins via ADMIN_EMAILS env var
 
 ### Carrinho
 - `CartProvider` (`src/contexts/cart-context.tsx`) wraps o app no root layout (é o único provider no layout — não há header/footer compartilhado, cada page inclui `<TopHeader />` individualmente)
@@ -133,14 +153,15 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 
 ### Painel Admin (`/admin`)
 - **Layout:** Dark theme (#0a0a0b) com sidebar fixa e accent âmbar
-- **Dashboard:** `/admin` — métricas, gráfico receita, ações rápidas, status bar
+- **Dashboard:** `/admin` — métricas REAIS (receita semanal, trend vs semana anterior, gráfico diário, últimos pedidos, estoque baixo). Nenhum dado fake/hardcoded.
 - **Banners:** `/admin/banners` — CRUD com preview ao vivo + geração IA
 - **Produtos:** `/admin/produtos` — CRUD, busca, filtros, upload de imagem
 - **Estoque:** `/admin/estoque` — controle visual, botões rápidos, filtros por status
 - **Cupons:** `/admin/cupons` — criar/editar, ativar/desativar, cards com stats
 - **Pedidos:** `/admin/pedidos` — listar, filtrar, atualizar status
 - **Clientes:** `/admin/clientes` — lista, busca, endereço, contagem pedidos
-- **Analytics IA:** `/admin/analytics` — custos, tokens, cache hits
+- **Analytics IA:** `/admin/analytics` — custos, tokens, cache hits (tabela: `ai_usage_analytics`)
+- **Segurança:** Todas as APIs admin usam `requireAdmin()` — verifica cookie de sessão + email na lista ADMIN_EMAILS
 
 ### Upload de Imagens
 - Supabase Storage bucket: `product-images`
@@ -154,18 +175,21 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - Confirmação: `src/app/pedido/[id]/page.tsx` — server component, mostra status do pagamento
 - Área do usuário: `src/app/minha-conta/` com layout + sidebar
   - Perfil: `src/app/minha-conta/page.tsx` — edita nome, telefone, endereço (via `PATCH /api/profile`)
-  - Histórico: `src/app/minha-conta/pedidos/page.tsx` — lista pedidos
+  - Pedidos: `src/app/minha-conta/pedidos/page.tsx` — lista pedidos
   - Detalhe: `src/app/minha-conta/pedidos/[id]/page.tsx` — pedido completo
+  - Alterar Senha: `src/app/minha-conta/senha/page.tsx` — troca senha via Supabase Auth
 - Webhook: `POST /api/webhooks/mercadopago` — recebe IPN, atualiza status do pedido via service role key
 
 ### Componentes UI
 - `src/components/automotive/` — componentes de página (header, hero-carousel, product section, promo banners, add-to-cart)
 - `src/components/cart/` — drawer, button, item, summary
-- `src/components/auth/` — login-form, register-form, auth-status, user-menu
+- `src/components/auth/` — login-form, register-form, auth-status (dropdown com Minha conta, Pedidos, Sair)
 - `src/components/checkout/` — address-form, checkout-steps, shipping-selector, order-summary, payment-form
 - `src/components/vehicle/` — autocomplete, results, search-button, search-dropdown
 - `src/components/admin/` — admin-sidebar, image-upload
 - `src/components/analytics/` — ai-dashboard
+- `src/components/cep/` — cep-modal (modal de CEP no header)
+- `src/components/footer.tsx` — footer global reutilizável (institucional, conta, contato, WhatsApp)
 - `src/components/ui/` — primitivos base (button, card) usando class-variance-authority
 - `src/components/ui-ux-pro-max/` — componentes gerados pela skill UI/UX Pro Max
 
@@ -233,6 +257,7 @@ ANTHROPIC_API_KEY=...             # API key Anthropic
 
 # App
 NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br
+ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no admin (comma-separated)
 ```
 
 ## API Routes
@@ -260,14 +285,19 @@ NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br
 
 ## Bugs Conhecidos / TODO
 
-- [ ] `/loja` não existe como rota (precisa criar ou redirecionar)
-- [ ] Menu de categorias não é clicável (links com `href="#"`)
-- [ ] "Informe CEP" no header não funciona (precisa modal/popup)
-- [ ] Admin não tem autenticação (qualquer pessoa acessa `/admin`)
-- [ ] Busca do header não tem funcionalidade real (só captura texto)
-- [ ] Imagens de produtos apontam para URL WordPress que pode não existir
-- [ ] `next.config.js` remotePatterns falta hostname do Supabase Storage (`mcaxtwztzfrytxtkgdxh.supabase.co`)
-- [ ] Faturamento no admin mostra dados zerados se tabelas não existem no Supabase
+- [x] ~~`/loja` não existe como rota~~ — criada e funcional
+- [x] ~~Menu de categorias não é clicável~~ — dropdown de departamentos funcional
+- [x] ~~"Informe CEP" no header não funciona~~ — CepModal funcional
+- [x] ~~Admin não tem autenticação~~ — `requireAdmin()` em todas as APIs
+- [x] ~~Busca do header não tem funcionalidade real~~ — redireciona para `/loja?busca=`
+- [x] ~~Imagens de produtos apontam para URL WordPress~~ — `imgUrl()` trata URLs completas
+- [x] ~~Faturamento no admin mostra dados zerados~~ — API retorna dados reais com trends
+- [ ] `next.config.js` remotePatterns falta hostname do Supabase Storage para `next/image` otimizado
+- [ ] Redes sociais no footer da home apontam para `#` (faltam URLs reais)
+- [ ] Página `/politica-de-privacidade` e `/termos-de-uso` precisam de conteúdo real
+- [ ] Melhor Envio token expira em 30 dias — automatizar renovação
+- [ ] Reviews de produto: formulário público de avaliação não existe ainda (só admin modera)
+- [ ] Busca por veículo: ainda não integrada ao header (componente existe mas não aparece)
 
 ## Gotchas
 
@@ -298,14 +328,26 @@ NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br
 - Imagens podem vir de 2 fontes:
   - URL completa (Supabase Storage): `https://mcaxtwztzfrytxtkgdxh.supabase.co/storage/v1/...`
   - Nome de arquivo legado (WordPress): prefixado com `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/`
-- Lógica: se `image_file.startsWith('http')` → usar direto, senão → prefixar com URL WordPress
+- Lógica em `imgUrl()`: se `file.startsWith('http')` → usar direto, senão → prefixar com URL WordPress
 - Upload novo vai para Supabase Storage (bucket `product-images`)
-- **BUG:** `next.config.js` remotePatterns não inclui `mcaxtwztzfrytxtkgdxh.supabase.co` — imagens do Storage não funcionam com `next/image` otimizado (precisam de `unoptimized` ou adicionar o hostname)
+- `next.config.js` remotePatterns inclui `moscabrancaparts.com.br` — **falta** `mcaxtwztzfrytxtkgdxh.supabase.co` para `next/image` otimizado
+
+### Rate Limiting
+- `src/lib/rate-limit.ts` — rate limiter in-memory com lazy cleanup (sem setInterval/timer leak)
+- Cleanup ativa apenas quando store > 100 entries e a cada 60s
+- Usado em APIs sensíveis (login, registro)
+
+### SEO
+- Root layout: metadata completo com `title.template`, Open Graph, Twitter Cards, robots
+- Produto: metadata dinâmico com OG image, preço na description
+- Home: Schema.org Organization + WebSite com SearchAction
+- Sitemap: `src/app/sitemap.ts` — gera URLs de páginas estáticas + todos os produtos dinâmicos
+- `robots.ts`: permite indexação completa
 
 ### Proxy/Network (Desenvolvimento)
-- Ambiente local tem proxy HTTP em localhost:59454 que bloqueia `git push`
-- Solução: fazer push manualmente no terminal ou usar `vercel --prod` para deploy direto
-- Node.js v26.0.0 (instável) pode causar erros de permissão — recomendado usar Node 20 LTS
+- Claude Code configura proxy HTTP (localhost:53280) que bloqueia `git push` e `vercel --prod`
+- Solução: abrir terminal separado, rodar `unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy` e então `git push origin main`
+- Deploy é automático na Vercel ao push para main
 
 ## Convenções
 
