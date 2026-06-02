@@ -91,24 +91,42 @@ export default async function Home() {
             {[
               {
                 title: "Categorias",
-                links: ["Saídas de Ar", "Acessórios", "Tampas e Acabamentos", "Banco e Assento", "Travas e Fechaduras", "Interruptores e Botões", "Componentes de Motor"],
+                links: [
+                  { label: "Saídas de Ar", href: "/loja?categoria=saidas-de-ar" },
+                  { label: "Acessórios", href: "/loja?categoria=acessorios" },
+                  { label: "Tampas e Acabamentos", href: "/loja?categoria=tampas-e-acabamentos" },
+                  { label: "Banco e Assento", href: "/loja?categoria=banco-e-assento" },
+                  { label: "Travas e Fechaduras", href: "/loja?categoria=fechaduras" },
+                  { label: "Interruptores e Botões", href: "/loja?categoria=interruptores-e-botoes" },
+                  { label: "Ver todas", href: "/loja" },
+                ],
               },
               {
-                title: "Atendimento",
-                links: ["Central de Ajuda", "Rastrear Pedido", "Trocas e Devoluções", "Suporte Técnico"],
+                title: "Institucional",
+                links: [
+                  { label: "Sobre a Mosca Branca", href: "/sobre" },
+                  { label: "Política de Privacidade", href: "/politica-de-privacidade" },
+                  { label: "Termos de Uso", href: "/termos-de-uso" },
+                  { label: "Meus Pedidos", href: "/minha-conta/pedidos" },
+                ],
               },
               {
                 title: "Contato",
-                links: ["(34) 99936-5936", "WhatsApp disponível", "Envio nacional", "Segunda a Sábado"],
+                links: [
+                  { label: "(34) 99936-5936", href: "tel:3499936-5936" },
+                  { label: "WhatsApp", href: "https://wa.me/5534999365936" },
+                  { label: "Envio nacional", href: "/loja" },
+                  { label: "Segunda a Sábado", href: "#" },
+                ],
               },
             ].map(({ title, links }) => (
               <nav key={title} aria-label={title}>
                 <h3 className="font-inter font-bold text-zinc-300 text-xs tracking-widest uppercase mb-4">{title}</h3>
                 <ul className="space-y-2">
                   {links.map((link) => (
-                    <li key={link}>
-                      <a href="#" className="font-inter text-sm text-zinc-500 hover:text-zinc-200 transition-colors duration-150 min-h-[44px] flex items-center">
-                        {link}
+                    <li key={link.label}>
+                      <a href={link.href} className="font-inter text-sm text-zinc-500 hover:text-zinc-200 transition-colors duration-150 min-h-[44px] flex items-center">
+                        {link.label}
                       </a>
                     </li>
                   ))}
@@ -135,7 +153,7 @@ export default async function Home() {
           </div>
 
           <div className="border-t border-zinc-800/50 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <p className="font-inter text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
+            <p className="font-inter text-xs text-zinc-600">© 2025–2026 Mosca Branca Parts. Todos os direitos reservados.</p>
             <p className="font-inter text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 6x sem juros</p>
           </div>
         </div>

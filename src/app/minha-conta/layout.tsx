@@ -1,13 +1,14 @@
 import Link from "next/link"
-import { User, Package, ArrowLeft } from "lucide-react"
+import { User, Package, Lock, ArrowLeft } from "lucide-react"
 import { TopHeader } from "@/components/automotive/top-header"
+import { Footer } from "@/components/footer"
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
       <TopHeader />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         <Link
           href="/"
           className="flex items-center gap-1 font-inter text-sm text-zinc-500 hover:text-zinc-700 mb-6 cursor-pointer"
@@ -39,6 +40,15 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                   Meus Pedidos
                 </Link>
               </li>
+              <li className="border-t border-zinc-100">
+                <Link
+                  href="/minha-conta/senha"
+                  className="flex items-center gap-3 px-4 py-3.5 font-inter text-sm text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+                >
+                  <Lock className="h-4 w-4 text-zinc-400" />
+                  Alterar Senha
+                </Link>
+              </li>
             </ul>
           </nav>
 
@@ -46,12 +56,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         </div>
       </div>
 
-      <footer className="bg-zinc-950 border-t border-zinc-800/50 mt-10 py-8" role="contentinfo">
-        <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-inter text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
-          <p className="font-inter text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 6x sem juros</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
