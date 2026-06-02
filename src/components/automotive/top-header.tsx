@@ -12,7 +12,12 @@ import { VehicleSearchDropdown } from "@/components/vehicle/vehicle-search-dropd
 import { CepModal } from "@/components/cep/cep-modal"
 import type { Vehicle } from "@/lib/vehicle-types"
 
-const TOP_LINKS = ["Conheça a Mosca Branca", "Atendimento", "Rastrear Pedido", "Meus Pedidos"]
+const TOP_LINKS = [
+  { label: "Sobre a Mosca Branca", href: "/sobre" },
+  { label: "Atendimento", href: "https://wa.me/5534999365936" },
+  { label: "Rastrear Pedido", href: "/minha-conta/pedidos" },
+  { label: "Meus Pedidos", href: "/minha-conta/pedidos" },
+]
 
 const DEFAULT_CATEGORIES = [
   { label: "Saídas de Ar", slug: "saidas-de-ar" },
@@ -33,6 +38,7 @@ export function TopHeader() {
   const [cepModalOpen, setCepModalOpen] = useState(false)
   const [savedCep, setSavedCep] = useState<{ cep: string; cidade: string; uf: string } | null>(null)
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
+  const [deptOpen, setDeptOpen] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem("mosca-cep")
@@ -65,8 +71,13 @@ export function TopHeader() {
         <div className="hidden lg:block bg-zinc-950/60 border-b border-zinc-800/50">
           <div className="container mx-auto px-4 flex items-center justify-end gap-6 h-8">
             {TOP_LINKS.map((link) => (
-              <a key={link} href="#" className="text-zinc-400 text-xs hover:text-zinc-100 transition-colors duration-150">
-                {link}
+              <a
+                key={link.label}
+                href={link.href}
+                {...(link.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                className="text-zinc-400 text-xs hover:text-zinc-100 transition-colors duration-150"
+              >
+                {link.label}
               </a>
             ))}
             <a href="tel:3499936-5936" className="text-zinc-400 text-xs hover:text-zinc-100 transition-colors flex items-center gap-1">
@@ -176,27 +187,61 @@ export function TopHeader() {
         {/* Category nav */}
         <nav aria-label="Categorias" className="bg-zinc-900/80 border-t border-zinc-800/50 backdrop-blur-sm">
           <div className="container mx-auto px-4">
-            <div className="flex items-center h-11 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-              <button
-                aria-label="Ver todos os departamentos"
-                className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium px-4 h-full flex-shrink-0 transition-colors duration-150 border-r border-zinc-700"
-              >
-                <Menu className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Compre por departamento</span>
-                <span className="sm:hidden">Departamentos</span>
-              </button>
-              {categories.map((cat) => (
-                <a
-                  key={cat.slug}
-                  href={`/loja?categoria=${cat.slug}`}
-                  className="text-zinc-400 hover:text-white text-sm px-5 h-full flex items-center flex-shrink-0 hover:bg-zinc-800 transition-colors duration-150 whitespace-nowrap"
+            <div className="flex items-center h-11">
+              {/* Departments dropdown */}
+              <div className="relative flex-shrink-0">
+                <button
+                  onClick={() => setDeptOpen(!deptOpen)}
+                  aria-label="Ver todos os departamentos"
+                  aria-expanded={deptOpen}
+                  className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium px-4 h-11 transition-colors duration-150 border-r border-zinc-700 cursor-pointer"
                 >
-                  {cat.label}
-                </a>
-              ))}
+                  <Menu className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">Departamentos</span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${deptOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                </button>
+                {deptOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setDeptOpen(false)} aria-hidden="true" />
+                    <div className="absolute top-full left-0 z-40 w-56 bg-zinc-900 border border-zinc-700 shadow-xl rounded-b-lg overflow-hidden">
+                      {categories.map((cat) => (
+                        <a
+                          key={cat.slug}
+                          href={`/loja?categoria=${cat.slug}`}
+                          onClick={() => setDeptOpen(false)}
+                          className="block px-4 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+                        >
+                          {cat.label}
+                        </a>
+                      ))}
+                      <a
+                        href="/loja"
+                        onClick={() => setDeptOpen(false)}
+                        className="block px-4 py-2.5 text-sm font-semibold text-red-400 hover:bg-zinc-800 border-t border-zinc-700/50 transition-colors"
+                      >
+                        Ver todos
+                      </a>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Scrollable category links */}
+              <div className="flex-1 overflow-x-auto flex items-center h-11" style={{ scrollbarWidth: "none" }}>
+                {categories.slice(0, 6).map((cat) => (
+                  <a
+                    key={cat.slug}
+                    href={`/loja?categoria=${cat.slug}`}
+                    className="text-zinc-400 hover:text-white text-sm px-4 h-full flex items-center flex-shrink-0 hover:bg-zinc-800 transition-colors duration-150 whitespace-nowrap"
+                  >
+                    {cat.label}
+                  </a>
+                ))}
+              </div>
+
               <a
                 href="/loja"
-                className="ml-auto bg-red-600/90 hover:bg-red-600 text-white text-sm font-semibold px-6 h-full flex items-center flex-shrink-0 transition-colors duration-200 whitespace-nowrap"
+                className="ml-auto bg-red-600/90 hover:bg-red-600 text-white text-sm font-semibold px-5 h-11 flex items-center flex-shrink-0 transition-colors duration-200 whitespace-nowrap"
               >
                 Ofertas
               </a>

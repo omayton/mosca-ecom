@@ -48,11 +48,11 @@ export function CepModal({ open, onClose, onSave }: CepModalProps) {
         return
       }
       const data = await res.json()
-      if (data.erro) {
+      if (data.error) {
         setError("CEP não encontrado")
         return
       }
-      setResult({ cep: digits, cidade: data.localidade, uf: data.uf })
+      setResult({ cep: digits, cidade: data.cidade, uf: data.estado })
     } catch {
       setError("Erro ao consultar CEP")
     } finally {

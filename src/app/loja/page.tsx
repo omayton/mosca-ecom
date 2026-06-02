@@ -1,4 +1,5 @@
 import { TopHeader } from "@/components/automotive/top-header"
+import { Footer } from "@/components/footer"
 import { supabase } from "@/lib/supabase"
 import { type Product, imgUrl, pixPrice, fmt } from "@/lib/products"
 import { ShopClient } from "./shop-client"
@@ -214,7 +215,7 @@ export default async function LojaPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* Footer WhatsApp */}
+      {/* WhatsApp CTA */}
       <div className="container mx-auto px-4 py-8">
         <div className="p-5 bg-zinc-900 border border-zinc-800/50 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl">
           <div>
@@ -232,6 +233,8 @@ export default async function LojaPage({ searchParams }: PageProps) {
           </a>
         </div>
       </div>
+
+      <Footer />
     </div>
   )
 }

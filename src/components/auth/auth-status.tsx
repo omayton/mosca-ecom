@@ -83,15 +83,23 @@ export function AuthStatus() {
             </div>
             <nav className="py-1">
               <a
+                href="/minha-conta"
+                className="flex items-center gap-2 px-4 py-2.5 font-inter text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+              >
+                <User className="h-4 w-4" aria-hidden="true" />
+                Minha conta
+              </a>
+              <a
                 href="/minha-conta/pedidos"
                 className="flex items-center gap-2 px-4 py-2.5 font-inter text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
               >
                 <Package className="h-4 w-4" aria-hidden="true" />
                 Meus pedidos
               </a>
+              <div className="border-t border-zinc-100 my-1" />
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-4 py-2.5 font-inter text-sm text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-4 py-2.5 font-inter text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 Sair
