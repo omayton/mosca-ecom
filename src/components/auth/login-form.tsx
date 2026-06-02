@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Mail, Lock, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 export function LoginForm() {
   const router = useRouter()
@@ -72,6 +73,12 @@ export function LoginForm() {
             placeholder="••••••••"
           />
         </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Link href="/esqueci-senha" className="font-inter text-xs text-red-600 hover:text-red-700 transition-colors">
+          Esqueci minha senha
+        </Link>
       </div>
 
       {error && (
