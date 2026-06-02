@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation"
-import Image from "next/image"
 import { TopHeader } from "@/components/automotive/top-header"
 import { AddToCart } from "@/components/automotive/add-to-cart"
 import { imgUrl, pixPrice, installmentPrice, fmt, parseWeight, parseDimensions } from "@/lib/products"
 import { getProductBySlug, getRelatedProducts, getAllSlugs } from "@/lib/products-db"
 import { Heart, Truck, Shield, RefreshCw, ChevronRight, MessageCircle, Package } from "lucide-react"
 import { ShippingCalculator } from "@/components/shipping-calculator"
+import { ProductImage } from "@/components/product-image"
 
 export const revalidate = 60
 
@@ -36,6 +36,32 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   return (
     <div className="min-h-screen bg-zinc-50/50">
+      {/* Schema.org Product JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.name,
+            description: product.description,
+            image: imgUrl(product.imageFile),
+            brand: { "@type": "Brand", name: "Mosca Branca Parts" },
+            category: product.category,
+            offers: {
+              "@type": "Offer",
+              url: `https://www.moscabrancaparts.com.br/produto/${product.slug}`,
+              priceCurrency: "BRL",
+              price: product.price.toFixed(2),
+              availability: product.inStock
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+              seller: { "@type": "Organization", name: "Mosca Branca Parts" },
+            },
+          }),
+        }}
+      />
+
       <TopHeader />
 
       {/* Breadcrumb */}
@@ -43,7 +69,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <div className="container mx-auto px-4 py-3.5 flex items-center gap-2 text-xs font-inter text-zinc-500 flex-wrap">
           <a href="/" className="hover:text-red-600 transition-colors">Início</a>
           <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-          <a href={`/categoria/${product.categorySlug}`} className="hover:text-red-600 transition-colors">
+          <a href={`/loja?categoria=${product.categorySlug}`} className="hover:text-red-600 transition-colors">
             {product.category}
           </a>
           <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -59,7 +85,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
             {/* ── IMAGEM ─────────────────────────────────────── */}
             <div>
               <div className="relative aspect-square bg-zinc-50/80 border border-zinc-100 overflow-hidden rounded-xl">
-                <Image
+                <ProductImage
                   src={imgUrl(product.imageFile)}
                   alt={product.name}
                   fill
@@ -89,7 +115,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                   Salvar
                 </button>
                 <a
-                  href={`https://wa.me/5518997696952?text=Olá! Tenho interesse no produto: ${encodeURIComponent(product.name)}`}
+                  href={`https://wa.me/5534999365936?text=Olá! Tenho interesse no produto: ${encodeURIComponent(product.name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 border border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 font-inter text-sm px-4 py-2.5 min-h-[44px] transition-all duration-200 rounded-lg flex-1 justify-center"
@@ -242,7 +268,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                     aria-label={rel.name}
                   >
                     <div className="relative aspect-square bg-zinc-50/80 overflow-hidden rounded-t-xl">
-                      <Image
+                      <ProductImage
                         src={imgUrl(rel.imageFile)}
                         alt={rel.name}
                         fill
@@ -272,13 +298,13 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="font-inter text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
           <a
-            href="https://wa.me/5518997696952"
+            href="https://wa.me/5534999365936"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-green-500 hover:text-green-400 font-inter text-sm transition-colors"
           >
             <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            (18) 99769-6952 — WhatsApp
+            (34) 99936-5936 — WhatsApp
           </a>
         </div>
       </footer>

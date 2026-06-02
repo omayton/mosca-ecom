@@ -124,7 +124,7 @@ export default async function Home() {
               <p className="font-inter text-zinc-400 text-xs mt-0.5">Fale com nossos especialistas pelo WhatsApp</p>
             </div>
             <a
-              href="https://wa.me/5518997696952"
+              href="https://wa.me/5534999365936"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-inter font-semibold text-sm px-6 py-3 min-h-[44px] transition-colors duration-200 whitespace-nowrap"
