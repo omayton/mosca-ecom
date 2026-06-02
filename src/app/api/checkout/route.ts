@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createClient } from "@supabase/supabase-js"
+import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit"
+import { sendEmail, orderConfirmedEmail } from "@/lib/email"
 
 function getAuthClient() {
   const cookieStore = cookies()
@@ -19,6 +21,12 @@ function getAuthClient() {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers)
+  const { success } = rateLimit(`checkout:${ip}`, RATE_LIMITS.checkout)
+  if (!success) {
+    return NextResponse.json({ error: "Muitas tentativas. Aguarde um momento." }, { status: 429 })
+  }
+
   const auth = getAuthClient()
   if (!auth) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
@@ -26,10 +34,24 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
 
   const body = await req.json()
-  const { items, address, shipping, cpf, saveAddress } = body
+  const { items, address, shipping, cpf, saveAddress, idempotencyKey } = body
 
   if (!items?.length || !address || !shipping || !cpf) {
     return NextResponse.json({ error: "Dados incompletos" }, { status: 400 })
+  }
+
+  // Idempotency check: prevent duplicate orders
+  if (idempotencyKey) {
+    const { data: existingOrder } = await auth.client
+      .from("orders")
+      .select("id")
+      .eq("idempotency_key", idempotencyKey)
+      .eq("user_id", user.id)
+      .single()
+
+    if (existingOrder) {
+      return NextResponse.json({ orderId: existingOrder.id, total: 0, duplicate: true })
+    }
   }
 
   const productIds = items.map((i: any) => i.productId)
@@ -77,6 +99,7 @@ export async function POST(req: NextRequest) {
       shipping_method: `${shipping.company} - ${shipping.name}`,
       address_json: address,
       cpf,
+      ...(idempotencyKey && { idempotency_key: idempotencyKey }),
     })
     .select("id")
     .single()
@@ -118,6 +141,26 @@ export async function POST(req: NextRequest) {
         phone: address.telefone,
       })
       .eq("id", user.id)
+  }
+
+  // Send order confirmation email (non-blocking)
+  try {
+    const customerName = user.user_metadata?.name || "Cliente"
+    const emailItems = items.map((item: any) => {
+      const product = productMap.get(item.productId)
+      return { name: product?.name || "Produto", quantity: item.quantity, price: Number(product?.price || 0) }
+    })
+    const tpl = orderConfirmedEmail({
+      customerName,
+      orderId: order.id,
+      items: emailItems,
+      total,
+      shippingMethod: `${shipping.company} - ${shipping.name}`,
+      shippingCost,
+    })
+    await sendEmail({ to: user.email!, ...tpl })
+  } catch (emailErr: any) {
+    console.error("[checkout] email error:", emailErr.message)
   }
 
   return NextResponse.json({ orderId: order.id, total })

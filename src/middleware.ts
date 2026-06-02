@@ -1,7 +1,9 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextRequest, NextResponse } from "next/server"
 
-const PROTECTED_PATHS = ["/checkout", "/minha-conta"]
+const PROTECTED_PATHS = ["/checkout", "/minha-conta", "/admin"]
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean)
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
@@ -56,6 +58,14 @@ export async function middleware(req: NextRequest) {
 
   if (isProtected(req.nextUrl.pathname) && !hasValidSession) {
     return redirectToLogin(req)
+  }
+
+  if (req.nextUrl.pathname.startsWith("/admin") && hasValidSession && ADMIN_EMAILS.length > 0) {
+    const currentUser = user || (await supabase.auth.getUser(accessToken)).data.user
+    const email = currentUser?.email?.toLowerCase() || ""
+    if (!ADMIN_EMAILS.includes(email)) {
+      return NextResponse.redirect(new URL("/", req.url))
+    }
   }
 
   return res

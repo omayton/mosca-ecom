@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextRequest, NextResponse } from "next/server"
+import { rateLimit, getClientIp, RATE_LIMITS } from "@/lib/rate-limit"
 
 function getSupabase() {
   return createClient(
@@ -10,6 +11,12 @@ function getSupabase() {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers)
+  const { success } = rateLimit(`login:${ip}`, RATE_LIMITS.login)
+  if (!success) {
+    return NextResponse.json({ error: "Muitas tentativas. Aguarde um momento." }, { status: 429 })
+  }
+
   try {
     const supabase = getSupabase()
     const { email, password } = await req.json()
