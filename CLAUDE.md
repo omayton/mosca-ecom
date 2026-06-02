@@ -48,6 +48,10 @@ npm run start    # Serve o build de produção localmente
 - API routes under `src/app/api/` — serverless functions on Vercel
 - Admin pages (`src/app/admin/`) — client components com layout próprio (sidebar dark)
 
+### Configuração de Deploy
+- `vercel.json` — define cron jobs (abandoned cart: hourly)
+- `next.config.js` — remotePatterns (imagens), security headers (CSP, HSTS, X-Frame-Options, etc.)
+
 ### Banco de dados (Supabase)
 
 **Tabelas:**
@@ -61,6 +65,7 @@ npm run start    # Serve o build de produção localmente
 - `coupon_uses` — registro de uso de cupons
 - `vehicle_compatibility_cache` — cache de análises IA (7 dias TTL)
 - `ai_usage_analytics` — tracking de custos IA
+- `admin_audit_log` — audit trail de ações admin
 
 **Schema:** `supabase/schema.sql` (inclui RLS policies e trigger de criação de perfil)
 **Seed:** `supabase/seed.sql` (20 produtos iniciais)
@@ -94,9 +99,29 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 
 ### Carrinho
 - `CartProvider` (`src/contexts/cart-context.tsx`) wraps o app no root layout (é o único provider no layout — não há header/footer compartilhado, cada page inclui `<TopHeader />` individualmente)
-- Persistência via localStorage (key: `mosca-cart`), apenas para anônimos
+- Persistência dual: localStorage (key: `mosca-cart`) + Supabase `cart_items` para usuários logados
+- Server sync: on mount, fetches `/api/cart` — merges server + local items; debounced POST sync on changes (1s delay)
+- Para anônimos: apenas localStorage
 - Drawer lateral abre automaticamente ao adicionar item (`setIsOpen(true)`)
 - Badge com contador no header (desktop e mobile)
+
+### Carrinho Abandonado
+- Cron job via Vercel: `GET /api/cron/abandoned-cart` — roda a cada hora (`vercel.json` crons)
+- Protegido por `CRON_SECRET` (header `Authorization: Bearer {secret}`)
+- Detecta carrinhos com `updated_at` > 2 horas sem checkout
+- Envia email de recuperação via Resend (`src/lib/email.ts`)
+- Admin: `/admin/carrinhos-abandonados` — painel para visualizar e gerenciar
+- Tabela `cart_items` já usada — filtra por tempo de inatividade
+
+### Email (Resend)
+- `src/lib/email.ts` — wrapper para Resend API
+- Graceful fallback: se `RESEND_API_KEY` não configurada, loga warning e retorna false
+- Usado pelo cron de carrinho abandonado
+
+### Audit Log
+- `src/lib/audit-log.ts` — registra ações admin na tabela `admin_audit_log`
+- Non-blocking: erros são engolidos para não quebrar o fluxo principal
+- Campos: userId, userEmail, action, entityType, entityId, details, ipAddress
 
 ### Melhor Envio (Frete)
 - OAuth flow: `/api/shipping/auth` → redirect → `/api/shipping/callback` → token salvo como env var
@@ -158,6 +183,7 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - **Produtos:** `/admin/produtos` — CRUD, busca, filtros, upload de imagem
 - **Estoque:** `/admin/estoque` — controle visual, botões rápidos, filtros por status
 - **Cupons:** `/admin/cupons` — criar/editar, ativar/desativar, cards com stats
+- **Carrinhos Abandonados:** `/admin/carrinhos-abandonados` — visualizar e recuperar carrinhos
 - **Pedidos:** `/admin/pedidos` — listar, filtrar, atualizar status
 - **Clientes:** `/admin/clientes` — lista, busca, endereço, contagem pedidos
 - **Avaliações:** `/admin/avaliacoes` — moderação de reviews de produtos
@@ -258,6 +284,13 @@ MERCADOPAGO_ACCESS_TOKEN=...
 VERCEL_AI_GATEWAY_URL=...         # Gateway URL para chamadas IA
 ANTHROPIC_API_KEY=...             # API key Anthropic
 
+# Email (Resend)
+RESEND_API_KEY=...                # API key do Resend para envio de emails
+EMAIL_FROM=Mosca Branca Parts <noreply@moscabrancaparts.com.br>
+
+# Cron
+CRON_SECRET=...                   # secret para proteger endpoints de cron (Vercel Cron)
+
 # App
 NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br
 ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no admin (comma-separated)
@@ -273,6 +306,8 @@ ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no adm
 - `POST /api/payments` — processar pagamento
 - `POST /api/checkout` — criar pedido
 - `POST /api/webhooks/mercadopago` — IPN webhook
+- `GET/POST /api/cart` — sync carrinho (usuários logados)
+- `GET /api/cron/abandoned-cart` — cron job notificação carrinho abandonado (protegido por CRON_SECRET)
 
 ### Admin
 - `GET /api/admin/dashboard` — métricas gerais
@@ -297,7 +332,7 @@ ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no adm
 - [x] ~~Busca do header não tem funcionalidade real~~ — redireciona para `/loja?busca=`
 - [x] ~~Imagens de produtos apontam para URL WordPress~~ — `imgUrl()` trata URLs completas
 - [x] ~~Faturamento no admin mostra dados zerados~~ — API retorna dados reais com trends
-- [ ] `next.config.js` remotePatterns falta hostname do Supabase Storage para `next/image` otimizado
+- [x] ~~`next.config.js` remotePatterns falta hostname do Supabase Storage~~ — já configurado
 - [ ] Redes sociais no footer da home apontam para `#` (faltam URLs reais)
 - [ ] Página `/politica-de-privacidade` e `/termos-de-uso` precisam de conteúdo real
 - [ ] Melhor Envio token expira em 30 dias — automatizar renovação
@@ -317,10 +352,11 @@ ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no adm
 - `products.ts` has `parseWeight(str)` and `parseDimensions(str)` helpers that convert human-readable strings ("0,5 kg", "30×20×15 cm") to numeric values for the shipping API. Defaults when missing: weight=0.3kg, dimensions=16×10×10cm
 - Supabase columns use `snake_case`, TypeScript interfaces use `camelCase` — the `rowToProduct()` mapper in `products-db.ts` handles conversion
 - MercadoPago integration uses direct REST API calls (`src/lib/mercadopago.ts`), not the official Node SDK
-- The middleware matcher excludes `/api/shipping` and `/api/webhooks` — these must remain unauthenticated for external callbacks
+- The middleware matcher excludes `/api/shipping`, `/api/webhooks`, and `/api/cron` — these must remain unauthenticated for external callbacks
 
 ### Carrinho
-- Cart state lives in localStorage only (no server sync for anonymous users) — the `CartProvider` in root layout hydrates on mount
+- Cart state lives in localStorage + Supabase `cart_items` (dual persistence)
+- Anonymous users: localStorage only. Logged-in users: merge on mount, debounced sync to server via `/api/cart`
 - O `CartDrawer` é renderizado dentro do `TopHeader` — qualquer página que precise do carrinho deve incluir `<TopHeader />`
 - Badge do carrinho usa `loaded` do CartContext para evitar hydration mismatch
 
@@ -335,7 +371,7 @@ ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no adm
   - Nome de arquivo legado (WordPress): prefixado com `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/`
 - Lógica em `imgUrl()`: se `file.startsWith('http')` → usar direto, senão → prefixar com URL WordPress
 - Upload novo vai para Supabase Storage (bucket `product-images`)
-- `next.config.js` remotePatterns inclui `moscabrancaparts.com.br` — **falta** `mcaxtwztzfrytxtkgdxh.supabase.co` para `next/image` otimizado
+- `next.config.js` remotePatterns inclui `moscabrancaparts.com.br` e `mcaxtwztzfrytxtkgdxh.supabase.co` para `next/image` otimizado
 
 ### Rate Limiting
 - `src/lib/rate-limit.ts` — rate limiter in-memory com lazy cleanup (sem setInterval/timer leak)

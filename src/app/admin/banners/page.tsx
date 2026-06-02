@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Eye, EyeOff, Wand2, GripVertical, Loader2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, Trash2, Edit2, Eye, EyeOff, Wand2, GripVertical, Loader2, Upload, X } from 'lucide-react'
+import { imgUrl } from '@/lib/products'
 
 interface Banner {
   id: number
@@ -220,18 +221,18 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
   })
   const [saving, setSaving] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const selectedProduct = products.find(p => p.id.toString() === form.productId)
 
   // Quando seleciona produto, atualiza imagem
   useEffect(() => {
     if (selectedProduct) {
-      const imgUrl = selectedProduct.image_file.startsWith('http')
-        ? selectedProduct.image_file
-        : `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/${selectedProduct.image_file}`
       setForm(prev => ({
         ...prev,
-        productImageUrl: imgUrl,
+        productImageUrl: imgUrl(selectedProduct.image_file),
         ctaLink: `/produto/${selectedProduct.slug}`
       }))
     }
@@ -267,6 +268,41 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
       console.error('Generate copy failed:', err)
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const handleImageUpload = async (file: File) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if (!allowedTypes.includes(file.type)) {
+      alert('Use JPG, PNG, WebP ou GIF')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Máximo 5MB')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setForm(prev => ({ ...prev, productImageUrl: data.url }))
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Erro no upload')
+      }
+    } catch {
+      alert('Erro de conexão')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -402,6 +438,90 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
                 {generating ? 'Gerando...' : 'Gerar Copy com IA'}
               </button>
             </div>
+          </div>
+
+          {/* Banner Image */}
+          <div>
+            <label className="block text-xs font-medium text-white/40 mb-1.5 uppercase tracking-wider">Imagem do Banner</label>
+            {form.productImageUrl ? (
+              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-white/[0.08] group bg-white/[0.02]">
+                <img
+                  src={form.productImageUrl}
+                  alt="Preview"
+                  className="w-full h-full object-contain"
+                />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm font-medium text-white hover:bg-white/20 cursor-pointer"
+                  >
+                    Trocar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, productImageUrl: '' })}
+                    className="p-2 bg-red-600 rounded-lg text-white hover:bg-red-700 cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                {uploading && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 text-white animate-spin" />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  setDragOver(false)
+                  const file = e.dataTransfer.files[0]
+                  if (file) handleImageUpload(file)
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full h-40 rounded-xl border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-3 transition-all duration-200 ${
+                  dragOver
+                    ? 'border-amber-400 bg-amber-500/10'
+                    : 'border-white/[0.12] bg-white/[0.02] hover:border-amber-500/40 hover:bg-white/[0.04]'
+                } ${uploading ? 'pointer-events-none opacity-60' : ''}`}
+              >
+                {uploading ? (
+                  <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+                ) : (
+                  <>
+                    <div className="p-3 rounded-full bg-white/[0.06]">
+                      <Upload className="h-5 w-5 text-white/40" />
+                    </div>
+                    <p className="text-sm text-white/40">
+                      Arraste uma imagem ou <span className="text-amber-400">clique aqui</span>
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="text"
+                value={form.productImageUrl}
+                onChange={(e) => setForm({ ...form, productImageUrl: e.target.value })}
+                placeholder="Ou cole a URL da imagem..."
+                className="flex-1 px-3 py-2 bg-white/[0.04] border border-white/[0.08] rounded-lg text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-amber-500/40"
+              />
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) handleImageUpload(file)
+              }}
+              className="hidden"
+            />
           </div>
 
           {/* Texts */}
