@@ -9,8 +9,14 @@ import { Metadata } from "next"
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: "Loja | Mosca Branca Parts — Peças Automotivas Raras",
-  description: "Encontre peças automotivas raras e de difícil localização. Filtros por categoria, busca rápida e envio para todo o Brasil.",
+  title: "Loja — Peças Automotivas Raras",
+  description: "Encontre peças automotivas raras e de difícil localização. Filtros por categoria, busca rápida e envio para todo o Brasil. Pague com PIX e ganhe 5% de desconto.",
+  openGraph: {
+    title: "Loja | Mosca Branca Parts — Peças Automotivas Raras",
+    description: "Encontre peças automotivas raras. Categorias, busca e envio nacional.",
+    type: "website",
+    url: "https://www.moscabrancaparts.com.br/loja",
+  },
 }
 
 interface PageProps {

@@ -24,6 +24,45 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
+      {/* Schema.org Organization + WebSite */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                name: "Mosca Branca Parts",
+                url: "https://www.moscabrancaparts.com.br",
+                logo: "https://www.moscabrancaparts.com.br/wp-content/uploads/2025/02/moscabranca-768x412.png",
+                contactPoint: {
+                  "@type": "ContactPoint",
+                  telephone: "+55-34-99936-5936",
+                  contactType: "sales",
+                  areaServed: "BR",
+                  availableLanguage: "Portuguese",
+                },
+                sameAs: [],
+              },
+              {
+                "@type": "WebSite",
+                name: "Mosca Branca Parts",
+                url: "https://www.moscabrancaparts.com.br",
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: {
+                    "@type": "EntryPoint",
+                    urlTemplate: "https://www.moscabrancaparts.com.br/loja?busca={search_term_string}",
+                  },
+                  "query-input": "required name=search_term_string",
+                },
+              },
+            ],
+          }),
+        }}
+      />
+
       <TopHeader />
       <HeroCarousel />
 

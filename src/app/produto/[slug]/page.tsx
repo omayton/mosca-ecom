@@ -17,9 +17,26 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const product = await getProductBySlug(params.slug)
   if (!product) return {}
+
+  const imageUrl = imgUrl(product.imageFile)
+  const price = `R$ ${fmt(product.price)}`
+
   return {
-    title: `${product.name} | Mosca Branca Parts`,
-    description: product.description,
+    title: product.name,
+    description: product.description || `${product.name} — Peça rara automotiva. ${price} com 5% OFF no PIX. Envio para todo o Brasil.`,
+    openGraph: {
+      title: `${product.name} | Mosca Branca Parts`,
+      description: product.description || `${product.name} — ${price} com 5% OFF no PIX.`,
+      images: [{ url: imageUrl, alt: product.name }],
+      type: 'website',
+      url: `https://www.moscabrancaparts.com.br/produto/${product.slug}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description: product.description || `${product.name} — ${price}`,
+      images: [imageUrl],
+    },
   }
 }
 
