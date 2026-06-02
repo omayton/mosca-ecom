@@ -1,9 +1,9 @@
 "use client"
 
-import Image from "next/image"
 import { Minus, Plus, Trash2 } from "lucide-react"
 import { useCart, CartItem as CartItemType } from "@/contexts/cart-context"
 import { imgUrl, fmt } from "@/lib/products"
+import { ProductImage } from "@/components/product-image"
 
 export function CartItemCard({ item }: { item: CartItemType }) {
   const { updateQuantity, removeItem } = useCart()
@@ -12,7 +12,7 @@ export function CartItemCard({ item }: { item: CartItemType }) {
     <div className="flex gap-3 py-4 border-b border-zinc-100 last:border-0">
       <a href={`/produto/${item.slug}`} className="flex-shrink-0">
         <div className="relative w-16 h-16 bg-zinc-50 border border-zinc-100 overflow-hidden rounded-lg">
-          <Image
+          <ProductImage
             src={imgUrl(item.imageFile)}
             alt={item.name}
             fill

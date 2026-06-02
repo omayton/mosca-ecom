@@ -1,9 +1,9 @@
 "use client"
 
 import { useRef } from "react"
-import Image from "next/image"
 import { Heart, ChevronLeft, ChevronRight } from "lucide-react"
 import { type Product, imgUrl, pixPrice, installmentPrice, fmt } from "@/lib/products"
+import { ProductImage } from "@/components/product-image"
 
 function ProductCard({ p }: { p: Product }) {
   const pix    = pixPrice(p.price)
@@ -23,7 +23,7 @@ function ProductCard({ p }: { p: Product }) {
         tabIndex={-1}
         aria-hidden="true"
       >
-        <Image
+        <ProductImage
           src={imgUrl(p.imageFile)}
           alt={p.name}
           fill

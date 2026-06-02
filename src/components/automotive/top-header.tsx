@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Search, MapPin, ShoppingCart, ChevronDown, Car, Menu, X, Phone, MessageCircle } from "lucide-react"
 import Image from "next/image"
 import { AuthStatus } from "@/components/auth/auth-status"
@@ -8,25 +9,53 @@ import { CartButton } from "@/components/cart/cart-button"
 import { CartDrawer } from "@/components/cart/cart-drawer"
 import { VehicleSearchButton } from "@/components/vehicle/vehicle-search-button"
 import { VehicleSearchDropdown } from "@/components/vehicle/vehicle-search-dropdown"
+import { CepModal } from "@/components/cep/cep-modal"
 import type { Vehicle } from "@/lib/vehicle-types"
 
 const TOP_LINKS = ["Conheça a Mosca Branca", "Atendimento", "Rastrear Pedido", "Meus Pedidos"]
 
-const CATEGORIES = [
-  "Saídas de Ar",
-  "Acessórios",
-  "Tampas e Acabamentos",
-  "Banco e Assento",
-  "Travas e Fechaduras",
-  "Interruptores e Botões",
-  "Componentes de Motor",
+const DEFAULT_CATEGORIES = [
+  { label: "Saídas de Ar", slug: "saidas-de-ar" },
+  { label: "Acessórios", slug: "acessorios" },
+  { label: "Tampas e Acabamentos", slug: "tampas-e-acabamentos" },
+  { label: "Banco e Assento", slug: "banco-e-assento" },
+  { label: "Travas e Fechaduras", slug: "fechaduras" },
+  { label: "Interruptores e Botões", slug: "interruptores-e-botoes" },
+  { label: "Componentes de Motor", slug: "motor" },
 ]
 
 export function TopHeader() {
+  const router = useRouter()
   const [query, setQuery] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [vehicleSearchOpen, setVehicleSearchOpen] = useState(false)
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
+  const [cepModalOpen, setCepModalOpen] = useState(false)
+  const [savedCep, setSavedCep] = useState<{ cep: string; cidade: string; uf: string } | null>(null)
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
+
+  useEffect(() => {
+    const stored = localStorage.getItem("mosca-cep")
+    if (stored) {
+      try { setSavedCep(JSON.parse(stored)) } catch {}
+    }
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.categories?.length > 0) {
+          setCategories(data.categories.map((c: any) => ({ label: c.name, slug: c.slug })))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    if (query.trim()) {
+      router.push(`/loja?busca=${encodeURIComponent(query.trim())}`)
+      setMobileMenuOpen(false)
+    }
+  }
 
   return (
     <>
@@ -45,7 +74,7 @@ export function TopHeader() {
               (34) 99936-5936
             </a>
             <a
-              href="https://wa.me/5518997696952"
+              href="https://wa.me/5534999365936"
               target="_blank"
               rel="noopener noreferrer"
               className="text-green-500 text-xs hover:text-green-400 transition-colors flex items-center gap-1"
@@ -87,7 +116,7 @@ export function TopHeader() {
             </div>
 
             {/* Search bar */}
-            <div className="flex flex-1 min-w-0 h-11">
+            <form onSubmit={handleSearch} className="flex flex-1 min-w-0 h-11">
               <label htmlFor="site-search" className="sr-only">Pesquisar peças e acessórios</label>
               <input
                 id="site-search"
@@ -101,21 +130,30 @@ export function TopHeader() {
               <button
                 type="submit"
                 aria-label="Pesquisar"
-                className="bg-red-600 hover:bg-red-700 text-white px-5 flex items-center justify-center transition-colors duration-150 min-w-[52px]"
+                className="bg-red-600 hover:bg-red-700 text-white px-5 flex items-center justify-center transition-colors duration-150 min-w-[52px] cursor-pointer"
               >
                 <Search className="h-5 w-5" aria-hidden="true" />
               </button>
-            </div>
+            </form>
 
             {/* Right icons — desktop */}
             <nav aria-label="Ações do usuário" className="hidden lg:flex items-center gap-1">
-              <a href="#" className="flex items-center gap-2 text-zinc-300 hover:text-white px-3 py-2 min-h-[44px] transition-colors duration-150">
+              <button onClick={() => setCepModalOpen(true)} className="flex items-center gap-2 text-zinc-300 hover:text-white px-3 py-2 min-h-[44px] transition-colors duration-150 cursor-pointer">
                 <MapPin className="h-5 w-5 text-red-500 flex-shrink-0" aria-hidden="true" />
-                <div className="text-xs leading-tight">
-                  <p className="text-zinc-500">Informe</p>
-                  <p className="font-semibold">seu CEP</p>
+                <div className="text-xs leading-tight text-left">
+                  {savedCep ? (
+                    <>
+                      <p className="text-zinc-500">{savedCep.cep.replace(/(\d{5})(\d{3})/, "$1-$2")}</p>
+                      <p className="font-semibold">{savedCep.cidade}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-zinc-500">Informe</p>
+                      <p className="font-semibold">seu CEP</p>
+                    </>
+                  )}
                 </div>
-              </a>
+              </button>
               <AuthStatus />
               <CartButton />
             </nav>
@@ -147,17 +185,17 @@ export function TopHeader() {
                 <span className="hidden sm:inline">Compre por departamento</span>
                 <span className="sm:hidden">Departamentos</span>
               </button>
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <a
-                  key={cat}
-                  href="#"
+                  key={cat.slug}
+                  href={`/loja?categoria=${cat.slug}`}
                   className="text-zinc-400 hover:text-white text-sm px-5 h-full flex items-center flex-shrink-0 hover:bg-zinc-800 transition-colors duration-150 whitespace-nowrap"
                 >
-                  {cat}
+                  {cat.label}
                 </a>
               ))}
               <a
-                href="#"
+                href="/loja"
                 className="ml-auto bg-red-600/90 hover:bg-red-600 text-white text-sm font-semibold px-6 h-full flex items-center flex-shrink-0 transition-colors duration-200 whitespace-nowrap"
               >
                 Ofertas
@@ -188,15 +226,15 @@ export function TopHeader() {
               </button>
             </div>
             <ul className="flex flex-col overflow-y-auto flex-1 py-2">
-              {CATEGORIES.map((cat) => (
-                <li key={cat}>
-                  <a href="#" className="block px-5 py-3 text-sm text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors min-h-[44px] flex items-center" onClick={() => setMobileMenuOpen(false)}>
-                    {cat}
+              {categories.map((cat) => (
+                <li key={cat.slug}>
+                  <a href={`/loja?categoria=${cat.slug}`} className="block px-5 py-3 text-sm text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors min-h-[44px] flex items-center" onClick={() => setMobileMenuOpen(false)}>
+                    {cat.label}
                   </a>
                 </li>
               ))}
               <li>
-                <a href="#" className="block px-5 py-3 text-sm font-bold text-red-500 hover:bg-zinc-900 transition-colors min-h-[44px] flex items-center" onClick={() => setMobileMenuOpen(false)}>
+                <a href="/loja" className="block px-5 py-3 text-sm font-bold text-red-500 hover:bg-zinc-900 transition-colors min-h-[44px] flex items-center" onClick={() => setMobileMenuOpen(false)}>
                   Ofertas
                 </a>
               </li>
@@ -206,7 +244,7 @@ export function TopHeader() {
                 <Phone className="h-5 w-5 text-red-500" aria-hidden="true" />
                 <span className="text-sm">(34) 99936-5936</span>
               </a>
-              <a href="https://wa.me/5518997696952" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-green-500 hover:text-green-400 py-2 min-h-[44px]">
+              <a href="https://wa.me/5534999365936" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-green-500 hover:text-green-400 py-2 min-h-[44px]">
                 <MessageCircle className="h-5 w-5" aria-hidden="true" />
                 <span className="text-sm">WhatsApp</span>
               </a>
@@ -216,6 +254,14 @@ export function TopHeader() {
       )}
 
       <CartDrawer />
+      <CepModal
+        open={cepModalOpen}
+        onClose={() => setCepModalOpen(false)}
+        onSave={(data) => {
+          setSavedCep(data)
+          localStorage.setItem("mosca-cep", JSON.stringify(data))
+        }}
+      />
     </>
   )
 }
