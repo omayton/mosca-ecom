@@ -2,6 +2,8 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Inter, Barlow_Condensed } from 'next/font/google'
 import { CartProvider } from '@/contexts/cart-context'
+import { CookieConsent } from '@/components/cookie-consent'
+import { Analytics } from '@/components/analytics'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -25,7 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={`${inter.variable} ${barlow.variable}`}>
       <body className="font-inter antialiased">
+        <Analytics />
         <CartProvider>{children}</CartProvider>
+        <CookieConsent />
       </body>
     </html>
   )
