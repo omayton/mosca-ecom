@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react"
 
 export interface CartItem {
   productId: number
@@ -47,15 +47,75 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const initialSyncDone = useRef(false)
 
   useEffect(() => {
-    setItems(loadFromStorage())
-    setLoaded(true)
+    const localItems = loadFromStorage()
+
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then(async (user) => {
+        if (user?.id) {
+          setIsLoggedIn(true)
+          try {
+            const res = await fetch("/api/cart")
+            if (res.ok) {
+              const data = await res.json()
+              const serverItems: CartItem[] = data.items || []
+
+              if (serverItems.length > 0) {
+                const merged = [...serverItems]
+                for (const localItem of localItems) {
+                  if (!merged.find((s) => s.productId === localItem.productId)) {
+                    merged.push(localItem)
+                  }
+                }
+                setItems(merged)
+                saveToStorage(merged)
+              } else if (localItems.length > 0) {
+                setItems(localItems)
+                await fetch("/api/cart", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ items: localItems.map((i) => ({ productId: i.productId, quantity: i.quantity })) }),
+                })
+              }
+            } else {
+              setItems(localItems)
+            }
+          } catch {
+            setItems(localItems)
+          }
+        } else {
+          setItems(localItems)
+        }
+        initialSyncDone.current = true
+        setLoaded(true)
+      })
+      .catch(() => {
+        setItems(localItems)
+        initialSyncDone.current = true
+        setLoaded(true)
+      })
   }, [])
 
   useEffect(() => {
-    if (loaded) saveToStorage(items)
-  }, [items, loaded])
+    if (!loaded) return
+    saveToStorage(items)
+
+    if (!isLoggedIn || !initialSyncDone.current) return
+
+    if (syncTimer.current) clearTimeout(syncTimer.current)
+    syncTimer.current = setTimeout(() => {
+      fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })) }),
+      }).catch(() => {})
+    }, 1000)
+  }, [items, loaded, isLoggedIn])
 
   const addItem = useCallback((item: Omit<CartItem, "quantity">) => {
     setItems((prev) => {
@@ -86,7 +146,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => {
     setItems([])
-  }, [])
+    if (isLoggedIn) {
+      fetch("/api/cart", { method: "DELETE" }).catch(() => {})
+    }
+  }, [isLoggedIn])
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0)
   const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0)

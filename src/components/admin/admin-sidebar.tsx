@@ -16,7 +16,8 @@ import {
   Image,
   Layers,
   BarChart3,
-  Star
+  Star,
+  AlertCircle
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -30,6 +31,7 @@ const navItems = [
   { href: '/admin/avaliacoes', label: 'Avaliações', icon: Star },
   { href: '/admin/clientes', label: 'Clientes', icon: Users },
   { href: '/admin/pedidos', label: 'Pedidos', icon: ShoppingCart },
+  { href: '/admin/carrinhos-abandonados', label: 'Carrinhos Abandonados', icon: AlertCircle },
   { href: '/admin/relatorios', label: 'Relatórios', icon: BarChart3 },
   { href: '/admin/analytics', label: 'Analytics IA', icon: Brain },
 ]
