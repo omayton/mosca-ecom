@@ -88,7 +88,7 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - Login form lê `?redirect=` e redireciona após sucesso
 - API routes: `/api/auth/login`, `/api/auth/register`, `/api/auth/logout`, `/api/auth/me`
 - Componente `AuthStatus` no header mostra estado de login com dropdown (Minha conta, Meus pedidos, Sair)
-- Pages de auth: `src/app/(auth)/login/`, `src/app/(auth)/registro/`, `src/app/(auth)/redefinir-senha/`
+- Pages de auth: `src/app/(auth)/login/`, `src/app/(auth)/registro/`, `src/app/(auth)/redefinir-senha/`, `src/app/(auth)/esqueci-senha/`
 - **Admin protegido:** `requireAdmin()` helper (`src/lib/require-admin.ts`) verifica cookie + ADMIN_EMAILS em TODAS as API routes admin
 - Middleware também bloqueia `/admin` UI para não-admins via ADMIN_EMAILS env var
 
@@ -160,6 +160,9 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - **Cupons:** `/admin/cupons` — criar/editar, ativar/desativar, cards com stats
 - **Pedidos:** `/admin/pedidos` — listar, filtrar, atualizar status
 - **Clientes:** `/admin/clientes` — lista, busca, endereço, contagem pedidos
+- **Avaliações:** `/admin/avaliacoes` — moderação de reviews de produtos
+- **Categorias:** `/admin/categorias` — gerenciamento de categorias
+- **Relatórios:** `/admin/relatorios` — relatórios do negócio
 - **Analytics IA:** `/admin/analytics` — custos, tokens, cache hits (tabela: `ai_usage_analytics`)
 - **Segurança:** Todas as APIs admin usam `requireAdmin()` — verifica cookie de sessão + email na lista ADMIN_EMAILS
 
@@ -282,6 +285,8 @@ ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no adm
 - `GET /api/admin/customers` — clientes
 - `POST/DELETE /api/admin/upload` — upload imagens
 - `GET /api/analytics/ai-usage` — analytics IA
+- `GET/POST/PATCH/DELETE /api/categories` — CRUD categorias
+- `GET/POST /api/reviews` — avaliações de produtos
 
 ## Bugs Conhecidos / TODO
 

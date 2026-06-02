@@ -61,7 +61,8 @@ export async function POST(req: NextRequest) {
         expires_at: body.expiresAt || null,
         is_active: true,
         applies_to: body.appliesTo || 'all',
-        applies_to_ids: body.appliesToIds || []
+        applies_to_ids: body.appliesToIds || [],
+        show_on_product: body.showOnProduct || false,
       })
       .select()
       .single()
@@ -105,6 +106,7 @@ export async function PATCH(req: NextRequest) {
     if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive
     if (updates.appliesTo !== undefined) dbUpdates.applies_to = updates.appliesTo
     if (updates.appliesToIds !== undefined) dbUpdates.applies_to_ids = updates.appliesToIds
+    if (updates.showOnProduct !== undefined) dbUpdates.show_on_product = updates.showOnProduct
 
     const { data, error } = await supabase
       .from('coupons')

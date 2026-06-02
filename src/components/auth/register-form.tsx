@@ -46,7 +46,7 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+        <label htmlFor="name" className="block text-sm font-medium text-zinc-700 mb-1.5">
           Nome
         </label>
         <div className="relative">
@@ -56,14 +56,14 @@ export function RegisterForm() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-zinc-200 font-inter text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
+            className="w-full pl-10 pr-4 py-3 border border-zinc-200 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
             placeholder="Seu nome"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="reg-email" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+        <label htmlFor="reg-email" className="block text-sm font-medium text-zinc-700 mb-1.5">
           Email
         </label>
         <div className="relative">
@@ -74,14 +74,14 @@ export function RegisterForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-zinc-200 font-inter text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
+            className="w-full pl-10 pr-4 py-3 border border-zinc-200 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
             placeholder="seu@email.com"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="reg-password" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+        <label htmlFor="reg-password" className="block text-sm font-medium text-zinc-700 mb-1.5">
           Senha
         </label>
         <div className="relative">
@@ -93,24 +93,24 @@ export function RegisterForm() {
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-zinc-200 font-inter text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
+            className="w-full pl-10 pr-4 py-3 border border-zinc-200 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
             placeholder="Mínimo 6 caracteres"
           />
         </div>
       </div>
 
       {error && (
-        <p className="font-inter text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+        <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
       )}
 
       {message && (
-        <p className="font-inter text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">{message}</p>
+        <p className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">{message}</p>
       )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-inter font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
+        className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
       >
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         {loading ? "Criando conta..." : "Criar conta"}

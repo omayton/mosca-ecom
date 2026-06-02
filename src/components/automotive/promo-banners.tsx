@@ -50,13 +50,13 @@ export function PromoBanners() {
 
               {/* Text */}
               <div className="relative z-10">
-                <p className="text-white/50 font-inter text-xs uppercase tracking-widest mb-1.5">{b.eyebrow}</p>
-                <h3 className="font-barlow font-black text-white leading-none mb-1" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}>
+                <p className="text-white/50 text-xs uppercase tracking-widest mb-1.5">{b.eyebrow}</p>
+                <h3 className="font-black text-white leading-none mb-1" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)" }}>
                   {b.title}
                 </h3>
-                <p className="text-white/80 font-inter text-base font-semibold mb-1">{b.subtitle}</p>
-                <p className="text-white/35 font-inter text-xs mb-3">{b.footnote}</p>
-                <span className={`inline-block ${b.ctaClass} text-white font-inter font-semibold text-sm px-5 py-2 min-h-[40px] transition-all duration-200 rounded-lg flex items-center`}>
+                <p className="text-white/80 text-base font-semibold mb-1">{b.subtitle}</p>
+                <p className="text-white/35 text-xs mb-3">{b.footnote}</p>
+                <span className={`inline-block ${b.ctaClass} text-white font-semibold text-sm px-5 py-2 min-h-[40px] transition-all duration-200 rounded-lg flex items-center`}>
                   {b.cta}
                 </span>
               </div>

@@ -78,14 +78,14 @@ export function ShippingSelector({ cep, items, onSelect }: ShippingSelectorProps
     return (
       <div className="flex items-center justify-center gap-2 py-8 text-zinc-500">
         <Loader2 className="h-5 w-5 animate-spin" />
-        <span className="font-inter text-sm">Calculando opções de frete...</span>
+        <span className="text-sm">Calculando opções de frete...</span>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 text-red-700 font-inter text-sm px-4 py-3 rounded-lg">
+      <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">
         {error}
       </div>
     )
@@ -95,7 +95,7 @@ export function ShippingSelector({ cep, items, onSelect }: ShippingSelectorProps
 
   return (
     <div className="space-y-3">
-      <p className="font-inter text-sm font-medium text-zinc-700">Selecione o frete:</p>
+      <p className="text-sm font-medium text-zinc-700">Selecione o frete:</p>
       <div className="space-y-2">
         {options.map((option) => (
           <label
@@ -116,14 +116,14 @@ export function ShippingSelector({ cep, items, onSelect }: ShippingSelectorProps
             />
             <Truck className="h-5 w-5 text-zinc-400 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="font-inter text-sm font-medium text-zinc-900">
+              <p className="text-sm font-medium text-zinc-900">
                 {option.company} — {option.name}
               </p>
-              <p className="font-inter text-xs text-zinc-500">
+              <p className="text-xs text-zinc-500">
                 Entrega em até {option.delivery_time} dias úteis
               </p>
             </div>
-            <span className="font-barlow font-bold text-zinc-900">
+            <span className="font-bold text-zinc-900">
               R$ {option.price.toFixed(2).replace(".", ",")}
             </span>
           </label>

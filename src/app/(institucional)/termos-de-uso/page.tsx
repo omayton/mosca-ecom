@@ -10,8 +10,8 @@ export default function TermsPage() {
     <div className="min-h-screen bg-[#FAFAFA]">
       <TopHeader />
       <main className="container mx-auto px-4 py-12 max-w-3xl">
-        <h1 className="font-inter font-bold text-zinc-900 text-3xl mb-8">Termos de Uso</h1>
-        <div className="bg-white border border-zinc-100 rounded-xl p-8 shadow-sm prose prose-zinc prose-sm max-w-none font-inter">
+        <h1 className="font-bold text-zinc-900 text-3xl mb-8">Termos de Uso</h1>
+        <div className="bg-white border border-zinc-100 rounded-xl p-8 shadow-sm prose prose-zinc prose-sm max-w-none">
           <p className="text-zinc-500 text-sm mb-6">Última atualização: Junho de 2025</p>
 
           <h2>1. Aceitação dos termos</h2>

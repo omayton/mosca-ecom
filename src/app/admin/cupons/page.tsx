@@ -17,6 +17,7 @@ interface Coupon {
   expires_at: string | null
   is_active: boolean
   applies_to: string
+  show_on_product: boolean
   created_at: string
 }
 
@@ -200,6 +201,7 @@ function CouponFormModal({ coupon, onClose, onSave }: {
     maxUses: coupon?.max_uses?.toString() || '',
     maxUsesPerUser: coupon?.max_uses_per_user?.toString() || '1',
     expiresAt: coupon?.expires_at ? coupon.expires_at.split('T')[0] : '',
+    showOnProduct: coupon?.show_on_product || false,
   })
   const [saving, setSaving] = useState(false)
 
@@ -218,6 +220,7 @@ function CouponFormModal({ coupon, onClose, onSave }: {
         maxUses: form.maxUses ? parseInt(form.maxUses) : null,
         maxUsesPerUser: parseInt(form.maxUsesPerUser) || 1,
         expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : null,
+        showOnProduct: form.showOnProduct,
       }
 
       const res = await fetch('/api/admin/coupons', {
@@ -339,6 +342,22 @@ function CouponFormModal({ coupon, onClose, onSave }: {
                 className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-red-300"
               />
             </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, showOnProduct: !form.showOnProduct })}
+              className="cursor-pointer"
+              aria-pressed={form.showOnProduct}
+            >
+              {form.showOnProduct ? (
+                <ToggleRight className="h-6 w-6 text-emerald-500" />
+              ) : (
+                <ToggleLeft className="h-6 w-6 text-zinc-400" />
+              )}
+            </button>
+            <span className="text-sm text-zinc-700">Exibir na página do produto</span>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-zinc-200">

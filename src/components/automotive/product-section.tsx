@@ -33,10 +33,10 @@ function ProductCard({ p }: { p: Product }) {
 
         {/* Badges dentro da imagem */}
         <div className="absolute top-2 left-2 flex flex-col gap-1 pointer-events-none">
-          <span className="bg-red-50 text-red-700 font-inter font-semibold leading-none px-2.5 py-1 rounded-md" style={{ fontSize: "10px" }}>
+          <span className="bg-red-50 text-red-700 font-semibold leading-none px-2.5 py-1 rounded-md" style={{ fontSize: "10px" }}>
             RARO
           </span>
-          <span className="bg-green-50 text-green-700 font-inter font-semibold leading-none px-2.5 py-1 rounded-md" style={{ fontSize: "10px" }}>
+          <span className="bg-green-50 text-green-700 font-semibold leading-none px-2.5 py-1 rounded-md" style={{ fontSize: "10px" }}>
             5% PIX
           </span>
         </div>
@@ -58,13 +58,13 @@ function ProductCard({ p }: { p: Product }) {
         aria-label={`Ver ${p.name}`}
       >
         {/* Categoria */}
-        <p className="font-inter text-zinc-400 uppercase tracking-wider mb-1.5" style={{ fontSize: "10px" }}>
+        <p className="text-zinc-400 uppercase tracking-wider mb-1.5" style={{ fontSize: "10px" }}>
           {p.category}
         </p>
 
         {/* Nome — clamp 3 linhas, ocupa espaço disponível */}
         <h3
-          className="font-inter text-zinc-800 leading-snug flex-1 overflow-hidden"
+          className="text-zinc-800 leading-snug flex-1 overflow-hidden"
           style={{ fontSize: "13px", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}
         >
           {p.name}
@@ -74,18 +74,18 @@ function ProductCard({ p }: { p: Product }) {
         <div className="flex-shrink-0 pt-3 border-t border-zinc-100 mt-2">
           {/* Preço antigo (se houver) */}
           {p.oldPrice && (
-            <p className="font-inter text-zinc-400 line-through" style={{ fontSize: "11px" }}>
+            <p className="text-zinc-400 line-through" style={{ fontSize: "11px" }}>
               R$ {fmt(p.oldPrice)}
             </p>
           )}
 
           {/* Preço PIX */}
-          <p className="font-barlow font-black text-zinc-900 leading-none" style={{ fontSize: "20px" }}>
+          <p className="font-black text-zinc-900 leading-none" style={{ fontSize: "20px" }}>
             R$ {fmt(pix)}
           </p>
 
           {/* Parcelas */}
-          <p className="font-inter text-zinc-500 mt-1" style={{ fontSize: "11px" }}>
+          <p className="text-zinc-500 mt-1" style={{ fontSize: "11px" }}>
             ou {" "}
             <span className="font-semibold text-zinc-700">3x R$ {fmt(parcel)}</span>
             {" "}sem juros
@@ -105,7 +105,7 @@ function Carousel({ products, label }: { products: Product[]; label: string }) {
     <section aria-label={label} className="bg-white py-10 border-t border-zinc-100">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-inter font-bold text-zinc-900 text-lg">{label}</h2>
+          <h2 className="font-bold text-zinc-900 text-lg">{label}</h2>
           <div className="flex items-center gap-2">
             {(["left", "right"] as const).map((dir) => (
               <button
@@ -140,7 +140,7 @@ function Carousel({ products, label }: { products: Product[]; label: string }) {
         <div className="text-center mt-6">
           <a
             href="/loja"
-            className="inline-flex items-center gap-2 border border-zinc-200 text-zinc-600 font-inter font-medium text-sm px-8 py-3 min-h-[44px] hover:border-zinc-400 hover:text-zinc-800 transition-all duration-200 rounded-lg"
+            className="inline-flex items-center gap-2 border border-zinc-200 text-zinc-600 font-medium text-sm px-8 py-3 min-h-[44px] hover:border-zinc-400 hover:text-zinc-800 transition-all duration-200 rounded-lg"
           >
             Ver todos os produtos
             <ChevronRight className="h-4 w-4" aria-hidden="true" />

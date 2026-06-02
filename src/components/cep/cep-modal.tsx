@@ -84,7 +84,7 @@ export function CepModal({ open, onClose, onSave }: CepModalProps) {
           <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100">
             <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-red-500" aria-hidden="true" />
-              <h2 className="font-inter font-semibold text-zinc-900 text-base">Informe seu CEP</h2>
+              <h2 className="font-semibold text-zinc-900 text-base">Informe seu CEP</h2>
             </div>
             <button onClick={handleClose} className="p-1.5 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer" aria-label="Fechar">
               <X className="h-5 w-5" />
@@ -94,7 +94,7 @@ export function CepModal({ open, onClose, onSave }: CepModalProps) {
           <div className="p-5">
             {!result ? (
               <form onSubmit={handleSubmit}>
-                <p className="text-sm text-zinc-500 font-inter mb-4">
+                <p className="text-sm text-zinc-500 mb-4">
                   Digite seu CEP para calcular prazos e valores de entrega.
                 </p>
                 <input
@@ -102,15 +102,15 @@ export function CepModal({ open, onClose, onSave }: CepModalProps) {
                   value={cep}
                   onChange={(e) => { setCep(formatCep(e.target.value)); setError("") }}
                   placeholder="00000-000"
-                  className="w-full border border-zinc-200 rounded-lg px-4 py-3 text-base font-inter text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-red-300 transition-colors"
+                  className="w-full border border-zinc-200 rounded-lg px-4 py-3 text-base text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-red-300 transition-colors"
                   autoFocus
                   inputMode="numeric"
                 />
-                {error && <p className="text-red-600 text-xs font-inter mt-2">{error}</p>}
+                {error && <p className="text-red-600 text-xs mt-2">{error}</p>}
                 <button
                   type="submit"
                   disabled={loading || cep.replace(/\D/g, "").length !== 8}
-                  className="w-full mt-4 bg-red-600 hover:bg-red-700 disabled:bg-zinc-300 text-white font-inter font-semibold text-sm py-3 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full mt-4 bg-red-600 hover:bg-red-700 disabled:bg-zinc-300 text-white font-semibold text-sm py-3 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Consultando...</> : "Buscar CEP"}
                 </button>
@@ -118,19 +118,19 @@ export function CepModal({ open, onClose, onSave }: CepModalProps) {
             ) : (
               <div>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                  <p className="font-inter font-semibold text-green-800 text-sm">{result.cidade} — {result.uf}</p>
-                  <p className="font-inter text-green-700 text-xs mt-1">CEP: {formatCep(result.cep)}</p>
+                  <p className="font-semibold text-green-800 text-sm">{result.cidade} — {result.uf}</p>
+                  <p className="text-green-700 text-xs mt-1">CEP: {formatCep(result.cep)}</p>
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => { setResult(null); setCep("") }}
-                    className="flex-1 border border-zinc-200 text-zinc-600 font-inter font-medium text-sm py-2.5 rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer"
+                    className="flex-1 border border-zinc-200 text-zinc-600 font-medium text-sm py-2.5 rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer"
                   >
                     Alterar
                   </button>
                   <button
                     onClick={handleConfirm}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-inter font-semibold text-sm py-2.5 rounded-lg transition-colors cursor-pointer"
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors cursor-pointer"
                   >
                     Confirmar
                   </button>

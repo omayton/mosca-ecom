@@ -14,8 +14,7 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        inter:  ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        barlow: ['var(--font-barlow)', 'Impact', 'sans-serif'],
+        ubuntu: ['var(--font-ubuntu)', 'system-ui', 'sans-serif'],
       },
     },
   },

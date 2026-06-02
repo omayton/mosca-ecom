@@ -44,7 +44,7 @@ export function CheckoutSteps({ current }: CheckoutStepsProps) {
               </div>
               <span
                 className={cn(
-                  "font-inter text-sm hidden sm:inline",
+                  "text-sm hidden sm:inline",
                   isCurrent && "font-semibold text-zinc-900",
                   isCompleted && "text-green-700",
                   !isCompleted && !isCurrent && "text-zinc-400"

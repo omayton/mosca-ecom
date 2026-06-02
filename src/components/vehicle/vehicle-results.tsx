@@ -180,7 +180,7 @@ export function VehicleResults({ vehicle, products, loading, error }: VehicleRes
                   </p>
                 )}
                 <div className="flex items-baseline gap-1">
-                  <p className="text-red-600 font-barlow font-bold text-lg">
+                  <p className="text-red-600 font-bold text-lg">
                     R$ {pixPrice(product.price)}
                   </p>
                   <p className="text-zinc-500 text-xs">

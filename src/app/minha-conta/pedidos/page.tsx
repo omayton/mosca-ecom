@@ -44,10 +44,10 @@ export default async function OrdersPage() {
     return (
       <div className="bg-white border border-zinc-100 rounded-xl p-8 shadow-sm text-center">
         <Package className="h-10 w-10 text-zinc-300 mx-auto mb-3" />
-        <p className="font-inter text-zinc-600">Você ainda não fez nenhum pedido.</p>
+        <p className="text-zinc-600">Você ainda não fez nenhum pedido.</p>
         <Link
           href="/"
-          className="inline-block mt-4 font-inter text-sm text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+          className="inline-block mt-4 text-sm text-red-600 hover:text-red-700 font-semibold cursor-pointer"
         >
           Explorar produtos
         </Link>
@@ -57,7 +57,7 @@ export default async function OrdersPage() {
 
   return (
     <div className="space-y-3">
-      <h2 className="font-inter font-semibold text-lg text-zinc-900 mb-4">Meus Pedidos</h2>
+      <h2 className="font-semibold text-lg text-zinc-900 mb-4">Meus Pedidos</h2>
       {orders.map((order: any) => {
         const status = STATUS_LABELS[order.status] || STATUS_LABELS.pending
         const totalItems = order.order_items?.reduce((sum: number, i: any) => sum + i.quantity, 0) || 0
@@ -70,18 +70,18 @@ export default async function OrdersPage() {
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-1">
-                <span className="font-inter font-semibold text-sm text-zinc-900">
+                <span className="font-semibold text-sm text-zinc-900">
                   Pedido #{order.id}
                 </span>
-                <span className={`px-2 py-0.5 rounded-full font-inter text-xs font-medium ${status.color}`}>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.color}`}>
                   {status.label}
                 </span>
               </div>
-              <p className="font-inter text-xs text-zinc-500">
+              <p className="text-xs text-zinc-500">
                 {new Date(order.created_at).toLocaleDateString("pt-BR")} — {totalItems} {totalItems === 1 ? "item" : "itens"}
               </p>
             </div>
-            <span className="font-barlow font-bold text-zinc-900">R$ {fmt(order.total)}</span>
+            <span className="font-bold text-zinc-900">R$ {fmt(order.total)}</span>
             <ChevronRight className="h-4 w-4 text-zinc-400 flex-shrink-0" />
           </Link>
         )

@@ -23,7 +23,7 @@ export function CartDrawer() {
         className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-md bg-white shadow-xl flex flex-col"
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
-          <h2 className="font-inter font-bold text-zinc-900 text-lg">Carrinho</h2>
+          <h2 className="font-bold text-zinc-900 text-lg">Carrinho</h2>
           <button
             onClick={() => setIsOpen(false)}
             aria-label="Fechar carrinho"
@@ -36,8 +36,8 @@ export function CartDrawer() {
         {items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
             <ShoppingBag className="h-12 w-12 text-zinc-300 mb-4" aria-hidden="true" />
-            <p className="font-inter text-zinc-600 font-medium mb-1">Seu carrinho está vazio</p>
-            <p className="font-inter text-sm text-zinc-400">Adicione produtos para continuar</p>
+            <p className="text-zinc-600 font-medium mb-1">Seu carrinho está vazio</p>
+            <p className="text-sm text-zinc-400">Adicione produtos para continuar</p>
           </div>
         ) : (
           <>

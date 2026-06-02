@@ -116,13 +116,13 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
     onSubmit(form, saveAddress)
   }
 
-  const inputClass = "w-full px-4 py-3 border border-zinc-200 font-inter text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
+  const inputClass = "w-full px-4 py-3 border border-zinc-200 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-1">
-          <label htmlFor="cep" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+          <label htmlFor="cep" className="block text-sm font-medium text-zinc-700 mb-1.5">
             CEP
           </label>
           <div className="relative">
@@ -139,11 +139,11 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
               <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-zinc-400" />
             )}
           </div>
-          {cepError && <p className="font-inter text-xs text-red-600 mt-1">{cepError}</p>}
+          {cepError && <p className="text-xs text-red-600 mt-1">{cepError}</p>}
         </div>
 
         <div className="sm:col-span-1">
-          <label htmlFor="estado" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+          <label htmlFor="estado" className="block text-sm font-medium text-zinc-700 mb-1.5">
             Estado
           </label>
           <input
@@ -160,7 +160,7 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
       </div>
 
       <div>
-        <label htmlFor="logradouro" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+        <label htmlFor="logradouro" className="block text-sm font-medium text-zinc-700 mb-1.5">
           Rua / Avenida
         </label>
         <input
@@ -176,7 +176,7 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label htmlFor="numero" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+          <label htmlFor="numero" className="block text-sm font-medium text-zinc-700 mb-1.5">
             Número
           </label>
           <input
@@ -190,7 +190,7 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
           />
         </div>
         <div className="sm:col-span-2">
-          <label htmlFor="complemento" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+          <label htmlFor="complemento" className="block text-sm font-medium text-zinc-700 mb-1.5">
             Complemento
           </label>
           <input
@@ -206,7 +206,7 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="bairro" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+          <label htmlFor="bairro" className="block text-sm font-medium text-zinc-700 mb-1.5">
             Bairro
           </label>
           <input
@@ -220,7 +220,7 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
           />
         </div>
         <div>
-          <label htmlFor="cidade" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+          <label htmlFor="cidade" className="block text-sm font-medium text-zinc-700 mb-1.5">
             Cidade
           </label>
           <input
@@ -237,7 +237,7 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="telefone" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+          <label htmlFor="telefone" className="block text-sm font-medium text-zinc-700 mb-1.5">
             Telefone
           </label>
           <input
@@ -251,7 +251,7 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
           />
         </div>
         <div>
-          <label htmlFor="cpf" className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+          <label htmlFor="cpf" className="block text-sm font-medium text-zinc-700 mb-1.5">
             CPF
           </label>
           <input
@@ -273,12 +273,12 @@ export function AddressForm({ initialAddress, initialPhone, onSubmit }: AddressF
           onChange={(e) => setSaveAddress(e.target.checked)}
           className="w-4 h-4 rounded border-zinc-300 text-red-600 focus:ring-red-500 cursor-pointer"
         />
-        <span className="font-inter text-sm text-zinc-700">Salvar endereço para próximas compras</span>
+        <span className="text-sm text-zinc-700">Salvar endereço para próximas compras</span>
       </label>
 
       <button
         type="submit"
-        className="w-full bg-red-600 hover:bg-red-700 text-white font-inter font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
+        className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
       >
         Continuar para o frete
       </button>

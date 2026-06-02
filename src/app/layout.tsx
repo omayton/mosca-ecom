@@ -1,20 +1,14 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Inter, Barlow_Condensed } from 'next/font/google'
+import { Ubuntu } from 'next/font/google'
 import { CartProvider } from '@/contexts/cart-context'
 import { CookieConsent } from '@/components/cookie-consent'
 import { Analytics } from '@/components/analytics'
 
-const inter = Inter({
+const ubuntu = Ubuntu({
   subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
-
-const barlow = Barlow_Condensed({
-  subsets: ['latin'],
-  variable: '--font-barlow',
-  weight: ['400', '600', '700', '800', '900'],
+  variable: '--font-ubuntu',
+  weight: ['300', '400', '500', '700'],
   display: 'swap',
 })
 
@@ -68,8 +62,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${barlow.variable}`}>
-      <body className="font-inter antialiased">
+    <html lang="pt-BR" className={ubuntu.variable}>
+      <body className="font-ubuntu antialiased">
         <Analytics />
         <CartProvider>{children}</CartProvider>
         <CookieConsent />

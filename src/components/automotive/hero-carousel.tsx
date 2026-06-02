@@ -114,7 +114,7 @@ export function HeroCarousel() {
             )}
 
             <h2
-              className="font-barlow font-black leading-none mb-4"
+              className="font-black leading-none mb-4"
               style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)", color: slide.text_color }}
             >
               {slide.title}

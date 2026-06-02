@@ -21,21 +21,21 @@ export default function GlobalError({
         <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <AlertTriangle className="h-8 w-8 text-red-600" />
         </div>
-        <h1 className="font-inter font-bold text-zinc-900 text-2xl mb-2">Algo deu errado</h1>
-        <p className="font-inter text-zinc-500 text-sm mb-8">
+        <h1 className="font-bold text-zinc-900 text-2xl mb-2">Algo deu errado</h1>
+        <p className="text-zinc-500 text-sm mb-8">
           Ocorreu um erro inesperado. Tente novamente ou volte para a página inicial.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={reset}
-            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-inter font-semibold text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer"
           >
             <RefreshCw className="h-4 w-4" />
             Tentar novamente
           </button>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 border border-zinc-200 hover:border-zinc-400 text-zinc-700 font-inter font-medium text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 border border-zinc-200 hover:border-zinc-400 text-zinc-700 font-medium text-sm px-6 py-3 rounded-lg transition-colors cursor-pointer"
           >
             <Home className="h-4 w-4" />
             Página inicial

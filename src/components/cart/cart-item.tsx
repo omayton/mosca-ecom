@@ -24,11 +24,11 @@ export function CartItemCard({ item }: { item: CartItemType }) {
 
       <div className="flex-1 min-w-0">
         <a href={`/produto/${item.slug}`}>
-          <h3 className="font-inter text-sm text-zinc-800 font-medium leading-snug line-clamp-2">
+          <h3 className="text-sm text-zinc-800 font-medium leading-snug line-clamp-2">
             {item.name}
           </h3>
         </a>
-        <p className="font-barlow font-bold text-zinc-900 text-sm mt-1">
+        <p className="font-bold text-zinc-900 text-sm mt-1">
           R$ {fmt(item.price * item.quantity)}
         </p>
 
@@ -40,7 +40,7 @@ export function CartItemCard({ item }: { item: CartItemType }) {
           >
             <Minus className="h-3 w-3" aria-hidden="true" />
           </button>
-          <span className="font-inter text-sm text-zinc-800 w-6 text-center">{item.quantity}</span>
+          <span className="text-sm text-zinc-800 w-6 text-center">{item.quantity}</span>
           <button
             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
             aria-label="Aumentar quantidade"

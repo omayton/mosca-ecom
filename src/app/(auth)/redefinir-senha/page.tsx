@@ -75,13 +75,13 @@ export default function ResetPasswordPage() {
             <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
-            <h1 className="font-inter font-bold text-zinc-900 text-xl mb-2">Senha redefinida!</h1>
-            <p className="font-inter text-zinc-500 text-sm mb-6">
+            <h1 className="font-bold text-zinc-900 text-xl mb-2">Senha redefinida!</h1>
+            <p className="text-zinc-500 text-sm mb-6">
               Sua senha foi alterada com sucesso. Você já pode fazer login.
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white font-inter font-semibold text-sm py-3 rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white font-semibold text-sm py-3 rounded-lg transition-colors cursor-pointer"
             >
               Ir para o login
             </Link>
@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
             <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
               <Lock className="h-8 w-8 text-zinc-400" />
             </div>
-            <p className="font-inter text-zinc-500 text-sm">Verificando link de recuperação...</p>
+            <p className="text-zinc-500 text-sm">Verificando link de recuperação...</p>
           </div>
         </div>
       </div>
@@ -114,13 +114,13 @@ export default function ResetPasswordPage() {
             <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="h-8 w-8 text-amber-600" />
             </div>
-            <h1 className="font-inter font-bold text-zinc-900 text-xl mb-2">Link inválido ou expirado</h1>
-            <p className="font-inter text-zinc-500 text-sm mb-6">
+            <h1 className="font-bold text-zinc-900 text-xl mb-2">Link inválido ou expirado</h1>
+            <p className="text-zinc-500 text-sm mb-6">
               Este link de recuperação pode ter expirado. Solicite um novo link.
             </p>
             <Link
               href="/esqueci-senha"
-              className="inline-flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white font-inter font-semibold text-sm py-3 rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center w-full bg-red-600 hover:bg-red-700 text-white font-semibold text-sm py-3 rounded-lg transition-colors cursor-pointer"
             >
               Solicitar novo link
             </Link>
@@ -138,15 +138,15 @@ export default function ResetPasswordPage() {
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Lock className="h-8 w-8 text-red-600" />
             </div>
-            <h1 className="font-inter font-bold text-zinc-900 text-xl mb-1">Nova senha</h1>
-            <p className="font-inter text-zinc-500 text-sm">
+            <h1 className="font-bold text-zinc-900 text-xl mb-1">Nova senha</h1>
+            <p className="text-zinc-500 text-sm">
               Digite sua nova senha abaixo.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-inter font-medium text-zinc-700 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-zinc-700 mb-1.5">
                 Nova senha
               </label>
               <input
@@ -157,12 +157,12 @@ export default function ResetPasswordPage() {
                 placeholder="Mínimo 6 caracteres"
                 required
                 minLength={6}
-                className="w-full border border-zinc-200 rounded-lg px-4 py-3 text-sm font-inter text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-red-300 transition-colors"
+                className="w-full border border-zinc-200 rounded-lg px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-red-300 transition-colors"
                 autoFocus
               />
             </div>
             <div>
-              <label htmlFor="confirm" className="block text-sm font-inter font-medium text-zinc-700 mb-1.5">
+              <label htmlFor="confirm" className="block text-sm font-medium text-zinc-700 mb-1.5">
                 Confirmar senha
               </label>
               <input
@@ -173,16 +173,16 @@ export default function ResetPasswordPage() {
                 placeholder="Repita a nova senha"
                 required
                 minLength={6}
-                className="w-full border border-zinc-200 rounded-lg px-4 py-3 text-sm font-inter text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-red-300 transition-colors"
+                className="w-full border border-zinc-200 rounded-lg px-4 py-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-red-300 transition-colors"
               />
             </div>
 
-            {error && <p className="text-red-600 text-xs font-inter">{error}</p>}
+            {error && <p className="text-red-600 text-xs">{error}</p>}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-zinc-300 text-white font-inter font-semibold text-sm py-3 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed"
+              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-zinc-300 text-white font-semibold text-sm py-3 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               {loading ? 'Salvando...' : 'Redefinir senha'}
             </button>

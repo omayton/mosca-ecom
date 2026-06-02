@@ -18,7 +18,7 @@ export function CheckoutHeader() {
         </a>
         <div className="flex items-center gap-2 text-zinc-300">
           <Lock className="h-4 w-4 text-green-500" aria-hidden="true" />
-          <span className="font-inter text-sm font-medium">Compra Segura</span>
+          <span className="text-sm font-medium">Compra Segura</span>
         </div>
       </div>
     </header>

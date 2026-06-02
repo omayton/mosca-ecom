@@ -97,7 +97,7 @@ export default async function LojaPage({ searchParams }: PageProps) {
 
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
-        <nav aria-label="Localização" className="mb-6 text-xs font-inter text-zinc-500">
+        <nav aria-label="Localização" className="mb-6 text-xs text-zinc-500">
           <a href="/" className="hover:text-red-600 transition-colors">Início</a>
           <span className="mx-2">›</span>
           <span className="text-zinc-800 font-medium">
@@ -116,18 +116,18 @@ export default async function LojaPage({ searchParams }: PageProps) {
           {/* Products grid */}
           <main className="flex-1">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="font-inter font-bold text-zinc-900 text-xl">
+              <h1 className="font-bold text-zinc-900 text-xl">
                 {busca ? `Resultados para "${busca}"` : activeLabel === "Todas" ? "Todos os Produtos" : activeLabel}
               </h1>
-              <span className="text-sm text-zinc-500 font-inter">
+              <span className="text-sm text-zinc-500">
                 {totalProducts} {totalProducts === 1 ? "produto" : "produtos"}
               </span>
             </div>
 
             {products.length === 0 ? (
               <div className="text-center py-16 bg-white border border-zinc-100 rounded-xl">
-                <p className="text-zinc-500 font-inter text-lg mb-2">Nenhum produto encontrado</p>
-                <p className="text-zinc-400 font-inter text-sm">
+                <p className="text-zinc-500 text-lg mb-2">Nenhum produto encontrado</p>
+                <p className="text-zinc-400 text-sm">
                   {busca
                     ? "Tente buscar com outros termos"
                     : "Esta categoria ainda não possui produtos cadastrados"}
@@ -149,29 +149,29 @@ export default async function LojaPage({ searchParams }: PageProps) {
                         loading="lazy"
                       />
                       <div className="absolute top-2 left-2 flex flex-col gap-1">
-                        <span className="bg-red-50 text-red-700 font-inter font-semibold px-2 py-0.5 rounded-md text-[10px]">
+                        <span className="bg-red-50 text-red-700 font-semibold px-2 py-0.5 rounded-md text-[10px]">
                           RARO
                         </span>
                       </div>
                     </div>
                     <div className="p-3 flex flex-col flex-1">
-                      <p className="font-inter text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5">{p.category}</p>
-                      <h3 className="font-inter text-xs text-zinc-800 font-medium line-clamp-2 mb-2 leading-tight">
+                      <p className="text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5">{p.category}</p>
+                      <h3 className="text-xs text-zinc-800 font-medium line-clamp-2 mb-2 leading-tight">
                         {p.name}
                       </h3>
                       <div className="mt-auto">
                         {p.oldPrice && (
-                          <p className="text-zinc-400 text-[11px] line-through font-inter">
+                          <p className="text-zinc-400 text-[11px] line-through">
                             R$ {fmt(p.oldPrice)}
                           </p>
                         )}
-                        <p className="font-barlow font-black text-zinc-900 text-lg leading-tight">
+                        <p className="font-black text-zinc-900 text-lg leading-tight">
                           R$ {fmt(pixPrice(p.price))}
                         </p>
-                        <p className="text-green-700 text-[10px] font-inter font-semibold bg-green-50 inline-block px-1.5 py-0.5 rounded mt-0.5">
+                        <p className="text-green-700 text-[10px] font-semibold bg-green-50 inline-block px-1.5 py-0.5 rounded mt-0.5">
                           5% OFF no PIX
                         </p>
-                        <p className="text-zinc-500 text-[10px] font-inter mt-1">
+                        <p className="text-zinc-500 text-[10px] mt-1">
                           ou 3x de R$ {fmt(installmentPrice(p.price, 3))}
                         </p>
                       </div>
@@ -187,7 +187,7 @@ export default async function LojaPage({ searchParams }: PageProps) {
                 {page > 1 && (
                   <a
                     href={buildPageUrl(page - 1, categoria, busca)}
-                    className="px-3 py-2 text-sm font-inter text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+                    className="px-3 py-2 text-sm text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
                   >
                     ← Anterior
                   </a>
@@ -201,7 +201,7 @@ export default async function LojaPage({ searchParams }: PageProps) {
                       )}
                       <a
                         href={buildPageUrl(p, categoria, busca)}
-                        className={`px-3 py-2 text-sm font-inter rounded-lg transition-colors ${
+                        className={`px-3 py-2 text-sm rounded-lg transition-colors ${
                           p === page
                             ? "bg-red-600 text-white font-semibold"
                             : "text-zinc-600 border border-zinc-200 hover:bg-zinc-50"
@@ -214,7 +214,7 @@ export default async function LojaPage({ searchParams }: PageProps) {
                 {page < totalPages && (
                   <a
                     href={buildPageUrl(page + 1, categoria, busca)}
-                    className="px-3 py-2 text-sm font-inter text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+                    className="px-3 py-2 text-sm text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
                   >
                     Próxima →
                   </a>
@@ -229,14 +229,14 @@ export default async function LojaPage({ searchParams }: PageProps) {
       <div className="container mx-auto px-4 py-8">
         <div className="p-5 bg-zinc-900 border border-zinc-800/50 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl">
           <div>
-            <p className="font-inter font-semibold text-white text-sm">Não achou a peça que precisa?</p>
-            <p className="font-inter text-zinc-400 text-xs mt-0.5">Fale com nossos especialistas pelo WhatsApp</p>
+            <p className="font-semibold text-white text-sm">Não achou a peça que precisa?</p>
+            <p className="text-zinc-400 text-xs mt-0.5">Fale com nossos especialistas pelo WhatsApp</p>
           </div>
           <a
             href="https://wa.me/5534999365936"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-inter font-semibold text-sm px-6 py-3 min-h-[44px] transition-colors duration-200 whitespace-nowrap rounded-lg cursor-pointer"
+            className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-6 py-3 min-h-[44px] transition-colors duration-200 whitespace-nowrap rounded-lg cursor-pointer"
           >
             <MessageCircle className="h-5 w-5" aria-hidden="true" />
             Chamar no WhatsApp

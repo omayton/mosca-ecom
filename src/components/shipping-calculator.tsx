@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Truck, Loader2, MapPin, ChevronDown, ChevronUp, XCircle } from "lucide-react"
+import { Truck, Loader2, MapPin, ChevronDown, ChevronUp, XCircle, Calendar } from "lucide-react"
 
 interface ShippingOption {
   id: number | string
@@ -30,6 +30,19 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
     const digits = value.replace(/\D/g, "").slice(0, 8)
     if (digits.length > 5) return digits.slice(0, 5) + "-" + digits.slice(5)
     return digits
+  }
+
+  function getDeliveryDate(businessDays: number): string {
+    const date = new Date()
+    let added = 0
+    while (added < businessDays) {
+      date.setDate(date.getDate() + 1)
+      const day = date.getDay()
+      if (day !== 0 && day !== 6) added++
+    }
+    const weekdays = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"]
+    const months = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
+    return `${weekdays[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]}`
   }
 
   async function calculate() {
@@ -82,7 +95,7 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
         className="w-full flex items-center justify-between group cursor-pointer transition-colors duration-200"
         aria-expanded={expanded}
       >
-        <h3 className="font-inter font-semibold text-zinc-900 text-sm flex items-center gap-2">
+        <h3 className="font-semibold text-zinc-900 text-sm flex items-center gap-2">
           <Truck className="h-[18px] w-[18px] text-red-600 transition-transform duration-300 group-hover:scale-110" aria-hidden="true" />
           Calcular frete e prazo de entrega
         </h3>
@@ -107,14 +120,14 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
                 value={cep}
                 onChange={(e) => setCep(formatCep(e.target.value))}
                 onKeyDown={(e) => e.key === "Enter" && calculate()}
-                className="w-full border border-zinc-200 pl-10 pr-3 py-2.5 text-sm font-inter text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all duration-200 rounded-xl min-h-[44px]"
+                className="w-full border border-zinc-200 pl-10 pr-3 py-2.5 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all duration-200 rounded-xl min-h-[44px]"
                 aria-label="CEP de destino"
               />
             </div>
             <button
               onClick={calculate}
               disabled={loading}
-              className="bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-zinc-300 disabled:cursor-not-allowed text-white font-inter font-semibold text-sm px-5 min-h-[44px] transition-all duration-200 flex items-center justify-center gap-2 rounded-xl cursor-pointer hover:shadow-sm disabled:shadow-none select-none"
+              className="bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-zinc-300 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 min-h-[44px] transition-all duration-200 flex items-center justify-center gap-2 rounded-xl cursor-pointer hover:shadow-sm disabled:shadow-none select-none"
             >
               {loading ? (
                 <>
@@ -131,7 +144,7 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
           {error && (
             <div className="mt-3 flex items-start gap-2 bg-red-50/80 border border-red-200 px-4 py-3 rounded-xl animate-in fade-in slide-in-from-top-1 duration-200">
               <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
-              <p className="font-inter text-sm text-red-700 leading-snug">{error}</p>
+              <p className="text-sm text-red-700 leading-snug">{error}</p>
             </div>
           )}
 
@@ -157,10 +170,10 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
                       {opt.company?.slice(0, 2) || "??"}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-inter text-sm font-medium text-zinc-800 truncate">
+                      <p className="text-sm font-medium text-zinc-800 truncate">
                         {opt.company || opt.name}
                       </p>
-                      <p className="font-inter text-xs text-zinc-500 mt-0.5 flex items-center gap-1">
+                      <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1">
                         <Truck className="h-3 w-3" aria-hidden="true" />
                         {opt.delivery_time > 0
                           ? `${opt.delivery_time} dia${opt.delivery_time > 1 ? "s" : ""} útil${opt.delivery_time > 1 ? "s" : ""}`
@@ -171,10 +184,16 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
                           </span>
                         )}
                       </p>
+                      {opt.delivery_time > 0 && (
+                        <p className="text-xs text-emerald-700 font-medium mt-1 flex items-center gap-1">
+                          <Calendar className="h-3 w-3" aria-hidden="true" />
+                          Chega até {getDeliveryDate(opt.delivery_time)}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex-shrink-0 ml-3 text-right">
-                    <span className="font-barlow font-bold text-base text-zinc-900 block">
+                    <span className="font-bold text-base text-zinc-900 block">
                       R$ {opt.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </span>
                   </div>

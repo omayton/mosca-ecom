@@ -74,8 +74,8 @@ export default async function Home() {
               <li key={text} className="flex items-center gap-3 py-4 px-4">
                 <Icon className="h-5 w-5 text-red-500 flex-shrink-0" aria-hidden="true" />
                 <div>
-                  <p className="font-inter font-semibold text-white text-xs uppercase tracking-wide leading-tight">{text}</p>
-                  <p className="font-inter text-zinc-500 text-[11px] leading-tight mt-0.5">{sub}</p>
+                  <p className="font-semibold text-white text-xs uppercase tracking-wide leading-tight">{text}</p>
+                  <p className="text-zinc-500 text-[11px] leading-tight mt-0.5">{sub}</p>
                 </div>
               </li>
             ))}
@@ -100,11 +100,11 @@ export default async function Home() {
                 height={86}
                 className="h-12 w-auto object-contain mb-4"
               />
-              <p className="text-zinc-400 font-inter text-sm leading-relaxed mb-4">
+              <p className="text-zinc-400 text-sm leading-relaxed mb-4">
                 Peças raras, soluções únicas.<br />
                 Aqui você encontra o que parecia impossível.
               </p>
-              <p className="text-zinc-600 font-inter text-xs mb-4">
+              <p className="text-zinc-600 text-xs mb-4">
                 Produção em Minas Gerais e São Paulo
               </p>
               {/* Social */}
@@ -160,11 +160,11 @@ export default async function Home() {
               },
             ].map(({ title, links }) => (
               <nav key={title} aria-label={title}>
-                <h3 className="font-inter font-bold text-zinc-300 text-xs tracking-widest uppercase mb-4">{title}</h3>
+                <h3 className="font-bold text-zinc-300 text-xs tracking-widest uppercase mb-4">{title}</h3>
                 <ul className="space-y-2">
                   {links.map((link) => (
                     <li key={link.label}>
-                      <a href={link.href} className="font-inter text-sm text-zinc-500 hover:text-zinc-200 transition-colors duration-150 min-h-[44px] flex items-center">
+                      <a href={link.href} className="text-sm text-zinc-500 hover:text-zinc-200 transition-colors duration-150 min-h-[44px] flex items-center">
                         {link.label}
                       </a>
                     </li>
@@ -177,14 +177,14 @@ export default async function Home() {
           {/* WhatsApp CTA */}
           <div className="mb-8 p-5 bg-zinc-900/80 border border-zinc-800/50 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl">
             <div>
-              <p className="font-inter font-semibold text-white text-sm">Não achou a peça que precisa?</p>
-              <p className="font-inter text-zinc-400 text-xs mt-0.5">Fale com nossos especialistas pelo WhatsApp</p>
+              <p className="font-semibold text-white text-sm">Não achou a peça que precisa?</p>
+              <p className="text-zinc-400 text-xs mt-0.5">Fale com nossos especialistas pelo WhatsApp</p>
             </div>
             <a
               href="https://wa.me/5534999365936"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-inter font-semibold text-sm px-6 py-3 min-h-[44px] transition-colors duration-200 whitespace-nowrap"
+              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-6 py-3 min-h-[44px] transition-colors duration-200 whitespace-nowrap"
             >
               <MessageCircle className="h-5 w-5" aria-hidden="true" />
               Chamar no WhatsApp
@@ -192,8 +192,8 @@ export default async function Home() {
           </div>
 
           <div className="border-t border-zinc-800/50 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <p className="font-inter text-xs text-zinc-600">© 2025–2026 Mosca Branca Parts. Todos os direitos reservados.</p>
-            <p className="font-inter text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 6x sem juros</p>
+            <p className="text-xs text-zinc-600">© 2025–2026 Mosca Branca Parts. Todos os direitos reservados.</p>
+            <p className="text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 6x sem juros</p>
           </div>
         </div>
       </footer>

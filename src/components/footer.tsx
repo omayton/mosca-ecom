@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <h3 className="font-barlow font-bold text-white text-lg mb-3">Mosca Branca Parts</h3>
+            <h3 className="font-bold text-white text-lg mb-3">Mosca Branca Parts</h3>
             <p className="text-zinc-500 text-sm leading-relaxed">
               Especialistas em pecas automotivas raras e de dificil localizacao. Enviamos para todo o Brasil.
             </p>
@@ -16,7 +16,7 @@ export function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="font-inter font-semibold text-white text-sm mb-3">Institucional</h4>
+            <h4 className="font-semibold text-white text-sm mb-3">Institucional</h4>
             <ul className="space-y-2">
               <li><Link href="/sobre" className="text-zinc-500 text-sm hover:text-white transition-colors">Sobre nos</Link></li>
               <li><Link href="/politica-de-privacidade" className="text-zinc-500 text-sm hover:text-white transition-colors">Politica de Privacidade</Link></li>
@@ -26,7 +26,7 @@ export function Footer() {
 
           {/* Conta */}
           <div>
-            <h4 className="font-inter font-semibold text-white text-sm mb-3">Minha Conta</h4>
+            <h4 className="font-semibold text-white text-sm mb-3">Minha Conta</h4>
             <ul className="space-y-2">
               <li><Link href="/minha-conta" className="text-zinc-500 text-sm hover:text-white transition-colors">Meu Perfil</Link></li>
               <li><Link href="/minha-conta/pedidos" className="text-zinc-500 text-sm hover:text-white transition-colors">Meus Pedidos</Link></li>
@@ -36,7 +36,7 @@ export function Footer() {
 
           {/* Contato */}
           <div>
-            <h4 className="font-inter font-semibold text-white text-sm mb-3">Contato</h4>
+            <h4 className="font-semibold text-white text-sm mb-3">Contato</h4>
             <ul className="space-y-2.5">
               <li>
                 <a href="https://wa.me/5534999365936" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-green-500 text-sm hover:text-green-400 transition-colors">

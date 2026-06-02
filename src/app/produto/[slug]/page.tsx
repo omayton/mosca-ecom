@@ -3,10 +3,13 @@ import { TopHeader } from "@/components/automotive/top-header"
 import { Footer } from "@/components/footer"
 import { AddToCart } from "@/components/automotive/add-to-cart"
 import { imgUrl, pixPrice, installmentPrice, fmt, parseWeight, parseDimensions } from "@/lib/products"
-import { getProductBySlug, getRelatedProducts, getAllSlugs } from "@/lib/products-db"
-import { Heart, Truck, Shield, RefreshCw, ChevronRight, MessageCircle, Package } from "lucide-react"
+import { getProductBySlug, getRelatedProducts, getAllSlugs, getProductImages } from "@/lib/products-db"
+import { Heart, Truck, Shield, RefreshCw, ChevronRight, MessageCircle, Package, CreditCard } from "lucide-react"
 import { ShippingCalculator } from "@/components/shipping-calculator"
 import { ProductImage } from "@/components/product-image"
+import { ProductGallery } from "@/components/product/product-gallery"
+import { ProductCoupons } from "@/components/product/product-coupons"
+import { ProductReviews } from "@/components/product/product-reviews"
 
 export const revalidate = 60
 
@@ -49,6 +52,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const parcel3  = installmentPrice(product.price, 3)
   const parcel12 = installmentPrice(product.price, 12)
   const related  = await getRelatedProducts(product, 4)
+  const productImages = await getProductImages(product.id)
   const weightNum = parseWeight(product.weight)
   const dims      = parseDimensions(product.dimensions)
 
@@ -84,7 +88,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
       {/* Breadcrumb */}
       <nav aria-label="Localização" className="bg-white/80 border-b border-zinc-100 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-3.5 flex items-center gap-2 text-xs font-inter text-zinc-500 flex-wrap">
+        <div className="container mx-auto px-4 py-3.5 flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
           <a href="/" className="hover:text-red-600 transition-colors">Início</a>
           <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           <a href={`/loja?categoria=${product.categorySlug}`} className="hover:text-red-600 transition-colors">
@@ -102,32 +106,21 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
             {/* ── IMAGEM ─────────────────────────────────────── */}
             <div>
-              <div className="relative aspect-square bg-zinc-50/80 border border-zinc-100 overflow-hidden rounded-xl">
-                <ProductImage
-                  src={imgUrl(product.imageFile)}
-                  alt={product.name}
-                  fill
-                  className="object-contain p-6"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  priority
-                />
-
-                {/* Rare badge */}
-                <div className="absolute top-4 left-4 flex flex-col gap-1.5">
-                  <span className="bg-red-50 text-red-700 font-inter font-semibold text-xs px-3 py-1.5 uppercase tracking-wide rounded-md">
-                    Peça Rara
-                  </span>
-                  <span className="bg-green-50 text-green-700 font-inter font-semibold text-xs px-3 py-1.5 rounded-md">
-                    5% OFF no PIX
-                  </span>
-                </div>
-              </div>
+              <ProductGallery
+                mainImage={imgUrl(product.imageFile)}
+                productName={product.name}
+                images={productImages.map((img) => ({
+                  id: img.id,
+                  url: img.url,
+                  alt: img.altText || product.name,
+                }))}
+              />
 
               {/* Share / Wishlist */}
               <div className="flex items-center gap-3 mt-4">
                 <button
                   aria-label="Salvar na lista de desejos"
-                  className="flex items-center gap-2 border border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:text-zinc-800 hover:bg-zinc-50 font-inter text-sm px-4 py-2.5 min-h-[44px] transition-all duration-200 rounded-lg flex-1 justify-center"
+                  className="flex items-center gap-2 border border-zinc-200 text-zinc-600 hover:border-zinc-400 hover:text-zinc-800 hover:bg-zinc-50 text-sm px-4 py-2.5 min-h-[44px] transition-all duration-200 rounded-lg flex-1 justify-center cursor-pointer"
                 >
                   <Heart className="h-4 w-4" aria-hidden="true" />
                   Salvar
@@ -136,7 +129,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
                   href={`https://wa.me/5534999365936?text=Olá! Tenho interesse no produto: ${encodeURIComponent(product.name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 border border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 font-inter text-sm px-4 py-2.5 min-h-[44px] transition-all duration-200 rounded-lg flex-1 justify-center"
+                  className="flex items-center gap-2 border border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 text-sm px-4 py-2.5 min-h-[44px] transition-all duration-200 rounded-lg flex-1 justify-center"
                 >
                   <MessageCircle className="h-4 w-4" aria-hidden="true" />
                   Tirar dúvida
@@ -149,13 +142,13 @@ export default async function ProductPage({ params }: { params: { slug: string }
               {/* Category */}
               <a
                 href={`/loja?categoria=${product.categorySlug}`}
-                className="inline-block font-inter text-xs font-semibold text-red-600 uppercase tracking-widest mb-3 hover:text-red-700 transition-colors"
+                className="inline-block text-xs font-semibold text-red-600 uppercase tracking-widest mb-3 hover:text-red-700 transition-colors"
               >
                 {product.category}
               </a>
 
               {/* Name */}
-              <h1 className="font-inter font-bold text-zinc-900 text-2xl md:text-3xl leading-tight mb-6">
+              <h1 className="font-bold text-zinc-900 text-2xl md:text-3xl leading-tight mb-6">
                 {product.name}
               </h1>
 
@@ -163,31 +156,31 @@ export default async function ProductPage({ params }: { params: { slug: string }
               <div className="bg-zinc-50/80 border border-zinc-100 p-6 mb-6 rounded-xl">
                 {/* PIX price */}
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="font-barlow font-black text-zinc-900 leading-none" style={{ fontSize: "2.2rem" }}>
+                  <span className="font-black text-zinc-900 leading-none" style={{ fontSize: "2.2rem" }}>
                     R$ {fmt(pix)}
                   </span>
-                  <span className="font-inter text-green-700 font-semibold text-sm bg-green-50 px-2.5 py-1 rounded-full">
+                  <span className="text-green-700 font-semibold text-sm bg-green-50 px-2.5 py-1 rounded-full">
                     5% OFF no PIX
                   </span>
                 </div>
 
                 {/* Normal price */}
                 {product.oldPrice ? (
-                  <p className="font-inter text-sm text-zinc-400 mb-1">
+                  <p className="text-sm text-zinc-400 mb-1">
                     De: <span className="line-through">R$ {fmt(product.oldPrice)}</span>{" "}
                     por <span className="text-zinc-700 font-semibold">R$ {fmt(product.price)}</span>
                   </p>
                 ) : (
-                  <p className="font-inter text-sm text-zinc-400 mb-1">
+                  <p className="text-sm text-zinc-400 mb-1">
                     Preço normal: <span className="text-zinc-700">R$ {fmt(product.price)}</span>
                   </p>
                 )}
 
                 {/* Installments */}
-                <p className="font-inter text-sm text-zinc-600">
+                <p className="text-sm text-zinc-600">
                   ou <span className="font-semibold text-zinc-800">3x de R$ {fmt(parcel3)}</span> sem juros
                 </p>
-                <p className="font-inter text-xs text-zinc-400 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   ou 12x de R$ {fmt(parcel12)} com Mercado Crédito
                 </p>
               </div>
@@ -195,13 +188,16 @@ export default async function ProductPage({ params }: { params: { slug: string }
               {/* Stock */}
               <div className="flex items-center gap-2 mb-5">
                 <Package className="h-4 w-4 text-green-600" aria-hidden="true" />
-                <span className="font-inter text-sm text-green-700 font-medium">
+                <span className="text-sm text-green-700 font-medium">
                   {product.inStock ? "Em estoque — pronto para envio" : "Consulte disponibilidade"}
                 </span>
               </div>
 
+              {/* Coupons */}
+              <ProductCoupons productId={product.id} categorySlug={product.categorySlug} />
+
               {/* Add to cart */}
-              <div className="mb-4">
+              <div className="mb-5">
                 <AddToCart
                   productId={product.id}
                   name={product.name}
@@ -211,19 +207,24 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 />
               </div>
 
-              {/* Shipping / guarantees */}
-              <ul className="space-y-3.5">
-                {[
-                  { icon: Truck,      text: "Frete grátis para SP em compras acima de R$ 430" },
-                  { icon: Shield,     text: "Garantia de devolução em 30 dias" },
-                  { icon: RefreshCw,  text: "Troca sem burocracia" },
-                ].map(({ icon: Icon, text }) => (
-                  <li key={text} className="flex items-center gap-3 text-sm font-inter text-zinc-600">
-                    <Icon className="h-4 w-4 text-red-500 flex-shrink-0" aria-hidden="true" />
-                    {text}
-                  </li>
-                ))}
-              </ul>
+              {/* Security seal */}
+              <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-4 mb-5">
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { icon: Shield, text: "Compra segura" },
+                    { icon: Truck, text: "Envio rastreado" },
+                    { icon: RefreshCw, text: "Devolução 30 dias" },
+                    { icon: CreditCard, text: "PIX, Cartão e Boleto" },
+                  ].map(({ icon: Icon, text }) => (
+                    <div key={text} className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                        <Icon className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                      </div>
+                      <span className="text-xs text-zinc-700 font-medium leading-tight">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {/* Shipping calculator */}
               <ShippingCalculator
@@ -237,23 +238,23 @@ export default async function ProductPage({ params }: { params: { slug: string }
               {/* Specs */}
               {(product.weight || product.dimensions) && (
                 <div className="mt-8 pt-6 border-t border-zinc-100">
-                  <h2 className="font-inter font-semibold text-zinc-900 text-sm mb-3 uppercase tracking-wide">
+                  <h2 className="font-semibold text-zinc-900 text-sm mb-3 uppercase tracking-wide">
                     Especificações
                   </h2>
                   <dl className="space-y-1.5">
                     {product.weight && (
-                      <div className="flex gap-4 text-sm font-inter">
+                      <div className="flex gap-4 text-sm">
                         <dt className="text-zinc-500 w-24 flex-shrink-0">Peso</dt>
                         <dd className="text-zinc-800">{product.weight}</dd>
                       </div>
                     )}
                     {product.dimensions && (
-                      <div className="flex gap-4 text-sm font-inter">
+                      <div className="flex gap-4 text-sm">
                         <dt className="text-zinc-500 w-24 flex-shrink-0">Dimensões</dt>
                         <dd className="text-zinc-800">{product.dimensions}</dd>
                       </div>
                     )}
-                    <div className="flex gap-4 text-sm font-inter">
+                    <div className="flex gap-4 text-sm">
                       <dt className="text-zinc-500 w-24 flex-shrink-0">Categoria</dt>
                       <dd className="text-zinc-800">{product.category}</dd>
                     </div>
@@ -265,18 +266,21 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
           {/* Description */}
           <div className="mt-12 pt-8 border-t border-zinc-100">
-            <h2 className="font-inter font-bold text-zinc-900 text-lg mb-4">Descrição</h2>
-            <p className="font-inter text-zinc-600 leading-relaxed max-w-3xl">{product.description}</p>
-            <p className="font-inter text-zinc-500 text-sm mt-4 italic">
+            <h2 className="font-bold text-zinc-900 text-lg mb-4">Descrição</h2>
+            <p className="text-zinc-600 leading-relaxed max-w-3xl">{product.description}</p>
+            <p className="text-zinc-500 text-sm mt-4 italic">
               &ldquo;Peças raras, soluções únicas. Aqui você encontra o que parecia impossível.&rdquo;
             </p>
           </div>
+
+          {/* Reviews */}
+          <ProductReviews productId={product.id} />
         </div>
 
         {/* Related products */}
         {related.length > 0 && (
           <section aria-label="Produtos relacionados" className="mt-8">
-            <h2 className="font-inter font-bold text-zinc-900 text-lg mb-5">Você também pode gostar</h2>
+            <h2 className="font-bold text-zinc-900 text-lg mb-5">Você também pode gostar</h2>
             <ul className="grid grid-cols-2 md:grid-cols-4 gap-5" role="list">
               {related.map((rel) => (
                 <li key={rel.id} role="listitem">
@@ -295,11 +299,11 @@ export default async function ProductPage({ params }: { params: { slug: string }
                       />
                     </div>
                     <div className="p-3">
-                      <p className="font-inter text-xs text-zinc-400 uppercase tracking-wider mb-1" style={{ fontSize: "10px" }}>{rel.category}</p>
-                      <h3 className="font-inter text-sm text-zinc-800 font-medium leading-snug line-clamp-2 mb-2">
+                      <p className="text-xs text-zinc-400 uppercase tracking-wider mb-1" style={{ fontSize: "10px" }}>{rel.category}</p>
+                      <h3 className="text-sm text-zinc-800 font-medium leading-snug line-clamp-2 mb-2">
                         {rel.name}
                       </h3>
-                      <p className="font-barlow font-black text-zinc-900 text-lg">
+                      <p className="font-black text-zinc-900 text-lg">
                         R$ {fmt(rel.price)}
                       </p>
                     </div>

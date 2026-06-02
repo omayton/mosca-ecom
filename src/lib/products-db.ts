@@ -119,3 +119,26 @@ export async function getAllSlugs(): Promise<string[]> {
   if (error) throw error
   return (data as { slug: string }[]).map((r) => r.slug)
 }
+
+export interface ProductImage {
+  id: number
+  url: string
+  altText: string
+  sortOrder: number
+}
+
+export async function getProductImages(productId: number): Promise<ProductImage[]> {
+  const { data, error } = await supabase
+    .from("product_images")
+    .select("id, url, alt_text, sort_order")
+    .eq("product_id", productId)
+    .order("sort_order")
+
+  if (error) return []
+  return (data || []).map((row: { id: number; url: string; alt_text: string; sort_order: number }) => ({
+    id: row.id,
+    url: row.url,
+    altText: row.alt_text,
+    sortOrder: row.sort_order,
+  }))
+}

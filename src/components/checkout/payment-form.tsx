@@ -161,8 +161,8 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
     return (
       <div className="text-center py-8">
         <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-4" />
-        <h3 className="font-barlow font-bold text-xl text-green-800">Pagamento aprovado!</h3>
-        <p className="font-inter text-sm text-green-700 mt-2">Redirecionando...</p>
+        <h3 className="font-bold text-xl text-green-800">Pagamento aprovado!</h3>
+        <p className="text-sm text-green-700 mt-2">Redirecionando...</p>
       </div>
     )
   }
@@ -171,11 +171,11 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
     return (
       <div className="text-center py-8 space-y-4">
         <XCircle className="h-12 w-12 text-red-600 mx-auto" />
-        <h3 className="font-barlow font-bold text-xl text-red-800">Pagamento recusado</h3>
-        <p className="font-inter text-sm text-red-700">Verifique os dados do cartão ou tente outro método.</p>
+        <h3 className="font-bold text-xl text-red-800">Pagamento recusado</h3>
+        <p className="text-sm text-red-700">Verifique os dados do cartão ou tente outro método.</p>
         <button
           onClick={() => { setPaymentStatus(null); setError("") }}
-          className="font-inter text-sm text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+          className="text-sm text-red-600 hover:text-red-700 font-semibold cursor-pointer"
         >
           Tentar novamente
         </button>
@@ -183,7 +183,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
     )
   }
 
-  const inputClass = "w-full px-4 py-3 border border-zinc-200 font-inter text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
+  const inputClass = "w-full px-4 py-3 border border-zinc-200 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all rounded-lg"
 
   return (
     <div className="space-y-6">
@@ -198,7 +198,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
           type="button"
           onClick={() => setTab("credit_card")}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-3.5 font-inter text-sm font-medium transition-colors cursor-pointer",
+            "flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors cursor-pointer",
             tab === "credit_card" ? "bg-red-600 text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"
           )}
         >
@@ -209,7 +209,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
           type="button"
           onClick={() => setTab("pix")}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-3.5 font-inter text-sm font-medium transition-colors cursor-pointer",
+            "flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors cursor-pointer",
             tab === "pix" ? "bg-red-600 text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"
           )}
         >
@@ -219,7 +219,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-700 font-inter text-sm px-4 py-3 rounded-lg">
+        <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
@@ -228,7 +228,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
       {tab === "credit_card" && (
         <form onSubmit={handleCardSubmit} className="space-y-4">
           <div>
-            <label className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+            <label className="block text-sm font-medium text-zinc-700 mb-1.5">
               Número do cartão
             </label>
             <input
@@ -244,7 +244,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">
                 Validade
               </label>
               <input
@@ -258,7 +258,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
               />
             </div>
             <div>
-              <label className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">
                 CVV
               </label>
               <input
@@ -274,7 +274,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
           </div>
 
           <div>
-            <label className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+            <label className="block text-sm font-medium text-zinc-700 mb-1.5">
               Nome no cartão
             </label>
             <input
@@ -289,7 +289,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
           </div>
 
           <div>
-            <label className="block font-inter text-sm font-medium text-zinc-700 mb-1.5">
+            <label className="block text-sm font-medium text-zinc-700 mb-1.5">
               Parcelas
             </label>
             <select
@@ -308,7 +308,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
           <button
             type="submit"
             disabled={loading || !mpReady}
-            className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-inter font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
+            className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             {loading ? "Processando..." : `Pagar R$ ${fmt(total)}`}
@@ -322,10 +322,10 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
           {!pixData ? (
             <div className="text-center space-y-4">
               <div className="bg-green-50 rounded-xl p-6">
-                <p className="font-barlow font-bold text-2xl text-green-700">
+                <p className="font-bold text-2xl text-green-700">
                   R$ {fmt(total * 0.95)}
                 </p>
-                <p className="font-inter text-sm text-green-600 mt-1">
+                <p className="text-sm text-green-600 mt-1">
                   5% de desconto no PIX (economia de R$ {fmt(total * 0.05)})
                 </p>
               </div>
@@ -333,7 +333,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
                 type="button"
                 onClick={handlePixGenerate}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-inter font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
+                className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
               >
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {loading ? "Gerando PIX..." : "Gerar QR Code PIX"}
@@ -341,7 +341,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
             </div>
           ) : (
             <div className="text-center space-y-4">
-              <p className="font-inter text-sm text-zinc-700 font-medium">
+              <p className="text-sm text-zinc-700 font-medium">
                 Escaneie o QR Code ou copie o código:
               </p>
 
@@ -360,7 +360,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
                   type="text"
                   readOnly
                   value={pixData.qr_code}
-                  className="w-full px-4 py-3 pr-12 border border-zinc-200 font-inter text-xs text-zinc-600 rounded-lg bg-zinc-50 truncate"
+                  className="w-full px-4 py-3 pr-12 border border-zinc-200 text-xs text-zinc-600 rounded-lg bg-zinc-50 truncate"
                 />
                 <button
                   type="button"
@@ -373,10 +373,10 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
               </div>
 
               {copied && (
-                <p className="font-inter text-xs text-green-600">Código copiado!</p>
+                <p className="text-xs text-green-600">Código copiado!</p>
               )}
 
-              <p className="font-inter text-xs text-zinc-500">
+              <p className="text-xs text-zinc-500">
                 Após o pagamento, o pedido será confirmado automaticamente.
               </p>
             </div>

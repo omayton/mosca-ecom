@@ -48,7 +48,7 @@ function ShopFilters({ categories, activeCategoria, activeBusca }: ShopClientPro
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Filtrar produtos..."
-            className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2.5 pr-16 text-sm font-inter text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-red-300 transition-colors"
+            className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2.5 pr-16 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-red-300 transition-colors"
           />
           <div className="absolute right-1 top-1 flex items-center gap-0.5">
             {busca && (
@@ -74,13 +74,13 @@ function ShopFilters({ categories, activeCategoria, activeBusca }: ShopClientPro
 
       {/* Category list — desktop */}
       <nav aria-label="Categorias" className="hidden lg:block">
-        <h2 className="font-inter font-bold text-zinc-900 text-sm mb-3 uppercase tracking-wide">Categorias</h2>
+        <h2 className="font-bold text-zinc-900 text-sm mb-3 uppercase tracking-wide">Categorias</h2>
         <ul className="space-y-0.5">
           {categories.map((cat) => (
             <li key={cat.slug}>
               <button
                 onClick={() => navigate(cat.slug, busca)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-inter transition-colors cursor-pointer ${
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer ${
                   activeCategoria === cat.slug
                     ? "bg-red-50 text-red-700 font-medium"
                     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
@@ -100,7 +100,7 @@ function ShopFilters({ categories, activeCategoria, activeBusca }: ShopClientPro
             <button
               key={cat.slug}
               onClick={() => navigate(cat.slug, busca)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-inter transition-colors cursor-pointer ${
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm transition-colors cursor-pointer ${
                 activeCategoria === cat.slug
                   ? "bg-red-600 text-white font-medium"
                   : "bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-400"

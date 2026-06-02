@@ -20,7 +20,7 @@ export default function CheckoutClient() {
   const [shipping, setShipping] = useState<ShippingOption | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [profile, setProfile] = useState<{ address_json?: any; phone?: string } | null>(null)
+  const [profile, setProfile] = useState<{ address_json?: any; phone?: string; name?: string; email?: string } | null>(null)
   const [orderId, setOrderId] = useState<number | null>(null)
   const [orderTotal, setOrderTotal] = useState<number>(0)
 
@@ -36,7 +36,7 @@ export default function CheckoutClient() {
       <div className="min-h-screen bg-[#FAFAFA]">
         <TopHeader />
         <div className="flex items-center justify-center py-32">
-          <p className="font-inter text-zinc-500 text-sm">Carregando...</p>
+          <p className="text-zinc-500 text-sm">Carregando...</p>
         </div>
       </div>
     )
@@ -48,10 +48,10 @@ export default function CheckoutClient() {
         <TopHeader />
         <div className="flex items-center justify-center py-32">
           <div className="text-center space-y-4">
-            <p className="font-inter text-zinc-600">Seu carrinho está vazio.</p>
+            <p className="text-zinc-600">Seu carrinho está vazio.</p>
             <button
               onClick={() => router.push("/")}
-              className="font-inter text-sm text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+              className="text-sm text-red-600 hover:text-red-700 font-semibold cursor-pointer"
             >
               Voltar às compras
             </button>
@@ -131,15 +131,15 @@ export default function CheckoutClient() {
         <div className="container mx-auto px-4 py-2.5 flex items-center justify-center gap-6">
           <div className="flex items-center gap-1.5">
             <Lock className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
-            <span className="font-inter text-xs text-green-700 font-medium">Compra Segura</span>
+            <span className="text-xs text-green-700 font-medium">Compra Segura</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Shield className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
-            <span className="font-inter text-xs text-green-700 font-medium">Dados Protegidos</span>
+            <span className="text-xs text-green-700 font-medium">Dados Protegidos</span>
           </div>
           <div className="flex items-center gap-1.5 hidden sm:flex">
             <CreditCard className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
-            <span className="font-inter text-xs text-green-700 font-medium">Pagamento Criptografado</span>
+            <span className="text-xs text-green-700 font-medium">Pagamento Criptografado</span>
           </div>
         </div>
       </div>
@@ -147,20 +147,27 @@ export default function CheckoutClient() {
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-1 font-inter text-sm text-zinc-500 hover:text-zinc-700 mb-6 cursor-pointer"
+          className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6 cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar
         </button>
 
-        <h1 className="font-barlow font-bold text-2xl text-zinc-900 mb-6">Finalizar Compra</h1>
+        <h1 className="font-bold text-2xl text-zinc-900 mb-2">Finalizar Compra</h1>
+
+        {profile?.name && (
+          <p className="text-sm text-zinc-600 mb-6">
+            Olá, <span className="font-semibold text-zinc-800">{profile.name}</span>
+            {profile.email && <span className="text-zinc-400 ml-1">({profile.email})</span>}
+          </p>
+        )}
 
         <div className="mb-8">
           <CheckoutSteps current={step} />
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-700 font-inter text-sm px-4 py-3 rounded-lg mb-6">
+          <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg mb-6">
             {error}
           </div>
         )}
@@ -185,14 +192,14 @@ export default function CheckoutClient() {
                 <button
                   onClick={handleProceedToPayment}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-inter font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
+                  className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-sm px-6 py-3.5 min-h-[48px] transition-colors duration-200 cursor-pointer rounded-xl"
                 >
                   {loading ? "Criando pedido..." : "Continuar para pagamento"}
                 </button>
               )}
               <button
                 onClick={() => setStep("address")}
-                className="w-full font-inter text-sm text-zinc-500 hover:text-zinc-700 cursor-pointer"
+                className="w-full text-sm text-zinc-500 hover:text-zinc-700 cursor-pointer"
               >
                 Voltar para endereço
               </button>
@@ -215,8 +222,8 @@ export default function CheckoutClient() {
       {/* Footer */}
       <footer className="bg-zinc-950 border-t border-zinc-800/50 mt-10 py-8" role="contentinfo">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-inter text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
-          <p className="font-inter text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 6x sem juros</p>
+          <p className="text-xs text-zinc-600">© 2025 Mosca Branca Parts. Todos os direitos reservados.</p>
+          <p className="text-xs text-zinc-600">Pix · Cartão · Boleto · Parcelamento em até 6x sem juros</p>
         </div>
       </footer>
     </div>
