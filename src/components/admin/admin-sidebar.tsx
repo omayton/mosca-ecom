@@ -13,7 +13,10 @@ import {
   ChevronLeft,
   Menu,
   ExternalLink,
-  Image
+  Image,
+  Layers,
+  BarChart3,
+  Star
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -21,10 +24,13 @@ const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/banners', label: 'Banners', icon: Image },
   { href: '/admin/produtos', label: 'Produtos', icon: Package },
+  { href: '/admin/categorias', label: 'Categorias', icon: Layers },
   { href: '/admin/estoque', label: 'Estoque', icon: Boxes },
   { href: '/admin/cupons', label: 'Cupons', icon: Tag },
+  { href: '/admin/avaliacoes', label: 'Avaliações', icon: Star },
   { href: '/admin/clientes', label: 'Clientes', icon: Users },
   { href: '/admin/pedidos', label: 'Pedidos', icon: ShoppingCart },
+  { href: '/admin/relatorios', label: 'Relatórios', icon: BarChart3 },
   { href: '/admin/analytics', label: 'Analytics IA', icon: Brain },
 ]
 

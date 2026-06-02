@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { auditLog } from '@/lib/audit-log'
+import { getClientIp } from '@/lib/rate-limit'
 
 function getSupabase() {
   return createClient(
@@ -82,6 +84,8 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error
 
+    await auditLog({ action: 'product.create', entityType: 'product', entityId: String(data.id), details: { name: body.name }, ipAddress: getClientIp(req.headers) })
+
     return NextResponse.json({ success: true, product: data })
   } catch (error) {
     console.error('Product create error:', error)
@@ -152,6 +156,8 @@ export async function DELETE(req: NextRequest) {
       .eq('id', id)
 
     if (error) throw error
+
+    await auditLog({ action: 'product.delete', entityType: 'product', entityId: id, ipAddress: getClientIp(req.headers) })
 
     return NextResponse.json({ success: true })
   } catch (error) {

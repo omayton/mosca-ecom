@@ -15,6 +15,8 @@ interface DashboardMetrics {
   lowStockCount: number
   revenueToday: number
   ordersToday: number
+  hasData?: boolean
+  apiError?: boolean
 }
 
 export default function AdminDashboardPage() {
@@ -58,6 +60,24 @@ export default function AdminDashboardPage() {
         <h1 className="text-4xl font-bold text-white tracking-tight">Dashboard</h1>
         <p className="text-white/30 mt-1 text-sm">Visão geral do e-commerce Mosca Branca Parts</p>
       </div>
+
+      {/* Status banners */}
+      {!loading && metrics.apiError && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
+          <p className="text-sm text-red-300 font-inter">
+            Não foi possível carregar os dados. Verifique a conexão com o banco de dados.
+          </p>
+        </div>
+      )}
+      {!loading && !metrics.apiError && !metrics.hasData && (
+        <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center gap-3">
+          <Clock className="h-5 w-5 text-amber-400 flex-shrink-0" />
+          <p className="text-sm text-amber-300 font-inter">
+            Nenhum pedido registrado ainda. Os dados aparecerão conforme as vendas acontecerem.
+          </p>
+        </div>
+      )}
 
       {/* Primary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

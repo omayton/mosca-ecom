@@ -23,13 +23,16 @@ export async function GET() {
     const todayOrders = todayOrdersRes.data || []
     const revenueToday = todayOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0)
 
+    const hasData = (productsRes.count || 0) > 0 || (ordersRes.count || 0) > 0
+
     return NextResponse.json({
       totalProducts: productsRes.count || 0,
       totalOrders: ordersRes.count || 0,
       totalCustomers: customersRes.count || 0,
       lowStockCount: lowStockRes.count || 0,
       revenueToday,
-      ordersToday: todayOrders.length
+      ordersToday: todayOrders.length,
+      hasData
     })
   } catch (error) {
     console.error('Dashboard metrics error:', error)
@@ -39,7 +42,9 @@ export async function GET() {
       totalCustomers: 0,
       lowStockCount: 0,
       revenueToday: 0,
-      ordersToday: 0
+      ordersToday: 0,
+      hasData: false,
+      apiError: true
     })
   }
 }
