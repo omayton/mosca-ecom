@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Script from "next/script"
-import { Loader2, CreditCard, QrCode, Copy, CheckCircle2, XCircle } from "lucide-react"
+import { Loader2, CreditCard, QrCode, Copy, CheckCircle2, XCircle, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { fmt } from "@/lib/products"
 import Image from "next/image"
@@ -23,6 +23,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
   const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string } | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [pixCountdown, setPixCountdown] = useState(0)
 
   // Card form state
   const [cardNumber, setCardNumber] = useState("")
@@ -122,6 +123,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
       }
 
       setPixData({ qr_code: data.qr_code, qr_code_base64: data.qr_code_base64 })
+      setPixCountdown(15 * 60) // 15 minutes
       setPaymentStatus(data.status)
     } catch {
       setError("Erro de conexão. Tente novamente.")
@@ -129,6 +131,18 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
       setLoading(false)
     }
   }
+
+  // PIX countdown timer
+  useEffect(() => {
+    if (pixCountdown <= 0) return
+    const interval = setInterval(() => {
+      setPixCountdown((prev) => {
+        if (prev <= 1) { clearInterval(interval); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [pixCountdown > 0])
 
   function handleCopyPix() {
     if (pixData?.qr_code) {
@@ -344,6 +358,25 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
               <p className="text-sm text-zinc-700 font-medium">
                 Escaneie o QR Code ou copie o código:
               </p>
+
+              {/* Countdown timer */}
+              {pixCountdown > 0 && (
+                <div className={`flex items-center justify-center gap-2 py-2 px-4 rounded-lg mx-auto w-fit ${
+                  pixCountdown <= 120 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+                }`}>
+                  <Clock className="h-4 w-4" aria-hidden="true" />
+                  <span className="text-sm font-bold tabular-nums">
+                    {String(Math.floor(pixCountdown / 60)).padStart(2, '0')}:{String(pixCountdown % 60).padStart(2, '0')}
+                  </span>
+                  <span className="text-xs font-medium">para pagar</span>
+                </div>
+              )}
+              {pixCountdown === 0 && pixData && (
+                <div className="flex items-center justify-center gap-2 py-2 px-4 bg-red-50 text-red-700 rounded-lg mx-auto w-fit">
+                  <XCircle className="h-4 w-4" aria-hidden="true" />
+                  <span className="text-sm font-bold">QR Code expirado — gere um novo</span>
+                </div>
+              )}
 
               {pixData.qr_code_base64 && (
                 <div className="flex justify-center">
