@@ -106,26 +106,30 @@ export async function POST(req: NextRequest) {
     let payment: any
 
     if (paymentMethod === "pix") {
+      // Apply 5% PIX discount on the transaction (server-side)
+      const pixAmount = Math.round(Number(order.total) * 0.95 * 100) / 100
+
       payment = await createPixPayment({
         orderId: order.id,
-        transactionAmount: Number(order.total),
+        transactionAmount: pixAmount,
         description: `Pedido #${order.id} — Mosca Branca Parts`,
         payer,
       })
 
-      // Atualizar pedido com payment_id
+      // Atualizar pedido com payment_id e total PIX
       await auth.client
         .from("orders")
         .update({
           payment_id: String(payment.id),
           payment_method: "pix",
+          total: pixAmount,
           updated_at: new Date().toISOString(),
         })
         .eq("id", order.id)
 
       await logPayment({
         orderId: order.id, userId: user.id, paymentMethod: "pix",
-        status: payment.status, amount: Number(order.total),
+        status: payment.status, amount: pixAmount,
         gatewayId: String(payment.id), gatewayResponse: { status: payment.status }, ip,
       })
 
@@ -135,6 +139,7 @@ export async function POST(req: NextRequest) {
         qr_code_base64: payment.point_of_interaction?.transaction_data?.qr_code_base64 || "",
         ticket_url: payment.point_of_interaction?.transaction_data?.ticket_url || "",
         expiration: payment.date_of_expiration || "",
+        pix_amount: pixAmount,
       })
     }
 
@@ -191,9 +196,24 @@ export async function POST(req: NextRequest) {
       status: "error", amount: Number(order?.total || 0),
       errorMessage: err.message, ip,
     })
-    return NextResponse.json(
-      { error: "Erro ao processar pagamento. Tente novamente." },
-      { status: 502 }
-    )
+
+    // Extract a human-readable error from MercadoPago response if present
+    let userMessage = "Erro ao processar pagamento. Tente novamente."
+    const mpMatch = err.message?.match(/\((\d{3})\): (.+)$/)
+    if (mpMatch) {
+      const [, statusCode, body] = mpMatch
+      try {
+        const parsed = JSON.parse(body)
+        if (statusCode === "401" || statusCode === "403") {
+          userMessage = "Falha de autenticação com o gateway. Contate o suporte."
+        } else if (parsed?.message) {
+          userMessage = `Erro do gateway: ${parsed.message}`
+        } else if (parsed?.cause?.[0]?.description) {
+          userMessage = `Erro do gateway: ${parsed.cause[0].description}`
+        }
+      } catch { /* body not JSON */ }
+    }
+
+    return NextResponse.json({ error: userMessage }, { status: 502 })
   }
 }

@@ -99,7 +99,7 @@ export function OrderSummary({ items, shipping, onCouponApplied }: OrderSummaryP
                 <p className="text-sm text-zinc-900 truncate">{item.name}</p>
                 <p className="text-xs text-zinc-500">Qtd: {item.quantity}</p>
               </div>
-              <span className="font-bold text-sm text-zinc-900">
+              <span className="font-bold text-sm text-zinc-900 flex-shrink-0 whitespace-nowrap">
                 R$ {fmt(item.price * item.quantity)}
               </span>
             </div>
