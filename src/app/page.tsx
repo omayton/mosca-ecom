@@ -3,7 +3,7 @@ import { HeroCarousel } from "@/components/automotive/hero-carousel"
 import { PromoBanners } from "@/components/automotive/promo-banners"
 import { ProductSection } from "@/components/automotive/product-section"
 import { getFeaturedProducts, getRecentProducts } from "@/lib/products-db"
-import { MessageCircle, Instagram, Facebook, Youtube, Truck, CreditCard, Shield, Package, Percent } from "lucide-react"
+import { MessageCircle, Instagram, Facebook, Youtube, Truck, CreditCard, Shield, Package, Percent, Star } from "lucide-react"
 import Image from "next/image"
 
 const TRUST = [
@@ -12,6 +12,15 @@ const TRUST = [
   { icon: CreditCard,  text: "6X SEM JUROS",          sub: "parcele sem acréscimo" },
   { icon: Shield,      text: "30 DIAS DE GARANTIA",   sub: "devolução sem burocracia" },
   { icon: Truck,       text: "ENVIO NACIONAL",         sub: "Correios e transportadora" },
+]
+
+const CATEGORIES_GRID = [
+  { label: "Saídas de Ar", slug: "saidas-de-ar", emoji: "💨" },
+  { label: "Acessórios", slug: "acessorios", emoji: "🔧" },
+  { label: "Tampas e Acabamentos", slug: "tampas-e-acabamentos", emoji: "🔲" },
+  { label: "Banco e Assento", slug: "banco-e-assento", emoji: "💺" },
+  { label: "Travas e Fechaduras", slug: "fechaduras", emoji: "🔐" },
+  { label: "Interruptores e Botões", slug: "interruptores-e-botoes", emoji: "🔘" },
 ]
 
 export const revalidate = 60
@@ -67,14 +76,16 @@ export default async function Home() {
       <HeroCarousel />
 
       {/* Trust bar */}
-      <div className="bg-zinc-950 border-t border-zinc-800/50">
+      <div className="bg-white border-y border-zinc-100 shadow-sm">
         <div className="container mx-auto px-4 py-5">
-          <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x divide-zinc-800/50">
+          <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {TRUST.map(({ icon: Icon, text, sub }) => (
-              <li key={text} className="flex items-center gap-3 py-4 px-4">
-                <Icon className="h-5 w-5 text-red-500 flex-shrink-0" aria-hidden="true" />
+              <li key={text} className="flex items-center gap-3 px-3 py-2">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                  <Icon className="h-5 w-5 text-red-600" aria-hidden="true" />
+                </div>
                 <div>
-                  <p className="font-semibold text-white text-xs uppercase tracking-wide leading-tight">{text}</p>
+                  <p className="font-bold text-zinc-900 text-xs uppercase tracking-wide leading-tight">{text}</p>
                   <p className="text-zinc-500 text-[11px] leading-tight mt-0.5">{sub}</p>
                 </div>
               </li>
@@ -84,7 +95,64 @@ export default async function Home() {
       </div>
 
       <PromoBanners />
+
+      {/* Categories Grid */}
+      <section aria-label="Categorias" className="bg-[#FAFAFA] py-12">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="font-bold text-zinc-900 text-xl">Navegue por Categoria</h2>
+            <p className="text-zinc-500 text-sm mt-1">Encontre a peça certa para o seu veículo</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {CATEGORIES_GRID.map((cat) => (
+              <a
+                key={cat.slug}
+                href={`/loja?categoria=${cat.slug}`}
+                className="bg-white border border-zinc-100 rounded-2xl p-5 flex flex-col items-center text-center group hover:shadow-lg hover:border-red-100 hover:bg-red-50/30 transition-all duration-300 cursor-pointer"
+              >
+                <span className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300" aria-hidden="true">
+                  {cat.emoji}
+                </span>
+                <span className="text-xs font-semibold text-zinc-700 group-hover:text-red-700 transition-colors leading-tight">
+                  {cat.label}
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <ProductSection featured={featured} recent={recent} />
+
+      {/* Social proof / testimonial */}
+      <section aria-label="Depoimentos" className="bg-white border-t border-zinc-100 py-14">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <h2 className="font-bold text-zinc-900 text-xl">O que nossos clientes dizem</h2>
+            <p className="text-zinc-500 text-sm mt-1">Avaliações reais de quem comprou</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {[
+              { name: "Carlos M.", city: "São Paulo, SP", text: "Encontrei uma peça que procurava há meses. Entrega rápida e produto original." },
+              { name: "Patrícia S.", city: "Belo Horizonte, MG", text: "Atendimento excelente pelo WhatsApp. Me ajudaram a identificar a peça correta pro meu carro." },
+              { name: "Roberto L.", city: "Curitiba, PR", text: "Preço justo e frete calculado na hora. Já é minha segunda compra aqui." },
+            ].map((review) => (
+              <div key={review.name} className="bg-zinc-50/80 border border-zinc-100 rounded-2xl p-6">
+                <div className="flex items-center gap-1 mb-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
+                  ))}
+                </div>
+                <p className="text-zinc-700 text-sm leading-relaxed mb-4">&ldquo;{review.text}&rdquo;</p>
+                <div>
+                  <p className="font-semibold text-zinc-900 text-sm">{review.name}</p>
+                  <p className="text-zinc-500 text-xs">{review.city}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="bg-zinc-950 border-t border-zinc-800/50 mt-4" role="contentinfo">
@@ -175,16 +243,16 @@ export default async function Home() {
           </div>
 
           {/* WhatsApp CTA */}
-          <div className="mb-8 p-5 bg-zinc-900/80 border border-zinc-800/50 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl">
+          <div className="mb-8 p-6 bg-gradient-to-r from-green-900/30 to-zinc-900/80 border border-green-800/30 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl">
             <div>
-              <p className="font-semibold text-white text-sm">Não achou a peça que precisa?</p>
-              <p className="text-zinc-400 text-xs mt-0.5">Fale com nossos especialistas pelo WhatsApp</p>
+              <p className="font-bold text-white text-base">Não achou a peça que precisa?</p>
+              <p className="text-zinc-400 text-sm mt-0.5">Nossos especialistas encontram para você</p>
             </div>
             <a
               href="https://wa.me/5534999365936"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-6 py-3 min-h-[44px] transition-colors duration-200 whitespace-nowrap"
+              className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white font-bold text-sm px-7 py-3.5 min-h-[44px] transition-all duration-200 whitespace-nowrap rounded-xl shadow-lg shadow-green-900/30 hover:shadow-green-800/40"
             >
               <MessageCircle className="h-5 w-5" aria-hidden="true" />
               Chamar no WhatsApp

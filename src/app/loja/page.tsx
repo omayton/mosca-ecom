@@ -125,7 +125,7 @@ export default async function LojaPage({ searchParams }: PageProps) {
             </div>
 
             {products.length === 0 ? (
-              <div className="text-center py-16 bg-white border border-zinc-100 rounded-xl">
+              <div className="text-center py-16 bg-white border border-zinc-100 rounded-2xl">
                 <p className="text-zinc-500 text-lg mb-2">Nenhum produto encontrado</p>
                 <p className="text-zinc-400 text-sm">
                   {busca
@@ -139,40 +139,42 @@ export default async function LojaPage({ searchParams }: PageProps) {
                   <a
                     key={p.id}
                     href={`/produto/${p.slug}`}
-                    className="bg-white border border-zinc-100 rounded-xl flex flex-col group hover:shadow-md hover:border-zinc-200 transition-all duration-300 cursor-pointer overflow-hidden"
+                    className="bg-white border border-zinc-100 rounded-2xl flex flex-col group hover:shadow-lg hover:border-zinc-200 transition-all duration-300 cursor-pointer overflow-hidden"
                   >
-                    <div className="relative bg-zinc-50/80 aspect-square overflow-hidden">
+                    <div className="relative bg-gradient-to-b from-zinc-50 to-white aspect-square overflow-hidden">
                       <img
                         src={imgUrl(p.imageFile)}
                         alt={p.name}
-                        className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500 ease-out"
+                        className="w-full h-full object-contain p-5 group-hover:scale-105 transition-transform duration-500 ease-out"
                         loading="lazy"
                       />
-                      <div className="absolute top-2 left-2 flex flex-col gap-1">
-                        <span className="bg-red-50 text-red-700 font-semibold px-2 py-0.5 rounded-md text-[10px]">
-                          RARO
+                      <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
+                        <span className="bg-red-600 text-white font-bold px-2 py-0.5 rounded-md shadow-sm" style={{ fontSize: "10px" }}>
+                          -{p.oldPrice ? Math.round((1 - p.price / p.oldPrice) * 100) : 5}%
                         </span>
                       </div>
                     </div>
-                    <div className="p-3 flex flex-col flex-1">
-                      <p className="text-[10px] text-zinc-400 uppercase tracking-wider mb-0.5">{p.category}</p>
-                      <h3 className="text-xs text-zinc-800 font-medium line-clamp-2 mb-2 leading-tight">
+                    <div className="p-4 flex flex-col flex-1">
+                      <p className="text-red-600 uppercase tracking-wider font-semibold mb-1" style={{ fontSize: "10px" }}>{p.category}</p>
+                      <h3 className="text-xs text-zinc-800 font-medium line-clamp-2 mb-3 leading-snug">
                         {p.name}
                       </h3>
                       <div className="mt-auto">
                         {p.oldPrice && (
-                          <p className="text-zinc-400 text-[11px] line-through">
+                          <p className="text-zinc-400 line-through" style={{ fontSize: "11px" }}>
                             R$ {fmt(p.oldPrice)}
                           </p>
                         )}
-                        <p className="font-black text-zinc-900 text-lg leading-tight">
-                          R$ {fmt(pixPrice(p.price))}
-                        </p>
-                        <p className="text-green-700 text-[10px] font-semibold bg-green-50 inline-block px-1.5 py-0.5 rounded mt-0.5">
-                          5% OFF no PIX
-                        </p>
-                        <p className="text-zinc-500 text-[10px] mt-1">
-                          ou 3x de R$ {fmt(installmentPrice(p.price, 3))}
+                        <div className="flex items-baseline gap-1.5">
+                          <p className="font-black text-zinc-900 text-lg leading-tight">
+                            R$ {fmt(pixPrice(p.price))}
+                          </p>
+                          <span className="text-green-700 font-bold bg-green-50 px-1.5 py-0.5 rounded" style={{ fontSize: "9px" }}>
+                            PIX
+                          </span>
+                        </div>
+                        <p className="text-zinc-500 mt-1" style={{ fontSize: "11px" }}>
+                          ou 3x de R$ {fmt(installmentPrice(p.price, 3))} s/ juros
                         </p>
                       </div>
                     </div>
