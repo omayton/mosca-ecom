@@ -353,92 +353,104 @@ function DesktopHtmlBanner({ slide, hasBackground = false }: { slide: BannerSlid
   )
 }
 
+function MobileBannerText({ slide, textColor = '#fff' }: { slide: BannerSlide; textColor?: string }) {
+  const shortTag = slide.tag && slide.tag.length <= 20 ? slide.tag : null
+  return (
+    <div className="flex flex-col gap-2 min-w-0">
+      {shortTag && (
+        <span
+          className="self-start text-[9px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full w-fit"
+          style={{
+            backgroundColor: `${slide.accent_color}28`,
+            color: slide.accent_color,
+            border: `1px solid ${slide.accent_color}50`,
+          }}
+        >
+          {shortTag}
+        </span>
+      )}
+      <h2
+        className="font-black leading-[1.15] line-clamp-2"
+        style={{
+          fontSize: 'clamp(0.85rem, 4vw, 1.15rem)',
+          color: textColor,
+          fontFamily: 'Ubuntu, sans-serif',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical' as const,
+          overflow: 'hidden',
+        }}
+      >
+        {slide.title}
+      </h2>
+      <a
+        href={slide.cta_link || '/loja'}
+        className="self-start inline-flex items-center gap-1.5 font-bold text-[10px] uppercase tracking-wide px-3.5 py-2 rounded-lg cursor-pointer min-h-[38px] transition-all duration-200 active:scale-95 mt-0.5"
+        style={{ backgroundColor: slide.accent_color, color: '#fff' }}
+      >
+        {slide.cta_text}
+        <ArrowRight className="h-2.5 w-2.5" />
+      </a>
+    </div>
+  )
+}
+
 function MobileLayout({ slide }: { slide: BannerSlide }) {
   const hasDesktopImage = !!slide.desktop_image_url
 
-  // Banner AI no mobile: usa a imagem como fundo + texto sobreposto
+  // Variante AI: imagem como fundo, texto sobreposto à esquerda
   if (hasDesktopImage) {
     return (
-      <div className="w-full h-full relative overflow-hidden flex items-center px-5 gap-3">
-        <img src={slide.desktop_image_url!} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover" />
-        {/* Gradiente escuro à esquerda para legibilidade */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.1) 100%)' }} />
-        <div className="relative z-10 flex flex-col gap-2">
-          {slide.tag && (
-            <span className="self-start text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
-              style={{ backgroundColor: `${slide.accent_color}30`, color: slide.accent_color, border: `1px solid ${slide.accent_color}55` }}>
-              {slide.tag}
-            </span>
-          )}
-          <h2 className="font-black leading-tight text-white"
-            style={{ fontSize: 'clamp(0.9rem, 4vw, 1.2rem)', fontFamily: 'Ubuntu, sans-serif' }}>
-            {slide.title}
-          </h2>
-          {slide.subtitle && (
-            <p className="text-[10px] text-white/55 leading-snug">{slide.subtitle}</p>
-          )}
-          <a href={slide.cta_link || '/loja'}
-            className="self-start inline-flex items-center gap-1.5 font-semibold text-[11px] px-4 py-2 rounded-lg cursor-pointer min-h-[40px] transition-all mt-1"
-            style={{ backgroundColor: slide.accent_color, color: '#fff' }}>
-            {slide.cta_text} <ArrowRight className="h-3 w-3" />
-          </a>
+      <div className="w-full h-full relative overflow-hidden flex items-center">
+        <img
+          src={slide.desktop_image_url!}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-cover object-right"
+        />
+        {/* Scrim gradiente — cobre 60% da esquerda */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(100deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.75) 45%, rgba(0,0,0,0.1) 75%, transparent 100%)' }}
+        />
+        <div className="relative z-10 px-5 w-[62%]">
+          <MobileBannerText slide={slide} />
         </div>
       </div>
     )
   }
 
+  // Variante HTML: texto esquerda, produto direita
   const textColor = slide.text_color || '#ffffff'
 
   return (
-    <div className="w-full h-full flex items-center relative overflow-hidden px-5 gap-3">
-      {/* Background glow */}
+    <div className="w-full h-full flex items-center relative overflow-hidden">
+      {/* Glow atrás do produto */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: `radial-gradient(ellipse at 80% 50%, ${slide.accent_color}30 0%, transparent 65%)` }}
+        className="absolute right-0 top-0 w-1/2 h-full pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 80% 50%, ${slide.accent_color}28 0%, transparent 70%)` }}
       />
 
-      {/* Left: text */}
-      <div className="relative z-10 flex-1 min-w-0 flex flex-col gap-2.5">
-        {slide.tag && (
-          <span
-            className="self-start text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: `${slide.accent_color}25`, color: slide.accent_color, border: `1px solid ${slide.accent_color}50` }}
-          >
-            {slide.tag}
-          </span>
-        )}
-        <h2
-          className="font-black leading-tight"
-          style={{ fontSize: 'clamp(0.95rem, 4.5vw, 1.3rem)', color: textColor, fontFamily: 'Ubuntu, sans-serif' }}
-        >
-          {slide.title}
-        </h2>
-        {slide.subtitle && (
-          <p className="text-[11px] leading-snug" style={{ color: textColor, opacity: 0.55 }}>
-            {slide.subtitle}
-          </p>
-        )}
-        <a
-          href={slide.cta_link || '/loja'}
-          className="self-start inline-flex items-center gap-1.5 font-semibold text-[11px] px-4 py-2.5 rounded-lg cursor-pointer min-h-[40px] transition-all duration-200 hover:brightness-110 mt-1"
-          style={{ backgroundColor: slide.accent_color, color: '#fff' }}
-        >
-          {slide.cta_text} <ArrowRight className="h-3 w-3" />
-        </a>
+      {/* Texto */}
+      <div className="relative z-10 flex-1 min-w-0 px-5">
+        <MobileBannerText slide={slide} textColor={textColor} />
       </div>
 
-      {/* Right: product */}
+      {/* Produto */}
       {slide.product_image_url && (
-        <div className="relative z-10 flex-shrink-0 flex items-center justify-center" style={{ width: '42%', height: '85%' }}>
+        <div
+          className="relative z-10 flex-shrink-0 flex items-center justify-center"
+          style={{ width: '38%', height: '80%' }}
+        >
           <div
-            className="absolute inset-4 blur-2xl opacity-25 rounded-full"
+            className="absolute inset-6 blur-2xl opacity-20 rounded-full"
             style={{ backgroundColor: slide.accent_color }}
           />
           <img
             src={slide.product_image_url}
             alt=""
             className="relative z-10 object-contain w-full h-full"
-            style={{ filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.7))' }}
+            style={{ filter: 'drop-shadow(0 4px 24px rgba(0,0,0,0.75))' }}
           />
         </div>
       )}
