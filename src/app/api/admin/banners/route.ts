@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         subtitle: body.subtitle || null,
         tag: body.tag || null,
         cta_text: body.ctaText || 'Ver produtos',
-        cta_link: body.ctaLink || '/produtos',
+        cta_link: body.ctaLink || '/loja',
         product_id: body.productId || null,
         product_image_url: body.productImageUrl || null,
         desktop_image_url: body.desktopImageUrl || null,
@@ -71,7 +71,10 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Banner create error:', error)
+      return NextResponse.json({ error: 'Erro ao criar banner: ' + error.message }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true, banner: data })
   } catch (error) {
@@ -120,7 +123,10 @@ export async function PATCH(req: NextRequest) {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Banner update error:', error)
+      return NextResponse.json({ error: 'Erro ao atualizar banner: ' + error.message }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true, banner: data })
   } catch (error) {

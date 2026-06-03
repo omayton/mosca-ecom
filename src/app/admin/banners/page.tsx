@@ -395,7 +395,10 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
       })
 
       if (res.ok) onSave()
-      else alert('Erro ao salvar banner')
+      else {
+        const data = await res.json()
+        alert(data.error || 'Erro ao salvar banner')
+      }
     } catch {
       alert('Erro de conexao')
     } finally {
