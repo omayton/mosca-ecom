@@ -265,7 +265,7 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
   }
 
   const generateBannerImage = async () => {
-    if (!form.productImageUrl) {
+    if (!selectedProduct) {
       alert('Selecione um produto primeiro para gerar o banner.')
       return
     }
@@ -372,7 +372,7 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
     try {
       const payload = {
         ...(banner && { id: banner.id }),
-        title: form.title || null,
+        title: form.title || selectedProduct?.name || 'Banner',
         subtitle: form.subtitle || null,
         tag: form.tag || null,
         ctaText: form.ctaText || 'Ver produtos',
@@ -561,7 +561,7 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
               <button
                 type="button"
                 onClick={generateBannerImage}
-                disabled={!form.productImageUrl || generatingImage}
+                disabled={!selectedProduct || generatingImage}
                 className="w-full flex items-center justify-center gap-3 px-5 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all shadow-lg shadow-violet-900/30 cursor-pointer"
               >
                 {generatingImage ? (
