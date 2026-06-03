@@ -321,24 +321,31 @@ function DesktopHtmlBanner({ slide, hasBackground = false }: { slide: BannerSlid
 
         {/* Product image */}
         {hasProduct && (
-          <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: 'clamp(200px, 26vw, 340px)', height: 'clamp(200px, 26vw, 340px)' }}>
-            {/* Glow circle */}
+          <div
+            className="flex-shrink-0 relative flex items-center justify-center rounded-2xl overflow-hidden"
+            style={{ width: 'clamp(220px, 28vw, 360px)', height: 'clamp(220px, 28vw, 360px)' }}
+          >
+            {/* Dark base gradient */}
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1c0404 0%, #0e0e0e 55%, #180606 100%)' }} />
+            {/* Accent spotlight — stage light from bottom */}
             <div
-              className="absolute inset-8 rounded-full blur-3xl opacity-30"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-1/2 blur-3xl opacity-45 rounded-full"
               style={{ backgroundColor: slide.accent_color }}
             />
-            {/* Light backdrop for dark products */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.1) 70%, transparent 100%)',
-              }}
-            />
+            {/* Subtle top reflection */}
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 5%, rgba(255,255,255,0.05) 0%, transparent 55%)' }} />
+            {/* Thin accent border */}
+            <div className="absolute inset-0 rounded-2xl" style={{ boxShadow: `inset 0 0 0 1px ${slide.accent_color}44` }} />
+            {/* Product */}
             <img
               src={slide.product_image_url!}
               alt=""
-              className="relative z-10 object-contain drop-shadow-2xl"
-              style={{ maxWidth: '80%', maxHeight: '80%' }}
+              className="relative z-10 object-contain"
+              style={{
+                maxWidth: '78%',
+                maxHeight: '78%',
+                filter: 'drop-shadow(0 8px 32px rgba(0,0,0,0.8)) drop-shadow(0 2px 8px rgba(0,0,0,0.6))',
+              }}
             />
           </div>
         )}
