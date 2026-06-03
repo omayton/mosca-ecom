@@ -34,14 +34,20 @@ export async function POST(req: NextRequest) {
 PRODUCT: "${productName}" — use the reference photo exactly, keep shape and color.
 STYLE INSTRUCTIONS: ${instructions_text}
 
+SAFE ZONE RULES (critical — must follow):
+- Keep ALL content (text, product, buttons, icons) at least 80px away from every edge (left, right, top, bottom)
+- The outer 80px border of the image must be ONLY background — no text, no product parts, no UI elements bleeding to the edge
+- Think of it as a frame: content lives inside the inner safe area, edges are clean background only
+- Product image must not be cropped or cut — show it fully within the safe zone
+
 BANNER COMPOSITION (wide horizontal format, like 1536x1024):
-- LEFT SIDE: Large bold promotional headline in Portuguese, example: "Peça Rara Encontrada!" or "Oferta Exclusiva!" — white or yellow bold font, big and impactful
-- CENTER: A discount badge or highlight, example: "ATÉ 20% OFF" or "FRETE GRÁTIS" in a colored box or circle (red #dc2626 or yellow)
-- RIGHT SIDE: The product from the reference photo, large, well-lit, floating with drop shadow
-- BOTTOM RIGHT: A CTA button shape: "Comprar Agora →" in dark red or black pill shape
-- BACKGROUND: Dark gradient (very dark charcoal or near-black), with subtle red accent glow (#dc2626) behind the product
-- Optional: small brand text "Mosca Branca Parts" bottom left, small and subtle
-- Trust icon strip at bottom: small icons like shield, star, truck
+- LEFT SIDE (inside safe zone): Large bold promotional headline in Portuguese, example: "Peça Rara Encontrada!" or "Oferta Exclusiva!" — white or yellow bold font, big and impactful
+- CENTER (inside safe zone): A discount badge or highlight, example: "ATÉ 20% OFF" or "FRETE GRÁTIS" in a colored box or circle (red #dc2626 or yellow)
+- RIGHT SIDE (inside safe zone): The product from the reference photo, large, well-lit, floating with drop shadow — fully visible, not cropped
+- BOTTOM RIGHT (inside safe zone): A CTA button shape: "Comprar Agora →" in dark red or black pill shape
+- BACKGROUND: Dark gradient (very dark charcoal or near-black), with subtle red accent glow (#dc2626) behind the product. Background fills the entire image edge-to-edge
+- Optional: small brand text "Mosca Branca Parts" bottom left, inside safe zone
+- Trust icon strip near bottom: small icons like shield, star, truck — inside safe zone
 
 STYLE:
 - Brazilian automotive e-commerce aesthetic — bold, high contrast, professional
