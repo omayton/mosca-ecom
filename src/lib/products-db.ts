@@ -70,10 +70,22 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   return (data as ProductRow[]).map(rowToProduct)
 }
 
-export async function getRecentProducts(limit = 8): Promise<Product[]> {
+export async function getRecentProducts(limit = 12): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
+    .order("id", { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  return (data as ProductRow[]).map(rowToProduct)
+}
+
+export async function getDiscountProducts(limit = 12): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .not("old_price", "is", null)
     .order("id", { ascending: false })
     .limit(limit)
 

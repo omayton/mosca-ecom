@@ -2,7 +2,7 @@ import { TopHeader }    from "@/components/automotive/top-header"
 import { HeroCarousel } from "@/components/automotive/hero-carousel"
 import { PromoBanners } from "@/components/automotive/promo-banners"
 import { ProductSection } from "@/components/automotive/product-section"
-import { getFeaturedProducts, getRecentProducts } from "@/lib/products-db"
+import { getFeaturedProducts, getRecentProducts, getDiscountProducts } from "@/lib/products-db"
 import { MessageCircle, Instagram, Facebook, Youtube, Truck, CreditCard, Shield, Package, Percent, Star, Wind, Wrench, LayoutGrid, Armchair, Lock, ToggleLeft } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import Image from "next/image"
@@ -27,9 +27,10 @@ const CATEGORIES_GRID: { label: string; slug: string; icon: LucideIcon }[] = [
 export const revalidate = 60
 
 export default async function Home() {
-  const [featured, recent] = await Promise.all([
+  const [featured, recent, discount] = await Promise.all([
     getFeaturedProducts(),
-    getRecentProducts(),
+    getRecentProducts(8),
+    getDiscountProducts(8),
   ])
 
   return (
@@ -121,7 +122,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <ProductSection featured={featured} recent={recent} />
+      <ProductSection featured={featured} recent={recent} discount={discount} />
 
       {/* Social proof / testimonial */}
       <section aria-label="Depoimentos" className="bg-white border-t border-zinc-100 py-14">

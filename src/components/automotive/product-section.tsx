@@ -1,7 +1,6 @@
 "use client"
 
-import { useRef } from "react"
-import { Heart, ChevronLeft, ChevronRight, Eye, ShoppingCart } from "lucide-react"
+import { Heart, ChevronRight, Eye, ShoppingCart } from "lucide-react"
 import { type Product, imgUrl, pixPrice, installmentPrice, fmt } from "@/lib/products"
 import { ProductImage } from "@/components/product-image"
 import { useCart } from "@/contexts/cart-context"
@@ -16,13 +15,11 @@ function ProductCard({ p }: { p: Product }) {
     <article
       aria-label={p.name}
       className="bg-white border border-zinc-100 flex flex-col group hover:shadow-lg hover:border-zinc-200 transition-all duration-300 rounded-2xl overflow-hidden"
-      style={{ width: "240px", flexShrink: 0 }}
     >
       {/* Image */}
       <a
         href={`/produto/${p.slug}`}
-        className="relative block overflow-hidden bg-gradient-to-b from-zinc-50 to-white"
-        style={{ height: "180px", flexShrink: 0 }}
+        className="relative block overflow-hidden bg-gradient-to-b from-zinc-50 to-white aspect-[4/3]"
         tabIndex={-1}
         aria-hidden="true"
       >
@@ -30,7 +27,7 @@ function ProductCard({ p }: { p: Product }) {
           src={imgUrl(p.imageFile)}
           alt={p.name}
           fill
-          sizes="240px"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-contain p-5 group-hover:scale-105 transition-transform duration-500 ease-out"
         />
 
@@ -124,42 +121,19 @@ function ProductCard({ p }: { p: Product }) {
   )
 }
 
-function Carousel({ products, label }: { products: Product[]; label: string }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const scroll = (dir: "left" | "right") =>
-    ref.current?.scrollBy({ left: dir === "right" ? 260 : -260, behavior: "smooth" })
-
+function ProductGrid({ products, label }: { products: Product[]; label: string }) {
   return (
-    <section aria-label={label} className="bg-white py-12 border-t border-zinc-100">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="font-bold text-zinc-900 text-xl">{label}</h2>
-            <p className="text-zinc-500 text-sm mt-0.5">Peças selecionadas para o seu veículo</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {(["left", "right"] as const).map((dir) => (
-              <button
-                key={dir}
-                onClick={() => scroll(dir)}
-                aria-label={dir === "left" ? "Produtos anteriores" : "Próximos produtos"}
-                className="border border-zinc-200 flex items-center justify-center text-zinc-500 hover:border-red-200 hover:text-red-600 hover:bg-red-50 transition-all duration-200 rounded-full"
-                style={{ width: "44px", height: "44px" }}
-              >
-                {dir === "left"
-                  ? <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-                  : <ChevronRight className="h-5 w-5" aria-hidden="true" />}
-              </button>
-            ))}
-          </div>
+    <section aria-label={label} className="bg-white py-16 border-t border-zinc-100">
+      <div className="container mx-auto px-4 lg:px-6">
+        <div className="mb-8">
+          <h2 className="font-bold text-zinc-900 text-2xl">{label}</h2>
+          <p className="text-zinc-500 text-base mt-1.5">Peças selecionadas para o seu veículo</p>
         </div>
 
         <div
-          ref={ref}
           role="list"
           aria-label={label}
-          className="flex gap-4 overflow-x-auto pb-4"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8"
         >
           {products.map((p) => (
             <div key={p.id} role="listitem">
@@ -168,13 +142,13 @@ function Carousel({ products, label }: { products: Product[]; label: string }) {
           ))}
         </div>
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-12">
           <a
             href="/loja"
-            className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-sm px-8 py-3.5 min-h-[44px] transition-all duration-200 rounded-xl shadow-sm hover:shadow-md"
+            className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-base px-10 py-4 min-h-[48px] transition-all duration-200 rounded-xl shadow-sm hover:shadow-md"
           >
             Ver todos os produtos
-            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
           </a>
         </div>
       </div>
@@ -182,11 +156,12 @@ function Carousel({ products, label }: { products: Product[]; label: string }) {
   )
 }
 
-export function ProductSection({ featured, recent }: { featured: Product[]; recent: Product[] }) {
+export function ProductSection({ featured, recent, discount }: { featured: Product[]; recent: Product[]; discount: Product[] }) {
   return (
     <>
-      <Carousel products={featured} label="Peças em destaque" />
-      <Carousel products={recent}   label="Adicionadas recentemente" />
+      <ProductGrid products={featured} label="Peças em destaque" />
+      <ProductGrid products={recent}   label="Adicionadas recentemente" />
+      {discount.length > 0 && <ProductGrid products={discount} label="Ofertas especiais" />}
     </>
   )
 }
