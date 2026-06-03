@@ -34,28 +34,32 @@ export async function POST(req: NextRequest) {
 PRODUCT: "${productName}" — use the reference photo exactly, keep shape and color.
 STYLE INSTRUCTIONS: ${instructions_text}
 
-SAFE ZONE RULES (critical — must follow):
-- Keep ALL content (text, product, buttons, icons) at least 80px away from every edge (left, right, top, bottom)
-- The outer 80px border of the image must be ONLY background — no text, no product parts, no UI elements bleeding to the edge
-- Think of it as a frame: content lives inside the inner safe area, edges are clean background only
-- Product image must not be cropped or cut — show it fully within the safe zone
+SAFE ZONE — CRITICAL (must follow strictly):
+- Imagine a border/frame of 120px on ALL sides (left, right, top, bottom)
+- NOTHING touches the edges — no text, no product, no buttons, no icons within 120px of any edge
+- Background gradient fills edge-to-edge, but ALL content stays inside the inner safe area
+- Product must be shown fully — never cropped, never bleeding past the safe zone
 
-BANNER COMPOSITION (wide horizontal format, like 1536x1024):
-- LEFT SIDE (inside safe zone): Large bold promotional headline in Portuguese, example: "Peça Rara Encontrada!" or "Oferta Exclusiva!" — white or yellow bold font, big and impactful
-- CENTER (inside safe zone): A discount badge or highlight, example: "ATÉ 20% OFF" or "FRETE GRÁTIS" in a colored box or circle (red #dc2626 or yellow)
-- RIGHT SIDE (inside safe zone): The product from the reference photo, large, well-lit, floating with drop shadow — fully visible, not cropped
-- BOTTOM RIGHT (inside safe zone): A CTA button shape: "Comprar Agora →" in dark red or black pill shape
-- BACKGROUND: Dark gradient (very dark charcoal or near-black), with subtle red accent glow (#dc2626) behind the product. Background fills the entire image edge-to-edge
-- Optional: small brand text "Mosca Branca Parts" bottom left, inside safe zone
-- Trust icon strip near bottom: small icons like shield, star, truck — inside safe zone
+COMPOSITION (content lives only inside the safe zone):
+- Scale everything to fit comfortably — content should feel airy, not cramped or overflowing
+- LEFT SIDE: Compact promotional headline in Portuguese (2–3 short lines max), Ubuntu font, bold/black weight, white or yellow, font size moderate — NOT huge
+- CENTER or LEFT-CENTER: Small discount badge "ATÉ 20% OFF" or "FRETE GRÁTIS" — compact rounded pill or box, red (#dc2626) or yellow, not oversized
+- RIGHT SIDE: Product from reference photo — medium size, perfectly centered vertically, full product visible, soft drop shadow beneath it
+- BOTTOM area (inside safe zone): Small CTA button "Comprar Agora →" pill shape, red or dark, compact size
+- Small text "Mosca Branca Parts" — very subtle, bottom-left corner (inside safe zone)
 
-STYLE:
-- Brazilian automotive e-commerce aesthetic — bold, high contrast, professional
-- Font style: heavy/black weight, impactful
-- Colors: dark background, red accent (#dc2626), white text, optional yellow highlight
-- Photorealistic product, graphic design composition for the rest
-- High production quality, commercial banner standard
-- All text in PORTUGUESE (Brazil)`
+TYPOGRAPHY:
+- Font: Ubuntu (sans-serif, geometric, clean) — use for all text
+- Headline: Ubuntu Bold or Black weight
+- Body/badge: Ubuntu Regular or Medium
+- All text in PORTUGUESE (Brazil)
+
+BACKGROUND & STYLE:
+- Very dark charcoal or near-black gradient, fills edge-to-edge
+- Subtle red glow (#dc2626) radiating softly behind the product
+- Brazilian automotive e-commerce premium look
+- High contrast, sharp, photorealistic product on graphic background
+- Overall feel: spacious, professional, breathing room on all sides`
 
     let buffer: Buffer
 
