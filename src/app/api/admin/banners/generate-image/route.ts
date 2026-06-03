@@ -35,43 +35,35 @@ export async function POST(req: NextRequest) {
       ? instructions
       : 'desconto especial, fundo escuro com vermelho'
 
-    const prompt = `Create a complete, ready-to-use promotional e-commerce banner image for a Brazilian automotive parts store called "Mosca Branca Parts".
+    const prompt = `Create a BACKGROUND IMAGE for an automotive e-commerce hero banner. This image will have HTML text overlaid on top, so the image itself must contain NO text whatsoever.
 
-PRODUCT: "${productName}" — use the reference photo exactly, keep shape and color.
-STYLE INSTRUCTIONS: ${instructions_text}
+PRODUCT: "${productName}" — use the reference photo, keep exact shape and color.
+${instructions_text !== 'desconto especial, fundo escuro com vermelho' ? `STYLE: ${instructions_text}` : ''}
 
-DIMENSIONS & SAFE ZONE — ABSOLUTE RULES:
-- The final image will be CENTER-CROPPED to a 3:1 wide banner (like 1536x512)
-- This means the TOP 25% and BOTTOM 25% of your image will be CUT OFF
-- Therefore: place ALL content ONLY in the middle 50% vertically — the horizontal center band
-- Left and right edges: keep 100px margin — nothing touches the sides
-- Background fills the entire image, content lives only in the center band
-- Product must be fully visible within the center band, not cropped
+PURPOSE: This is a background/atmosphere image only. Clean HTML text will be placed over it later.
 
-COMPOSITION (content lives only inside the safe zone):
-- The banner is WIDE and SHORT — think of it like a movie letterbox, not a poster
-- Everything must feel compact and balanced — generous white space, nothing crowded
-- LEFT SIDE: Headline in Portuguese, 2 lines MAX, Ubuntu Bold — font size should be SMALL-TO-MEDIUM relative to banner height (headline height ~15–20% of banner height total)
-- Small badge above headline: "FRETE GRÁTIS" or similar — tiny pill, not oversized
-- Below headline: 1 short subtitle line in small text
-- BOTTOM-LEFT: CTA button "Comprar Agora →" — compact pill, width ~30% of banner
-- RIGHT SIDE: Product, medium size (~40% of banner height), full product visible, centered vertically
-- Leave breathing room — do NOT fill every pixel with content
+COMPOSITION:
+- Wide landscape format (3:1 ratio — very wide, short height)
+- RIGHT HALF: The product, photorealistic, studio quality, well-lit with a soft spotlight from above-left. Product floats slightly with a soft drop shadow. Fully visible, not cropped. Takes up about 35–40% of image width
+- LEFT HALF: Empty dark space — this is where text will go. Keep it very clean, dark, and uncluttered. A very subtle vignette or texture is fine, but no objects, no shapes, nothing distracting
+- CENTER: Soft transition between dark left and product right
 
-TYPOGRAPHY SIZES (strict):
-- Badge: very small, ~11–12px equivalent
-- Headline: medium-bold, ~28–34px equivalent — NOT display/hero size
-- Subtitle: small, ~13–14px equivalent
-- CTA button: ~14px, compact padding
-- Font: Ubuntu throughout — Bold for headline, Regular for subtitle
-- All text in PORTUGUESE (Brazil)
+BACKGROUND ATMOSPHERE:
+- Very dark: deep charcoal (#111111 to #1a1a1a) or very dark navy/maroon depending on product
+- Subtle radial glow behind the product only — dark red (#dc2626 at very low opacity ~15%) or matching brand tone
+- Very faint noise/grain texture for premium feel (optional)
+- NO geometric shapes, NO lines, NO patterns on the left side — keep it pure dark
 
-BACKGROUND & STYLE:
-- Very dark charcoal or near-black gradient, fills edge-to-edge
-- Subtle red glow (#dc2626) radiating softly behind the product
-- Brazilian automotive e-commerce premium look
-- High contrast, sharp, photorealistic product on graphic background
-- Overall feel: spacious, professional, breathing room on all sides`
+LIGHTING ON PRODUCT:
+- Cinematic studio lighting — main light from upper-left, subtle rim light from behind-right
+- Product looks sharp, premium, photorealistic
+- Soft shadow beneath product on the floor/surface
+
+ABSOLUTE RULES:
+- ZERO text, ZERO words, ZERO letters, ZERO numbers anywhere
+- ZERO UI elements (no buttons, badges, icons)
+- Left side must be very dark and empty — the HTML overlay depends on this
+- Fill the entire frame edge-to-edge with background`
 
     let buffer: Buffer
 

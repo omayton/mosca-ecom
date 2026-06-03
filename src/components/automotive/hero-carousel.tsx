@@ -203,28 +203,28 @@ function NavButton({ direction, onClick, isDark }: { direction: 'prev' | 'next';
 }
 
 function SlideRenderer({ slide }: { slide: BannerSlide }) {
-  if (slide.desktop_image_url) {
-    return (
-      <>
-        {/* Desktop: AI full image, clickable */}
-        <a href={slide.cta_link || '/loja'} className="hidden md:block w-full h-full cursor-pointer" aria-label={slide.title}>
-          <img src={slide.desktop_image_url} alt={slide.title} className="w-full h-full object-cover" />
-        </a>
-        {/* Mobile: HTML fallback */}
-        <div className="md:hidden w-full h-full" style={{ backgroundColor: slide.bg_color }}>
-          <MobileLayout slide={slide} />
-        </div>
-      </>
-    )
-  }
+  const hasDesktopImage = !!slide.desktop_image_url
 
   return (
-    <div className="w-full h-full" style={{ backgroundColor: slide.bg_color }}>
-      {/* Desktop HTML banner */}
-      <div className="hidden md:flex w-full h-full items-center relative overflow-hidden">
-        <DesktopHtmlBanner slide={slide} />
+    <div
+      className="w-full h-full relative overflow-hidden"
+      style={{ backgroundColor: slide.bg_color }}
+    >
+      {/* Desktop */}
+      <div className="hidden md:flex w-full h-full items-center relative">
+        {/* AI image as background — HTML overlays on top */}
+        {hasDesktopImage && (
+          <img
+            src={slide.desktop_image_url!}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+        <DesktopHtmlBanner slide={slide} hasBackground={hasDesktopImage} />
       </div>
-      {/* Mobile HTML banner */}
+
+      {/* Mobile */}
       <div className="md:hidden w-full h-full">
         <MobileLayout slide={slide} />
       </div>
@@ -232,13 +232,24 @@ function SlideRenderer({ slide }: { slide: BannerSlide }) {
   )
 }
 
-function DesktopHtmlBanner({ slide }: { slide: BannerSlide }) {
-  const isDark = isColorDark(slide.bg_color)
-  const hasProduct = !!slide.product_image_url
+function DesktopHtmlBanner({ slide, hasBackground = false }: { slide: BannerSlide; hasBackground?: boolean }) {
+  const isDark = hasBackground ? true : isColorDark(slide.bg_color)
+  const hasProduct = !!slide.product_image_url && !hasBackground
+  const textColor = hasBackground ? '#ffffff' : slide.text_color
 
   return (
     <>
-      {/* Background glow behind product */}
+      {/* When AI background image: dark gradient on left so text is readable */}
+      {hasBackground && (
+        <div
+          className="absolute inset-0 pointer-events-none z-[1]"
+          style={{
+            background: 'linear-gradient(90deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.15) 65%, transparent 80%)',
+          }}
+        />
+      )}
+
+      {/* Background glow behind product (HTML-only mode) */}
       {hasProduct && (
         <div
           className="absolute right-0 top-0 w-1/2 h-full pointer-events-none"
@@ -248,14 +259,16 @@ function DesktopHtmlBanner({ slide }: { slide: BannerSlide }) {
         />
       )}
 
-      {/* Subtle grid texture */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(${isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} 1px, transparent 1px), linear-gradient(90deg, ${isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-        }}
-      />
+      {/* Subtle grid texture (HTML-only mode) */}
+      {!hasBackground && (
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(${isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} 1px, transparent 1px), linear-gradient(90deg, ${isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
+          }}
+        />
+      )}
 
       <div className="relative z-10 w-full max-w-[1280px] mx-auto px-16 flex items-center gap-12 h-full">
         {/* Content */}
@@ -275,7 +288,7 @@ function DesktopHtmlBanner({ slide }: { slide: BannerSlide }) {
             className="font-black leading-[1.1] mb-3 tracking-tight"
             style={{
               fontSize: 'clamp(1.2rem, 2.1vw, 1.9rem)',
-              color: slide.text_color,
+              color: textColor,
               fontFamily: 'Ubuntu, sans-serif',
               textShadow: isDark ? '0 2px 20px rgba(0,0,0,0.5)' : 'none',
             }}
@@ -286,7 +299,7 @@ function DesktopHtmlBanner({ slide }: { slide: BannerSlide }) {
           {slide.subtitle && (
             <p
               className="text-[13px] leading-relaxed mb-6 max-w-[380px]"
-              style={{ color: slide.text_color, opacity: 0.65 }}
+              style={{ color: textColor, opacity: 0.75 }}
             >
               {slide.subtitle}
             </p>
