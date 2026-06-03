@@ -46,10 +46,10 @@ Requirements:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'dall-e-3',
+        model: 'gpt-image-1',
         prompt,
         n: 1,
-        size: '1792x1024',
+        size: '1536x1024',
       }),
     })
 
@@ -63,17 +63,25 @@ Requirements:
     }
 
     const openaiData = await openaiRes.json()
-    const imageUrl = openaiData.data?.[0]?.url
 
-    if (!imageUrl) {
+    // gpt-image-1 retorna base64, dall-e-3 retorna url — suporta ambos
+    const imageData = openaiData.data?.[0]
+    if (!imageData) {
       return NextResponse.json({ error: 'OpenAI não retornou imagem.' }, { status: 500 })
     }
 
-    const imgRes = await fetch(imageUrl)
-    if (!imgRes.ok) {
-      return NextResponse.json({ error: 'Erro ao baixar imagem gerada.' }, { status: 500 })
+    let buffer: Buffer
+    if (imageData.b64_json) {
+      buffer = Buffer.from(imageData.b64_json, 'base64')
+    } else if (imageData.url) {
+      const imgRes = await fetch(imageData.url)
+      if (!imgRes.ok) {
+        return NextResponse.json({ error: 'Erro ao baixar imagem gerada.' }, { status: 500 })
+      }
+      buffer = Buffer.from(await imgRes.arrayBuffer())
+    } else {
+      return NextResponse.json({ error: 'Formato de resposta inesperado da OpenAI.' }, { status: 500 })
     }
-    const buffer = Buffer.from(await imgRes.arrayBuffer())
 
     const supabase = getSupabase()
     const fileName = `banner-ai-${Date.now()}.png`
