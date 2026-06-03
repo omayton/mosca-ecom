@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
         cta_link: body.ctaLink || '/produtos',
         product_id: body.productId || null,
         product_image_url: body.productImageUrl || null,
+        desktop_image_url: body.desktopImageUrl || null,
         template: body.template || 'hero',
         bg_color: body.bgColor || '#0a0a0b',
         accent_color: body.accentColor || '#dc2626',
@@ -100,6 +101,7 @@ export async function PATCH(req: NextRequest) {
     if (updates.ctaLink !== undefined) dbUpdates.cta_link = updates.ctaLink
     if (updates.productId !== undefined) dbUpdates.product_id = updates.productId
     if (updates.productImageUrl !== undefined) dbUpdates.product_image_url = updates.productImageUrl
+    if (updates.desktopImageUrl !== undefined) dbUpdates.desktop_image_url = updates.desktopImageUrl
     if (updates.template !== undefined) dbUpdates.template = updates.template
     if (updates.bgColor !== undefined) dbUpdates.bg_color = updates.bgColor
     if (updates.accentColor !== undefined) dbUpdates.accent_color = updates.accentColor
