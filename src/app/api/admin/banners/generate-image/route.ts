@@ -25,19 +25,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'OPENAI_API_KEY não configurada.' }, { status: 500 })
     }
 
-    const prompt = `Premium e-commerce hero banner for "Mosca Branca Parts", a rare automotive parts store.
-The product "${productName}" must be the EXACT SAME product from the reference photo — keep its shape, color and details perfectly.
-${instructions ? `Additional style: ${instructions}.` : ''}
-Banner style:
-- Wide horizontal composition (landscape)
-- Dark studio background: deep black or very dark charcoal gradient
-- Dramatic cinematic lighting on the product — spotlight from above-front, subtle red rim light (#dc2626) on edges
-- Product centered-right, large and sharp, floating slightly with soft drop shadow
-- Left side: open dark space (reserved for text overlay — keep it clean and empty)
-- Subtle geometric texture or carbon fiber pattern in background (very faint)
-- Metallic, high-contrast, premium automotive feel
-- NO text, NO words, NO letters, NO watermarks anywhere
-- Photorealistic quality, commercial photography standard`
+    const instructions_text = instructions?.trim()
+      ? instructions
+      : 'desconto especial, fundo escuro com vermelho'
+
+    const prompt = `Create a complete, ready-to-use promotional e-commerce banner image for a Brazilian automotive parts store called "Mosca Branca Parts".
+
+PRODUCT: "${productName}" — use the reference photo exactly, keep shape and color.
+STYLE INSTRUCTIONS: ${instructions_text}
+
+BANNER COMPOSITION (wide horizontal format, like 1536x1024):
+- LEFT SIDE: Large bold promotional headline in Portuguese, example: "Peça Rara Encontrada!" or "Oferta Exclusiva!" — white or yellow bold font, big and impactful
+- CENTER: A discount badge or highlight, example: "ATÉ 20% OFF" or "FRETE GRÁTIS" in a colored box or circle (red #dc2626 or yellow)
+- RIGHT SIDE: The product from the reference photo, large, well-lit, floating with drop shadow
+- BOTTOM RIGHT: A CTA button shape: "Comprar Agora →" in dark red or black pill shape
+- BACKGROUND: Dark gradient (very dark charcoal or near-black), with subtle red accent glow (#dc2626) behind the product
+- Optional: small brand text "Mosca Branca Parts" bottom left, small and subtle
+- Trust icon strip at bottom: small icons like shield, star, truck
+
+STYLE:
+- Brazilian automotive e-commerce aesthetic — bold, high contrast, professional
+- Font style: heavy/black weight, impactful
+- Colors: dark background, red accent (#dc2626), white text, optional yellow highlight
+- Photorealistic product, graphic design composition for the rest
+- High production quality, commercial banner standard
+- All text in PORTUGUESE (Brazil)`
 
     let buffer: Buffer
 
