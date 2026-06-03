@@ -24,6 +24,7 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [pixCountdown, setPixCountdown] = useState(0)
+  const pixPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Card form state
   const [cardNumber, setCardNumber] = useState("")
@@ -125,6 +126,25 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
       setPixData({ qr_code: data.qr_code, qr_code_base64: data.qr_code_base64 })
       setPixCountdown(15 * 60) // 15 minutes
       setPaymentStatus(data.status)
+
+      // Poll order status every 5s until confirmed or cancelled
+      if (pixPollRef.current) clearInterval(pixPollRef.current)
+      pixPollRef.current = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/orders/${orderId}/status`)
+          if (!res.ok) return
+          const orderData = await res.json()
+          if (orderData.status === "confirmed") {
+            clearInterval(pixPollRef.current!)
+            setPaymentStatus("approved")
+            setTimeout(onSuccess, 1500)
+          } else if (orderData.status === "cancelled") {
+            clearInterval(pixPollRef.current!)
+            setError("Pagamento PIX não confirmado. Gere um novo QR Code.")
+            setPixData(null)
+          }
+        } catch { /* network error — keep polling */ }
+      }, 5000)
     } catch {
       setError("Erro de conexão. Tente novamente.")
     } finally {
@@ -137,12 +157,22 @@ export function PaymentForm({ orderId, total, onSuccess }: PaymentFormProps) {
     if (pixCountdown <= 0) return
     const interval = setInterval(() => {
       setPixCountdown((prev) => {
-        if (prev <= 1) { clearInterval(interval); return 0 }
+        if (prev <= 1) {
+          clearInterval(interval)
+          // Stop polling when QR code expires
+          if (pixPollRef.current) { clearInterval(pixPollRef.current); pixPollRef.current = null }
+          return 0
+        }
         return prev - 1
       })
     }, 1000)
     return () => clearInterval(interval)
   }, [pixCountdown > 0])
+
+  // Cleanup poll on unmount
+  useEffect(() => {
+    return () => { if (pixPollRef.current) clearInterval(pixPollRef.current) }
+  }, [])
 
   function handleCopyPix() {
     if (pixData?.qr_code) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, ChevronDown, Menu, X, Phone, MessageCircle, Zap, User, LayoutGrid } from "lucide-react"
+import { Search, MapPin, ChevronDown, Menu, X, Phone, MessageCircle, Zap, User, LayoutGrid, Package, LogOut, LogIn } from "lucide-react"
 import Image from "next/image"
 import { AuthStatus } from "@/components/auth/auth-status"
 import { CartButton } from "@/components/cart/cart-button"
@@ -38,6 +38,7 @@ export function TopHeader() {
   const [savedCep, setSavedCep] = useState<{ cep: string; cidade: string; uf: string } | null>(null)
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES)
   const [deptOpen, setDeptOpen] = useState(false)
+  const [mobileUser, setMobileUser] = useState<{ email: string; name?: string } | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem("mosca-cep")
@@ -51,6 +52,11 @@ export function TopHeader() {
           setCategories(data.categories.map((c: any) => ({ label: c.name, slug: c.slug })))
         }
       })
+      .catch(() => {})
+
+    fetch("/api/auth/me")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.user) setMobileUser(data.user) })
       .catch(() => {})
   }, [])
 
@@ -304,6 +310,42 @@ export function TopHeader() {
                 </a>
               </li>
             </ul>
+
+            {/* Auth section */}
+            <div className="px-4 py-3 border-t border-zinc-800 bg-zinc-900/30">
+              {mobileUser ? (
+                <div className="space-y-1">
+                  <p className="text-xs text-zinc-500 px-1 mb-2 truncate">
+                    Olá, <span className="text-zinc-300 font-semibold">{mobileUser.name || mobileUser.email.split("@")[0]}</span>
+                  </p>
+                  <a href="/minha-conta" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-zinc-300 hover:text-white hover:bg-zinc-800 px-3 py-2.5 rounded-lg min-h-[44px] transition-colors">
+                    <User className="h-4 w-4 text-zinc-400" aria-hidden="true" />
+                    <span className="text-sm">Minha Conta</span>
+                  </a>
+                  <a href="/minha-conta/pedidos" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-zinc-300 hover:text-white hover:bg-zinc-800 px-3 py-2.5 rounded-lg min-h-[44px] transition-colors">
+                    <Package className="h-4 w-4 text-zinc-400" aria-hidden="true" />
+                    <span className="text-sm">Meus Pedidos</span>
+                  </a>
+                  <button
+                    onClick={async () => {
+                      await fetch("/api/auth/logout", { method: "POST" })
+                      setMobileUser(null)
+                      setMobileMenuOpen(false)
+                      window.location.href = "/"
+                    }}
+                    className="w-full flex items-center gap-3 text-red-400 hover:text-red-300 hover:bg-zinc-800 px-3 py-2.5 rounded-lg min-h-[44px] transition-colors cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden="true" />
+                    <span className="text-sm">Sair</span>
+                  </button>
+                </div>
+              ) : (
+                <a href="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-zinc-300 hover:text-white hover:bg-zinc-800 px-3 py-2.5 rounded-lg min-h-[44px] transition-colors">
+                  <LogIn className="h-4 w-4 text-zinc-400" aria-hidden="true" />
+                  <span className="text-sm font-semibold">Entrar / Cadastrar</span>
+                </a>
+              )}
+            </div>
 
             <div className="px-4 py-4 border-t border-zinc-800 space-y-2 bg-zinc-900/50">
               <a href="tel:3499936-5936" className="flex items-center gap-3 text-zinc-300 hover:text-white py-2 min-h-[44px] transition-colors">
