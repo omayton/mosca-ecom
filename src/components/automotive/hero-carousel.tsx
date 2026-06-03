@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
 
 interface BannerSlide {
   id: number
@@ -20,111 +20,116 @@ interface BannerSlide {
 const FALLBACK_SLIDES: BannerSlide[] = [
   {
     id: 1,
-    title: "PEÇAS RARAS",
-    subtitle: "Encontre o que parecia impossível",
-    tag: "Peças difíceis de encontrar? Aqui tem.",
+    title: "Peças Raras Encontradas",
+    subtitle: "O que parecia impossível de achar, aqui você encontra.",
+    tag: "Catálogo exclusivo",
     cta_text: "Ver catálogo",
     cta_link: "/loja",
     product_image_url: null,
     desktop_image_url: null,
-    bg_color: "#f4f4f5",
+    bg_color: "#0f0f11",
     accent_color: "#dc2626",
-    text_color: "#18181b",
+    text_color: "#ffffff",
   },
   {
     id: 2,
-    title: "5% OFF NO PIX",
-    subtitle: "Parcele em até 6x sem juros",
-    tag: "Válido em todo o site",
-    cta_text: "Aproveitar",
+    title: "5% OFF no PIX",
+    subtitle: "Parcele em até 6x sem juros no cartão.",
+    tag: "Promoção",
+    cta_text: "Aproveitar agora",
     cta_link: "/loja",
     product_image_url: null,
     desktop_image_url: null,
-    bg_color: "#f0fdf4",
+    bg_color: "#0a1a0f",
     accent_color: "#16a34a",
-    text_color: "#14532d",
+    text_color: "#ffffff",
   },
   {
     id: 3,
-    title: "COMPONENTES",
-    subtitle: "Garantia de 30 dias — Envio nacional",
-    tag: "Motor, freios, suspensão e mais",
+    title: "Envio para Todo o Brasil",
+    subtitle: "Garantia de 30 dias em todos os produtos.",
+    tag: "Frete nacional",
     cta_text: "Ver produtos",
     cta_link: "/loja",
     product_image_url: null,
     desktop_image_url: null,
-    bg_color: "#fafafa",
-    accent_color: "#18181b",
-    text_color: "#18181b",
+    bg_color: "#0d0d14",
+    accent_color: "#7c3aed",
+    text_color: "#ffffff",
   },
 ]
+
+const SLIDE_DURATION = 6000
 
 export function HeroCarousel() {
   const [slides, setSlides] = useState<BannerSlide[]>(FALLBACK_SLIDES)
   const [current, setCurrent] = useState(0)
-  const [prev, setPrev] = useState<number | null>(null)
+  const [prevIdx, setPrevIdx] = useState<number | null>(null)
   const [animating, setAnimating] = useState(false)
   const [paused, setPaused] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const reducedMotion = useRef(false)
 
   useEffect(() => {
-    async function fetchBanners() {
-      try {
-        const res = await fetch('/api/admin/banners?active=true')
-        if (res.ok) {
-          const data = await res.json()
-          if (data.banners?.length > 0) setSlides(data.banners)
-        }
-      } catch {}
-    }
-    fetchBanners()
+    reducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    fetch('/api/admin/banners?active=true')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.banners?.length > 0) setSlides(d.banners) })
+      .catch(() => {})
   }, [])
 
   const goTo = useCallback((next: number) => {
     if (animating) return
-    setPrev(current)
+    setPrevIdx(current)
     setAnimating(true)
     setCurrent(next)
-    setTimeout(() => {
-      setPrev(null)
-      setAnimating(false)
-    }, 600)
+    setProgress(0)
+    const duration = reducedMotion.current ? 0 : 500
+    setTimeout(() => { setPrevIdx(null); setAnimating(false) }, duration)
   }, [current, animating])
 
   const goNext = useCallback(() => goTo((current + 1) % slides.length), [current, slides.length, goTo])
   const goPrev = useCallback(() => goTo((current - 1 + slides.length) % slides.length), [current, slides.length, goTo])
 
+  // Auto-advance + progress bar
   useEffect(() => {
-    if (paused) return
-    const id = setInterval(goNext, 5500)
-    return () => clearInterval(id)
+    if (paused) { setProgress(0); return }
+    const step = 50
+    const increment = (step / SLIDE_DURATION) * 100
+    progressRef.current = setInterval(() => {
+      setProgress(p => {
+        if (p >= 100) { goNext(); return 0 }
+        return p + increment
+      })
+    }, step)
+    return () => { if (progressRef.current) clearInterval(progressRef.current) }
   }, [paused, goNext])
 
   const slide = slides[current]
   if (!slide) return null
-
-  const isDarkBg = isColorDark(slide.bg_color)
+  const isDark = isColorDark(slide.bg_color)
 
   return (
     <section
       aria-label="Banner promocional"
       className="relative w-full overflow-hidden"
-      style={{ height: 'clamp(300px, 42vw, 480px)' }}
+      style={{ height: 'clamp(280px, 40vw, 480px)' }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Slides stack — crossfade */}
+      {/* Slides — crossfade stack */}
       {slides.map((s, i) => {
         const isActive = i === current
-        const isPrev = i === prev
+        const isPrev = i === prevIdx
         if (!isActive && !isPrev) return null
-
         return (
           <div
             key={s.id}
-            className="absolute inset-0 w-full h-full"
+            className="absolute inset-0"
             style={{
               opacity: isActive ? 1 : 0,
-              transition: 'opacity 600ms ease-in-out',
+              transition: reducedMotion.current ? 'none' : 'opacity 500ms cubic-bezier(0.4,0,0.2,1)',
               zIndex: isActive ? 2 : 1,
             }}
           >
@@ -133,44 +138,36 @@ export function HeroCarousel() {
         )
       })}
 
+      {/* Progress bar */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] z-20" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}>
+        <div
+          className="h-full"
+          style={{
+            width: `${progress}%`,
+            backgroundColor: slide.accent_color,
+            transition: paused ? 'none' : 'width 50ms linear',
+          }}
+        />
+      </div>
+
       {/* Prev / Next */}
-      <button
-        onClick={goPrev}
-        aria-label="Slide anterior"
-        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110 cursor-pointer"
-        style={{
-          backgroundColor: isDarkBg ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
-          color: isDarkBg ? '#fff' : '#18181b',
-        }}
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        onClick={goNext}
-        aria-label="Próximo slide"
-        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110 cursor-pointer"
-        style={{
-          backgroundColor: isDarkBg ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
-          color: isDarkBg ? '#fff' : '#18181b',
-        }}
-      >
-        <ChevronRight className="h-5 w-5" />
-      </button>
+      <NavButton direction="prev" onClick={goPrev} isDark={isDark} />
+      <NavButton direction="next" onClick={goNext} isDark={isDark} />
 
       {/* Dots */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2">
         {slides.map((s, i) => (
           <button
             key={s.id}
-            aria-label={`Slide ${i + 1}`}
+            aria-label={`Ir para slide ${i + 1}`}
             onClick={() => goTo(i)}
-            className="transition-all duration-300 rounded-full cursor-pointer"
+            className="cursor-pointer transition-all duration-300 rounded-full"
             style={{
-              width: i === current ? '24px' : '8px',
-              height: '8px',
+              width: i === current ? '20px' : '6px',
+              height: '6px',
               backgroundColor: i === current
                 ? slide.accent_color
-                : isDarkBg ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.18)',
+                : isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)',
             }}
           />
         ))}
@@ -179,155 +176,248 @@ export function HeroCarousel() {
   )
 }
 
-function SlideRenderer({ slide }: { slide: BannerSlide }) {
-  const hasDesktopImage = !!slide.desktop_image_url
-  const ctaLink = slide.cta_link || '/loja'
+function NavButton({ direction, onClick, isDark }: { direction: 'prev' | 'next'; onClick: () => void; isDark: boolean }) {
+  const isPrev = direction === 'prev'
+  return (
+    <button
+      onClick={onClick}
+      aria-label={isPrev ? 'Slide anterior' : 'Próximo slide'}
+      className={`
+        absolute top-1/2 -translate-y-1/2 z-10
+        ${isPrev ? 'left-3 md:left-5' : 'right-3 md:right-5'}
+        w-9 h-9 md:w-10 md:h-10 min-w-[44px] min-h-[44px]
+        flex items-center justify-center rounded-full
+        cursor-pointer transition-all duration-200
+        hover:scale-110 active:scale-95
+        backdrop-blur-md border
+      `}
+      style={{
+        backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+        borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+        color: isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.7)',
+      }}
+    >
+      {isPrev ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+    </button>
+  )
+}
 
-  if (hasDesktopImage) {
+function SlideRenderer({ slide }: { slide: BannerSlide }) {
+  if (slide.desktop_image_url) {
     return (
       <>
-        {/* Desktop: full AI image, clickable */}
-        <a
-          href={ctaLink}
-          className="hidden md:block w-full h-full cursor-pointer"
-          aria-label={slide.title}
-        >
-          <img
-            src={slide.desktop_image_url!}
-            alt={slide.title}
-            className="w-full h-full object-cover"
-          />
+        {/* Desktop: AI full image, clickable */}
+        <a href={slide.cta_link || '/loja'} className="hidden md:block w-full h-full cursor-pointer" aria-label={slide.title}>
+          <img src={slide.desktop_image_url} alt={slide.title} className="w-full h-full object-cover" />
         </a>
-        {/* Mobile: HTML layout */}
-        <div
-          className="md:hidden w-full h-full flex flex-col items-center justify-center gap-4 px-6 text-center"
-          style={{ backgroundColor: slide.bg_color }}
-        >
-          <MobileSlideContent slide={slide} />
+        {/* Mobile: HTML fallback */}
+        <div className="md:hidden w-full h-full" style={{ backgroundColor: slide.bg_color }}>
+          <MobileLayout slide={slide} />
         </div>
       </>
     )
   }
 
-  // HTML banner — both desktop and mobile
   return (
-    <div
-      className="w-full h-full flex items-center"
-      style={{ backgroundColor: slide.bg_color }}
-    >
-      {/* Desktop */}
-      <div className="hidden md:flex container mx-auto px-12 items-center gap-10 h-full">
-        <HtmlSlideContent slide={slide} />
-        <HtmlSlideImage slide={slide} />
+    <div className="w-full h-full" style={{ backgroundColor: slide.bg_color }}>
+      {/* Desktop HTML banner */}
+      <div className="hidden md:flex w-full h-full items-center relative overflow-hidden">
+        <DesktopHtmlBanner slide={slide} />
       </div>
-      {/* Mobile */}
-      <div className="md:hidden w-full px-6 flex flex-col items-center gap-4 text-center">
-        <MobileSlideContent slide={slide} />
+      {/* Mobile HTML banner */}
+      <div className="md:hidden w-full h-full">
+        <MobileLayout slide={slide} />
       </div>
     </div>
   )
 }
 
-function HtmlSlideContent({ slide }: { slide: BannerSlide }) {
+function DesktopHtmlBanner({ slide }: { slide: BannerSlide }) {
+  const isDark = isColorDark(slide.bg_color)
+  const hasProduct = !!slide.product_image_url
+
   return (
-    <div className="flex-1 min-w-0">
+    <>
+      {/* Background glow behind product */}
+      {hasProduct && (
+        <div
+          className="absolute right-0 top-0 w-1/2 h-full pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse 60% 80% at 75% 50%, ${slide.accent_color}22 0%, transparent 70%)`,
+          }}
+        />
+      )}
+
+      {/* Subtle grid texture */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{
+          backgroundImage: `linear-gradient(${isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} 1px, transparent 1px), linear-gradient(90deg, ${isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'} 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+        }}
+      />
+
+      <div className="relative z-10 w-full max-w-[1280px] mx-auto px-16 flex items-center gap-12 h-full">
+        {/* Content */}
+        <div className="flex-1 min-w-0 max-w-[520px]">
+          {slide.tag && (
+            <div className="flex items-center gap-2 mb-5">
+              <span
+                className="inline-flex items-center text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: `${slide.accent_color}22`, color: slide.accent_color, border: `1px solid ${slide.accent_color}44` }}
+              >
+                {slide.tag}
+              </span>
+            </div>
+          )}
+
+          <h2
+            className="font-black leading-[1.05] mb-4 tracking-tight"
+            style={{
+              fontSize: 'clamp(1.7rem, 3vw, 2.8rem)',
+              color: slide.text_color,
+              fontFamily: 'Ubuntu, sans-serif',
+              textShadow: isDark ? '0 2px 20px rgba(0,0,0,0.5)' : 'none',
+            }}
+          >
+            {slide.title}
+          </h2>
+
+          {slide.subtitle && (
+            <p
+              className="text-[15px] leading-relaxed mb-7 max-w-[400px]"
+              style={{ color: slide.text_color, opacity: 0.65 }}
+            >
+              {slide.subtitle}
+            </p>
+          )}
+
+          <a
+            href={slide.cta_link || '/loja'}
+            className="inline-flex items-center gap-2.5 font-semibold text-sm px-6 py-3.5 rounded-xl transition-all duration-200 hover:brightness-110 hover:shadow-lg active:scale-95 cursor-pointer min-h-[44px]"
+            style={{
+              backgroundColor: slide.accent_color,
+              color: '#fff',
+              boxShadow: `0 4px 24px ${slide.accent_color}44`,
+            }}
+          >
+            {slide.cta_text}
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
+
+        {/* Product image */}
+        {hasProduct && (
+          <div className="flex-shrink-0 relative flex items-center justify-center" style={{ width: 'clamp(200px, 26vw, 340px)', height: 'clamp(200px, 26vw, 340px)' }}>
+            {/* Glow circle */}
+            <div
+              className="absolute inset-8 rounded-full blur-3xl opacity-30"
+              style={{ backgroundColor: slide.accent_color }}
+            />
+            {/* Light backdrop for dark products */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.1) 70%, transparent 100%)',
+              }}
+            />
+            <img
+              src={slide.product_image_url!}
+              alt=""
+              className="relative z-10 object-contain drop-shadow-2xl"
+              style={{ maxWidth: '80%', maxHeight: '80%' }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Bottom accent line */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[2px]"
+        style={{ background: `linear-gradient(90deg, transparent, ${slide.accent_color}66, transparent)` }}
+      />
+    </>
+  )
+}
+
+function MobileLayout({ slide }: { slide: BannerSlide }) {
+  const isDark = isColorDark(slide.bg_color)
+  const hasDesktopImage = !!slide.desktop_image_url
+
+  if (hasDesktopImage) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-6 text-center relative overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: `radial-gradient(ellipse at 50% 30%, ${slide.accent_color}33 0%, transparent 70%)` }}
+        />
+        {slide.tag && (
+          <span
+            className="relative z-10 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full"
+            style={{ backgroundColor: `${slide.accent_color}22`, color: slide.accent_color, border: `1px solid ${slide.accent_color}44` }}
+          >
+            {slide.tag}
+          </span>
+        )}
+        <h2
+          className="relative z-10 font-black leading-tight"
+          style={{ fontSize: 'clamp(1.2rem, 5vw, 1.6rem)', color: slide.text_color, fontFamily: 'Ubuntu, sans-serif' }}
+        >
+          {slide.title}
+        </h2>
+        {slide.subtitle && (
+          <p className="relative z-10 text-xs opacity-60" style={{ color: slide.text_color }}>{slide.subtitle}</p>
+        )}
+        <a
+          href={slide.cta_link || '/loja'}
+          className="relative z-10 inline-flex items-center gap-2 font-semibold text-xs px-5 py-2.5 rounded-lg cursor-pointer min-h-[44px] transition-all duration-200 hover:brightness-110"
+          style={{ backgroundColor: slide.accent_color, color: '#fff' }}
+        >
+          {slide.cta_text} <ArrowRight className="h-3.5 w-3.5" />
+        </a>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center gap-3 px-5 text-center relative overflow-hidden">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse at 50% 20%, ${slide.accent_color}2a 0%, transparent 65%)` }}
+      />
       {slide.tag && (
         <span
-          className="inline-flex items-center text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-full mb-4"
-          style={{ backgroundColor: slide.accent_color, color: '#fff' }}
+          className="relative z-10 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full"
+          style={{ backgroundColor: `${slide.accent_color}22`, color: slide.accent_color, border: `1px solid ${slide.accent_color}44` }}
         >
           {slide.tag}
         </span>
       )}
       <h2
-        className="font-black leading-tight mb-3"
-        style={{
-          fontSize: 'clamp(1.6rem, 3.2vw, 2.6rem)',
-          color: slide.text_color,
-          fontFamily: 'Ubuntu, sans-serif',
-        }}
+        className="relative z-10 font-black leading-tight"
+        style={{ fontSize: 'clamp(1.2rem, 5.5vw, 1.7rem)', color: slide.text_color, fontFamily: 'Ubuntu, sans-serif' }}
       >
         {slide.title}
       </h2>
       {slide.subtitle && (
-        <p className="text-base mb-6 opacity-70 max-w-sm" style={{ color: slide.text_color }}>
+        <p className="relative z-10 text-xs leading-relaxed max-w-[280px]" style={{ color: slide.text_color, opacity: 0.6 }}>
           {slide.subtitle}
         </p>
       )}
-      <a
-        href={slide.cta_link || '/loja'}
-        className="inline-flex items-center gap-2 font-semibold text-sm px-7 py-3 rounded-lg transition-all duration-200 hover:opacity-90 cursor-pointer"
-        style={{ backgroundColor: slide.accent_color, color: '#fff' }}
-      >
-        {slide.cta_text}
-        <ChevronRight className="h-4 w-4" />
-      </a>
-    </div>
-  )
-}
-
-function HtmlSlideImage({ slide }: { slide: BannerSlide }) {
-  if (!slide.product_image_url) return (
-    <div className="flex-shrink-0 w-64 h-64 opacity-40">
-      <GearGraphic color={slide.accent_color} />
-    </div>
-  )
-
-  return (
-    <div className="flex-shrink-0 w-60 h-60 md:w-72 md:h-72 relative flex items-center justify-center">
-      <div
-        className="absolute inset-0 rounded-3xl"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.55) 55%, transparent 100%)',
-        }}
-      />
-      <img
-        src={slide.product_image_url}
-        alt=""
-        className="relative z-10 max-w-[78%] max-h-[78%] object-contain drop-shadow-lg"
-      />
-    </div>
-  )
-}
-
-function MobileSlideContent({ slide }: { slide: BannerSlide }) {
-  return (
-    <>
-      {slide.tag && (
-        <span
-          className="inline-flex items-center text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full"
-          style={{ backgroundColor: slide.accent_color, color: '#fff' }}
-        >
-          {slide.tag}
-        </span>
-      )}
-      <h2
-        className="font-black leading-tight"
-        style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', color: slide.text_color, fontFamily: 'Ubuntu, sans-serif' }}
-      >
-        {slide.title}
-      </h2>
-      {slide.subtitle && (
-        <p className="text-sm opacity-70" style={{ color: slide.text_color }}>{slide.subtitle}</p>
-      )}
       {slide.product_image_url && (
-        <div className="w-32 h-32 relative flex items-center justify-center">
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 60%, transparent 80%)' }}
-          />
-          <img src={slide.product_image_url} alt="" className="relative z-10 max-w-[75%] max-h-[75%] object-contain" />
+        <div className="relative z-10 w-28 h-28 flex items-center justify-center flex-shrink-0">
+          <div className="absolute inset-0 rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.4) 60%, transparent 85%)' }} />
+          <img src={slide.product_image_url} alt="" className="relative z-10 max-w-[75%] max-h-[75%] object-contain drop-shadow-lg" />
         </div>
       )}
       <a
         href={slide.cta_link || '/loja'}
-        className="inline-flex items-center gap-2 font-semibold text-sm px-6 py-2.5 rounded-lg transition-all duration-200 hover:opacity-90 cursor-pointer"
+        className="relative z-10 inline-flex items-center gap-2 font-semibold text-xs px-5 py-2.5 rounded-lg cursor-pointer min-h-[44px] transition-all duration-200 hover:brightness-110"
         style={{ backgroundColor: slide.accent_color, color: '#fff' }}
       >
-        {slide.cta_text}
-        <ChevronRight className="h-4 w-4" />
+        {slide.cta_text} <ArrowRight className="h-3.5 w-3.5" />
       </a>
-    </>
+    </div>
   )
 }
 
@@ -338,21 +428,4 @@ function isColorDark(hex: string): boolean {
   const g = parseInt(c.substring(2, 4), 16)
   const b = parseInt(c.substring(4, 6), 16)
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5
-}
-
-function GearGraphic({ color }: { color: string }) {
-  return (
-    <svg viewBox="0 0 200 200" className="w-full h-full" aria-hidden="true">
-      {Array.from({ length: 12 }).map((_, i) => {
-        const angle = (i * 30 * Math.PI) / 180
-        const x = 100 + Math.cos(angle) * 82
-        const y = 100 + Math.sin(angle) * 82
-        return <rect key={i} x={x - 6} y={y - 10} width="12" height="20" rx="3" fill={color} opacity="0.8" transform={`rotate(${i * 30} ${x} ${y})`} />
-      })}
-      <circle cx="100" cy="100" r="72" fill={color} opacity="0.15" />
-      <circle cx="100" cy="100" r="68" fill="#f4f4f5" />
-      <circle cx="100" cy="100" r="22" fill={color} opacity="0.8" />
-      <circle cx="100" cy="100" r="12" fill="#f4f4f5" />
-    </svg>
-  )
 }
