@@ -3,7 +3,8 @@ import { HeroCarousel } from "@/components/automotive/hero-carousel"
 import { PromoBanners } from "@/components/automotive/promo-banners"
 import { ProductSection } from "@/components/automotive/product-section"
 import { getFeaturedProducts, getRecentProducts } from "@/lib/products-db"
-import { MessageCircle, Instagram, Facebook, Youtube, Truck, CreditCard, Shield, Package, Percent, Star } from "lucide-react"
+import { MessageCircle, Instagram, Facebook, Youtube, Truck, CreditCard, Shield, Package, Percent, Star, Wind, Wrench, LayoutGrid, Armchair, Lock, ToggleLeft } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import Image from "next/image"
 
 const TRUST = [
@@ -14,13 +15,13 @@ const TRUST = [
   { icon: Truck,       text: "ENVIO NACIONAL",         sub: "Correios e transportadora" },
 ]
 
-const CATEGORIES_GRID = [
-  { label: "Saídas de Ar", slug: "saidas-de-ar", emoji: "💨" },
-  { label: "Acessórios", slug: "acessorios", emoji: "🔧" },
-  { label: "Tampas e Acabamentos", slug: "tampas-e-acabamentos", emoji: "🔲" },
-  { label: "Banco e Assento", slug: "banco-e-assento", emoji: "💺" },
-  { label: "Travas e Fechaduras", slug: "fechaduras", emoji: "🔐" },
-  { label: "Interruptores e Botões", slug: "interruptores-e-botoes", emoji: "🔘" },
+const CATEGORIES_GRID: { label: string; slug: string; icon: LucideIcon }[] = [
+  { label: "Saídas de Ar", slug: "saidas-de-ar", icon: Wind },
+  { label: "Acessórios", slug: "acessorios", icon: Wrench },
+  { label: "Tampas e Acabamentos", slug: "tampas-e-acabamentos", icon: LayoutGrid },
+  { label: "Banco e Assento", slug: "banco-e-assento", icon: Armchair },
+  { label: "Travas e Fechaduras", slug: "fechaduras", icon: Lock },
+  { label: "Interruptores e Botões", slug: "interruptores-e-botoes", icon: ToggleLeft },
 ]
 
 export const revalidate = 60
@@ -110,9 +111,7 @@ export default async function Home() {
                 href={`/loja?categoria=${cat.slug}`}
                 className="bg-white border border-zinc-100 rounded-2xl p-5 flex flex-col items-center text-center group hover:shadow-lg hover:border-red-100 hover:bg-red-50/30 transition-all duration-300 cursor-pointer"
               >
-                <span className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-300" aria-hidden="true">
-                  {cat.emoji}
-                </span>
+                <cat.icon className="h-6 w-6 text-zinc-400 group-hover:text-red-600 transition-colors duration-300" aria-hidden="true" />
                 <span className="text-xs font-semibold text-zinc-700 group-hover:text-red-700 transition-colors leading-tight">
                   {cat.label}
                 </span>
