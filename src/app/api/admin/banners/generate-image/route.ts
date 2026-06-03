@@ -25,67 +25,78 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'OPENAI_API_KEY não configurada.' }, { status: 500 })
     }
 
-    const prompt = `Create a premium e-commerce banner for an automotive parts store called "Mosca Branca Parts".
-Product: ${productName}.
-${instructions ? `Style instructions: ${instructions}.` : ''}
-Requirements:
-- Horizontal banner, 1440x480px proportions
-- Dark, premium automotive aesthetic (blacks, deep grays, metallic accents)
-- The product should be the hero element, prominently displayed
-- Professional studio lighting with dramatic shadows
-- NO text, NO words, NO letters anywhere in the image
-- Background: deep dark gradient (near black)
-- Subtle red accent lighting (brand color #dc2626)
-- High-end commercial photography style
-- Clean, minimal composition`
-
-    const openaiRes = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-image-1',
-        prompt,
-        n: 1,
-        size: '1536x1024',
-      }),
-    })
-
-    if (!openaiRes.ok) {
-      const err = await openaiRes.json().catch(() => ({}))
-      console.error('OpenAI error:', err)
-      return NextResponse.json(
-        { error: 'Erro ao chamar OpenAI: ' + (err?.error?.message || openaiRes.statusText) },
-        { status: 500 }
-      )
-    }
-
-    const openaiData = await openaiRes.json()
-
-    // gpt-image-1 retorna base64, dall-e-3 retorna url — suporta ambos
-    const imageData = openaiData.data?.[0]
-    if (!imageData) {
-      return NextResponse.json({ error: 'OpenAI não retornou imagem.' }, { status: 500 })
-    }
+    const prompt = `Premium e-commerce hero banner for "Mosca Branca Parts", a rare automotive parts store.
+The product "${productName}" must be the EXACT SAME product from the reference photo — keep its shape, color and details perfectly.
+${instructions ? `Additional style: ${instructions}.` : ''}
+Banner style:
+- Wide horizontal composition (landscape)
+- Dark studio background: deep black or very dark charcoal gradient
+- Dramatic cinematic lighting on the product — spotlight from above-front, subtle red rim light (#dc2626) on edges
+- Product centered-right, large and sharp, floating slightly with soft drop shadow
+- Left side: open dark space (reserved for text overlay — keep it clean and empty)
+- Subtle geometric texture or carbon fiber pattern in background (very faint)
+- Metallic, high-contrast, premium automotive feel
+- NO text, NO words, NO letters, NO watermarks anywhere
+- Photorealistic quality, commercial photography standard`
 
     let buffer: Buffer
-    if (imageData.b64_json) {
-      buffer = Buffer.from(imageData.b64_json, 'base64')
-    } else if (imageData.url) {
-      const imgRes = await fetch(imageData.url)
-      if (!imgRes.ok) {
-        return NextResponse.json({ error: 'Erro ao baixar imagem gerada.' }, { status: 500 })
+
+    // Se tem imagem do produto, usa o endpoint de edição (resultado muito melhor)
+    if (productImageUrl) {
+      try {
+        const imgFetch = await fetch(productImageUrl)
+        if (imgFetch.ok) {
+          const imgBuffer = Buffer.from(await imgFetch.arrayBuffer())
+          const contentType = imgFetch.headers.get('content-type') || 'image/png'
+          const ext = contentType.includes('jpg') || contentType.includes('jpeg') ? 'jpg' : 'png'
+
+          const formData = new FormData()
+          formData.append('model', 'gpt-image-1')
+          formData.append('prompt', prompt)
+          formData.append('n', '1')
+          formData.append('size', '1536x1024')
+          formData.append(
+            'image',
+            new Blob([imgBuffer], { type: contentType }),
+            `product.${ext}`
+          )
+
+          const editRes = await fetch('https://api.openai.com/v1/images/edits', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${openaiKey}` },
+            body: formData,
+          })
+
+          if (editRes.ok) {
+            const editData = await editRes.json()
+            const imageData = editData.data?.[0]
+            if (imageData?.b64_json) {
+              buffer = Buffer.from(imageData.b64_json, 'base64')
+            } else if (imageData?.url) {
+              const r = await fetch(imageData.url)
+              buffer = Buffer.from(await r.arrayBuffer())
+            } else {
+              throw new Error('sem imagem na resposta de edição')
+            }
+          } else {
+            // fallback para geração pura se edição falhar
+            const err = await editRes.json().catch(() => ({}))
+            console.warn('Image edit failed, falling back to generation:', err)
+            buffer = await generateFromText(openaiKey, prompt)
+          }
+        } else {
+          buffer = await generateFromText(openaiKey, prompt)
+        }
+      } catch (e) {
+        console.warn('Edit endpoint error, falling back:', e)
+        buffer = await generateFromText(openaiKey, prompt)
       }
-      buffer = Buffer.from(await imgRes.arrayBuffer())
     } else {
-      return NextResponse.json({ error: 'Formato de resposta inesperado da OpenAI.' }, { status: 500 })
+      buffer = await generateFromText(openaiKey, prompt)
     }
 
     const supabase = getSupabase()
-    const fileName = `banner-ai-${Date.now()}.png`
-    const filePath = `banners/${fileName}`
+    const filePath = `banners/banner-ai-${Date.now()}.png`
 
     const { error: uploadError } = await supabase.storage
       .from('product-images')
@@ -105,4 +116,35 @@ Requirements:
     console.error('generate-image error:', error)
     return NextResponse.json({ error: 'Erro na geração da imagem.' }, { status: 500 })
   }
+}
+
+async function generateFromText(openaiKey: string, prompt: string): Promise<Buffer> {
+  const res = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-image-1',
+      prompt,
+      n: 1,
+      size: '1536x1024',
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error('Erro ao chamar OpenAI: ' + (err?.error?.message || res.statusText))
+  }
+
+  const data = await res.json()
+  const imageData = data.data?.[0]
+
+  if (imageData?.b64_json) return Buffer.from(imageData.b64_json, 'base64')
+  if (imageData?.url) {
+    const r = await fetch(imageData.url)
+    return Buffer.from(await r.arrayBuffer())
+  }
+  throw new Error('OpenAI não retornou imagem.')
 }
