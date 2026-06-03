@@ -37,8 +37,8 @@ export async function requireAdmin(): Promise<
     return { error: NextResponse.json({ error: "Não autenticado" }, { status: 401 }) }
   }
 
-  // If ADMIN_EMAILS is configured, enforce it
-  if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+  // Block if list is empty (env not configured) OR user not in list
+  if (ADMIN_EMAILS.length === 0 || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
     return { error: NextResponse.json({ error: "Acesso negado" }, { status: 403 }) }
   }
 

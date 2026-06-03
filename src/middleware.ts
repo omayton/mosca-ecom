@@ -72,9 +72,10 @@ export async function middleware(req: NextRequest) {
     return redirectToLogin(req)
   }
 
-  if (pathname.startsWith("/admin") && hasValidSession && ADMIN_EMAILS.length > 0) {
+  if (pathname.startsWith("/admin") && hasValidSession) {
     const email = user?.email?.toLowerCase() || ""
-    if (!ADMIN_EMAILS.includes(email)) {
+    // Block if list is empty (env not configured) OR user not in list
+    if (ADMIN_EMAILS.length === 0 || !ADMIN_EMAILS.includes(email)) {
       return NextResponse.redirect(new URL("/", req.url))
     }
   }
