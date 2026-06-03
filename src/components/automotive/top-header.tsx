@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, ShoppingCart, ChevronDown, Car, Menu, X, Phone, MessageCircle } from "lucide-react"
+import { Search, MapPin, ChevronDown, Menu, X, Phone, MessageCircle, Zap, User, LayoutGrid } from "lucide-react"
 import Image from "next/image"
 import { AuthStatus } from "@/components/auth/auth-status"
 import { CartButton } from "@/components/cart/cart-button"
@@ -13,8 +13,7 @@ import { CepModal } from "@/components/cep/cep-modal"
 import type { Vehicle } from "@/lib/vehicle-types"
 
 const TOP_LINKS = [
-  { label: "Sobre a Mosca Branca", href: "/sobre" },
-  { label: "Atendimento", href: "https://wa.me/5534999365936" },
+  { label: "Sobre", href: "/sobre" },
   { label: "Rastrear Pedido", href: "/minha-conta/pedidos" },
   { label: "Meus Pedidos", href: "/minha-conta/pedidos" },
 ]
@@ -65,40 +64,44 @@ export function TopHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-zinc-950 shadow-sm">
+      <header className="sticky top-0 z-50 bg-zinc-950 shadow-lg shadow-black/20">
 
-        {/* Utility bar */}
-        <div className="hidden lg:block bg-zinc-950/60 border-b border-zinc-800/50">
-          <div className="container mx-auto px-4 flex items-center justify-end gap-6 h-8">
-            {TOP_LINKS.map((link) => (
+        {/* Utility bar — promos + links */}
+        <div className="hidden lg:block bg-gradient-to-r from-red-700 via-red-600 to-red-700">
+          <div className="container mx-auto px-4 flex items-center justify-between h-9">
+            <div className="flex items-center gap-2">
+              <Zap className="h-3.5 w-3.5 text-white" aria-hidden="true" />
+              <span className="text-white text-xs font-semibold tracking-wide">
+                5% OFF no PIX • Frete para todo o Brasil • Até 6x sem juros
+              </span>
+            </div>
+            <div className="flex items-center gap-5">
+              {TOP_LINKS.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  {...(link.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  className="text-white/80 text-xs hover:text-white transition-colors duration-150"
+                >
+                  {link.label}
+                </a>
+              ))}
               <a
-                key={link.label}
-                href={link.href}
-                {...(link.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                className="text-zinc-400 text-xs hover:text-zinc-100 transition-colors duration-150"
+                href="https://wa.me/5534999365936"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white text-xs font-semibold hover:text-white/90 transition-colors flex items-center gap-1"
               >
-                {link.label}
+                <MessageCircle className="h-3 w-3" aria-hidden="true" />
+                WhatsApp
               </a>
-            ))}
-            <a href="tel:3499936-5936" className="text-zinc-400 text-xs hover:text-zinc-100 transition-colors flex items-center gap-1">
-              <Phone className="h-3 w-3" aria-hidden="true" />
-              (34) 99936-5936
-            </a>
-            <a
-              href="https://wa.me/5534999365936"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-green-500 text-xs hover:text-green-400 transition-colors flex items-center gap-1"
-            >
-              <MessageCircle className="h-3 w-3" aria-hidden="true" />
-              WhatsApp
-            </a>
+            </div>
           </div>
         </div>
 
         {/* Main header */}
         <div className="container mx-auto px-4 relative">
-          <div className="flex items-center gap-3 h-16">
+          <div className="flex items-center gap-4 h-[68px]">
 
             {/* Logo */}
             <a href="/" aria-label="Mosca Branca Parts — Página inicial" className="flex-shrink-0">
@@ -107,7 +110,7 @@ export function TopHeader() {
                 alt="Mosca Branca Parts"
                 width={140}
                 height={75}
-                className="h-10 w-auto object-contain"
+                className="h-11 w-auto object-contain"
                 priority
               />
             </a>
@@ -127,7 +130,7 @@ export function TopHeader() {
             </div>
 
             {/* Search bar */}
-            <form onSubmit={handleSearch} className="flex flex-1 min-w-0 h-11">
+            <form onSubmit={handleSearch} className="flex flex-1 min-w-0 h-11 rounded-xl overflow-hidden ring-1 ring-zinc-700 focus-within:ring-2 focus-within:ring-red-500 transition-all duration-200">
               <label htmlFor="site-search" className="sr-only">Pesquisar peças e acessórios</label>
               <input
                 id="site-search"
@@ -136,12 +139,12 @@ export function TopHeader() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar peças, acessórios, componentes..."
                 autoComplete="off"
-                className="flex-1 bg-white text-zinc-900 text-sm px-4 placeholder:text-zinc-400 focus:outline-none border-0 min-w-0"
+                className="flex-1 bg-zinc-900 text-white text-sm px-4 placeholder:text-zinc-500 focus:outline-none border-0 min-w-0"
               />
               <button
                 type="submit"
                 aria-label="Pesquisar"
-                className="bg-red-600 hover:bg-red-700 text-white px-5 flex items-center justify-center transition-colors duration-150 min-w-[52px] cursor-pointer"
+                className="bg-red-600 hover:bg-red-500 text-white px-5 flex items-center justify-center transition-colors duration-150 min-w-[52px] cursor-pointer"
               >
                 <Search className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -149,18 +152,18 @@ export function TopHeader() {
 
             {/* Right icons — desktop */}
             <nav aria-label="Ações do usuário" className="hidden lg:flex items-center gap-1">
-              <button onClick={() => setCepModalOpen(true)} className="flex items-center gap-2 text-zinc-300 hover:text-white px-3 py-2 min-h-[44px] transition-colors duration-150 cursor-pointer">
-                <MapPin className="h-5 w-5 text-red-500 flex-shrink-0" aria-hidden="true" />
+              <button onClick={() => setCepModalOpen(true)} className="flex items-center gap-2 text-zinc-300 hover:text-white px-3 py-2 min-h-[44px] transition-colors duration-150 cursor-pointer rounded-lg hover:bg-zinc-800/60">
+                <MapPin className="h-5 w-5 text-red-400 flex-shrink-0" aria-hidden="true" />
                 <div className="text-xs leading-tight text-left">
                   {savedCep ? (
                     <>
                       <p className="text-zinc-500">{savedCep.cep.replace(/(\d{5})(\d{3})/, "$1-$2")}</p>
-                      <p className="font-semibold">{savedCep.cidade}</p>
+                      <p className="font-semibold text-white">{savedCep.cidade}</p>
                     </>
                   ) : (
                     <>
                       <p className="text-zinc-500">Informe</p>
-                      <p className="font-semibold">seu CEP</p>
+                      <p className="font-semibold text-white">seu CEP</p>
                     </>
                   )}
                 </div>
@@ -176,7 +179,7 @@ export function TopHeader() {
                 aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
                 aria-expanded={mobileMenuOpen}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-300"
+                className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-300 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
               </button>
@@ -185,7 +188,7 @@ export function TopHeader() {
         </div>
 
         {/* Category nav */}
-        <nav aria-label="Categorias" className="bg-zinc-900/80 border-t border-zinc-800/50 backdrop-blur-sm">
+        <nav aria-label="Categorias" className="bg-zinc-900 border-t border-zinc-800/60">
           <div className="container mx-auto px-4">
             <div className="flex items-center h-11">
               {/* Departments dropdown */}
@@ -194,22 +197,22 @@ export function TopHeader() {
                   onClick={() => setDeptOpen(!deptOpen)}
                   aria-label="Ver todos os departamentos"
                   aria-expanded={deptOpen}
-                  className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium px-4 h-11 transition-colors duration-150 border-r border-zinc-700 cursor-pointer"
+                  className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium px-4 h-11 transition-colors duration-150 rounded-none cursor-pointer"
                 >
-                  <Menu className="h-4 w-4" aria-hidden="true" />
+                  <LayoutGrid className="h-4 w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">Departamentos</span>
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${deptOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${deptOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
                 {deptOpen && (
                   <>
                     <div className="fixed inset-0 z-30" onClick={() => setDeptOpen(false)} aria-hidden="true" />
-                    <div className="absolute top-full left-0 z-40 w-56 bg-zinc-900 border border-zinc-700 shadow-xl rounded-b-lg overflow-hidden">
+                    <div className="absolute top-full left-0 z-40 w-60 bg-zinc-900 border border-zinc-700 shadow-2xl rounded-b-xl overflow-hidden">
                       {categories.map((cat) => (
                         <a
                           key={cat.slug}
                           href={`/loja?categoria=${cat.slug}`}
                           onClick={() => setDeptOpen(false)}
-                          className="block px-4 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+                          className="block px-5 py-3 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors border-b border-zinc-800/50 last:border-0"
                         >
                           {cat.label}
                         </a>
@@ -217,9 +220,9 @@ export function TopHeader() {
                       <a
                         href="/loja"
                         onClick={() => setDeptOpen(false)}
-                        className="block px-4 py-2.5 text-sm font-semibold text-red-400 hover:bg-zinc-800 border-t border-zinc-700/50 transition-colors"
+                        className="block px-5 py-3 text-sm font-bold text-red-400 hover:text-red-300 hover:bg-zinc-800 border-t border-zinc-700 transition-colors"
                       >
-                        Ver todos
+                        Ver todos →
                       </a>
                     </div>
                   </>
@@ -232,7 +235,7 @@ export function TopHeader() {
                   <a
                     key={cat.slug}
                     href={`/loja?categoria=${cat.slug}`}
-                    className="text-zinc-400 hover:text-white text-sm px-4 h-full flex items-center flex-shrink-0 hover:bg-zinc-800 transition-colors duration-150 whitespace-nowrap"
+                    className="text-zinc-400 hover:text-white text-sm px-4 h-full flex items-center flex-shrink-0 hover:bg-zinc-800/60 transition-colors duration-150 whitespace-nowrap relative after:absolute after:bottom-0 after:left-4 after:right-4 after:h-0.5 after:bg-red-500 after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-200"
                   >
                     {cat.label}
                   </a>
@@ -241,7 +244,7 @@ export function TopHeader() {
 
               <a
                 href="/loja"
-                className="ml-auto bg-red-600/90 hover:bg-red-600 text-white text-sm font-semibold px-5 h-11 flex items-center flex-shrink-0 transition-colors duration-200 whitespace-nowrap"
+                className="ml-auto bg-red-600 hover:bg-red-500 text-white text-xs font-bold px-5 h-8 flex items-center flex-shrink-0 transition-all duration-200 whitespace-nowrap rounded-full uppercase tracking-wide"
               >
                 Ofertas
               </a>
@@ -253,12 +256,12 @@ export function TopHeader() {
       {/* Mobile drawer */}
       {mobileMenuOpen && (
         <>
-          <div className="fixed inset-0 z-40 bg-zinc-950/70 lg:hidden" onClick={() => setMobileMenuOpen(false)} aria-hidden="true" />
+          <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden" onClick={() => setMobileMenuOpen(false)} aria-hidden="true" />
           <nav
             aria-label="Menu mobile"
-            className="fixed top-0 left-0 bottom-0 z-50 w-72 bg-zinc-950 border-r border-zinc-800/50 flex flex-col lg:hidden"
+            className="fixed top-0 left-0 bottom-0 z-50 w-[280px] bg-zinc-950 border-r border-zinc-800 flex flex-col lg:hidden shadow-2xl"
           >
-            <div className="flex items-center justify-between px-4 h-16 border-b border-zinc-800">
+            <div className="flex items-center justify-between px-5 h-16 border-b border-zinc-800/80">
               <Image
                 src="https://www.moscabrancaparts.com.br/wp-content/uploads/2025/02/moscabranca-768x412.png"
                 alt="Mosca Branca Parts"
@@ -266,10 +269,27 @@ export function TopHeader() {
                 height={64}
                 className="h-8 w-auto object-contain"
               />
-              <button onClick={() => setMobileMenuOpen(false)} aria-label="Fechar" className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-white">
+              <button onClick={() => setMobileMenuOpen(false)} aria-label="Fechar" className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors">
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
+
+            {/* Mobile search */}
+            <div className="px-4 py-4 border-b border-zinc-800/50">
+              <form onSubmit={handleSearch} className="flex h-10 rounded-lg overflow-hidden ring-1 ring-zinc-700">
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar peças..."
+                  className="flex-1 bg-zinc-900 text-white text-sm px-3 placeholder:text-zinc-500 focus:outline-none"
+                />
+                <button type="submit" className="bg-red-600 px-3 text-white cursor-pointer">
+                  <Search className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </form>
+            </div>
+
             <ul className="flex flex-col overflow-y-auto flex-1 py-2">
               {categories.map((cat) => (
                 <li key={cat.slug}>
@@ -279,19 +299,20 @@ export function TopHeader() {
                 </li>
               ))}
               <li>
-                <a href="/loja" className="block px-5 py-3 text-sm font-bold text-red-500 hover:bg-zinc-900 transition-colors min-h-[44px] flex items-center" onClick={() => setMobileMenuOpen(false)}>
-                  Ofertas
+                <a href="/loja" className="block px-5 py-3 text-sm font-bold text-red-400 hover:bg-zinc-900 transition-colors min-h-[44px] flex items-center border-t border-zinc-800/50 mt-2" onClick={() => setMobileMenuOpen(false)}>
+                  🔥 Ofertas
                 </a>
               </li>
             </ul>
-            <div className="px-4 py-4 border-t border-zinc-800 space-y-2">
-              <a href="tel:3499936-5936" className="flex items-center gap-3 text-zinc-300 hover:text-white py-2 min-h-[44px]">
-                <Phone className="h-5 w-5 text-red-500" aria-hidden="true" />
+
+            <div className="px-4 py-4 border-t border-zinc-800 space-y-2 bg-zinc-900/50">
+              <a href="tel:3499936-5936" className="flex items-center gap-3 text-zinc-300 hover:text-white py-2 min-h-[44px] transition-colors">
+                <Phone className="h-5 w-5 text-red-400" aria-hidden="true" />
                 <span className="text-sm">(34) 99936-5936</span>
               </a>
-              <a href="https://wa.me/5534999365936" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-green-500 hover:text-green-400 py-2 min-h-[44px]">
+              <a href="https://wa.me/5534999365936" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-green-600 hover:bg-green-500 text-white py-3 px-4 rounded-xl min-h-[44px] transition-colors">
                 <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                <span className="text-sm">WhatsApp</span>
+                <span className="text-sm font-semibold">Chamar no WhatsApp</span>
               </a>
             </div>
           </nav>
