@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/require-admin'
+import sharp from 'sharp'
+
+// Banner ratio: full width × max 480px → ~3:1
+// gpt-image-1 only supports 1536x1024 (1.5:1), so we crop to 1536x512 (exact 3:1)
+const BANNER_W = 1536
+const BANNER_H = 512
 
 function getSupabase() {
   return createClient(
@@ -34,11 +40,13 @@ export async function POST(req: NextRequest) {
 PRODUCT: "${productName}" — use the reference photo exactly, keep shape and color.
 STYLE INSTRUCTIONS: ${instructions_text}
 
-SAFE ZONE — CRITICAL (must follow strictly):
-- Imagine a border/frame of 120px on ALL sides (left, right, top, bottom)
-- NOTHING touches the edges — no text, no product, no buttons, no icons within 120px of any edge
-- Background gradient fills edge-to-edge, but ALL content stays inside the inner safe area
-- Product must be shown fully — never cropped, never bleeding past the safe zone
+DIMENSIONS & SAFE ZONE — ABSOLUTE RULES:
+- The final image will be CENTER-CROPPED to a 3:1 wide banner (like 1536x512)
+- This means the TOP 25% and BOTTOM 25% of your image will be CUT OFF
+- Therefore: place ALL content ONLY in the middle 50% vertically — the horizontal center band
+- Left and right edges: keep 100px margin — nothing touches the sides
+- Background fills the entire image, content lives only in the center band
+- Product must be fully visible within the center band, not cropped
 
 COMPOSITION (content lives only inside the safe zone):
 - Scale everything to fit comfortably — content should feel airy, not cramped or overflowing
@@ -117,12 +125,23 @@ BACKGROUND & STYLE:
       buffer = await generateFromText(openaiKey, prompt)
     }
 
+    // Crop to exact banner ratio (3:1) — center crop from the generated 1536x1024
+    const croppedBuffer = await sharp(buffer)
+      .resize({
+        width: BANNER_W,
+        height: BANNER_H,
+        fit: 'cover',
+        position: 'centre',
+      })
+      .png()
+      .toBuffer()
+
     const supabase = getSupabase()
     const filePath = `banners/banner-ai-${Date.now()}.png`
 
     const { error: uploadError } = await supabase.storage
       .from('product-images')
-      .upload(filePath, buffer, { contentType: 'image/png', upsert: false })
+      .upload(filePath, croppedBuffer, { contentType: 'image/png', upsert: false })
 
     if (uploadError) {
       console.error('Storage upload error:', uploadError)
