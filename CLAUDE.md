@@ -30,10 +30,10 @@ npm run start    # Serve o build de produção localmente
 - `src/app/(institucional)/termos-de-uso/page.tsx` — placeholder (precisa conteúdo real)
 
 ### Header (`src/components/automotive/top-header.tsx`)
-- Top bar com links funcionais: Sobre, Atendimento (WhatsApp), Rastrear Pedido, Meus Pedidos
-- Barra principal: logo, busca (redireciona p/ `/loja?busca=`), CEP modal, auth status, carrinho
-- Nav categorias: botão "Departamentos" com dropdown de todas as categorias + links rápidos p/ 6 primeiras + botão "Ofertas"
-- Dropdown de departamentos é toggle (estado `deptOpen`)
+- Promo bar vermelha (desktop): "5% OFF no PIX • Frete para todo o Brasil • Até 6x sem juros" + links (Sobre, Rastrear, WhatsApp)
+- Barra principal: logo, vehicle search, busca (rounded-xl, fundo dark, ring vermelho no focus), CEP modal, auth status, carrinho
+- Nav categorias: botão "Departamentos" (LayoutGrid icon) com dropdown + links rápidos p/ 6 primeiras (underline vermelho animado no hover) + pill "Ofertas"
+- Mobile: drawer com busca embutida, WhatsApp como botão verde full-width, backdrop blur
 - `categories` vem de DEFAULT_CATEGORIES ou fetch do Supabase
 
 ### Footer
@@ -49,7 +49,7 @@ npm run start    # Serve o build de produção localmente
 - Admin pages (`src/app/admin/`) — client components com layout próprio (sidebar dark)
 
 ### Configuração de Deploy
-- `vercel.json` — define cron jobs (abandoned cart: hourly)
+- `vercel.json` — define cron jobs (abandoned cart: daily 9h — Hobby plan limit)
 - `next.config.js` — remotePatterns (imagens), security headers (CSP, HSTS, X-Frame-Options, etc.)
 
 ### Banco de dados (Supabase)
@@ -106,7 +106,7 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - Badge com contador no header (desktop e mobile)
 
 ### Carrinho Abandonado
-- Cron job via Vercel: `GET /api/cron/abandoned-cart` — roda a cada hora (`vercel.json` crons)
+- Cron job via Vercel: `GET /api/cron/abandoned-cart` — roda 1x/dia às 9h (`vercel.json` — Hobby plan limit)
 - Protegido por `CRON_SECRET` (header `Authorization: Bearer {secret}`)
 - Detecta carrinhos com `updated_at` > 2 horas sem checkout
 - Envia email de recuperação via Resend (`src/lib/email.ts`)
@@ -153,10 +153,21 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 ### Sistema de Banners (IA)
 - Banners dinâmicos gerenciados pelo admin
 - Copy gerada por Claude Haiku (tag, título, subtítulo, CTA)
-- Vinculação com produto (puxa foto e link automaticamente)
+- Vinculação com produto (puxa foto automaticamente via `imgUrl()`)
+- Upload de imagem customizada: drag & drop / file picker / URL manual → Supabase Storage via `/api/admin/upload`
 - Templates: Hero, Promoção, Lançamento, Categoria
 - Cores customizáveis (fundo, destaque, texto)
 - Preview ao vivo no formulário
+
+### Design System (UI)
+- **Estilo**: e-commerce profissional, clean, high-conversion. Dark header com promo bar vermelha, body em #FAFAFA
+- **Font**: Ubuntu (300/400/500/700) via `next/font/google`, var `--font-ubuntu`
+- **Cores primárias**: red-600 (CTAs, destaques), zinc-950 (header/footer), green (PIX badge/WhatsApp)
+- **Product cards**: rounded-2xl, badge desconto % vermelho, preço PIX + tag verde, hover com shadow-lg + add-to-cart overlay (home carousel)
+- **Promo banners**: 4 cards gradiente (PIX, Parcela, Envio, Garantia) com ícones Lucide
+- **Homepage sections**: Trust bar branca (ícones em círculos red-50) → Promo banners → Categories grid (emojis) → Product carousels → Testimonials (3 reviews, estrelas) → Footer
+- **Shipping results**: logos de transportadoras (Correios: badge amarelo/azul, Jadlog: vermelho, Azul: azul escuro, fallback: iniciais)
+- **Responsivo**: mobile drawer com busca, WhatsApp CTA, categorias scrollable
 - Carrossel na home busca banners ativos do Supabase (fallback para slides estáticos)
 - `mix-blend-mode: multiply` para remover fundo branco de fotos
 - API: `/api/admin/banners`, `/api/admin/banners/generate-copy`
