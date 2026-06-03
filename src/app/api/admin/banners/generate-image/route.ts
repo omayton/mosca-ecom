@@ -49,17 +49,21 @@ DIMENSIONS & SAFE ZONE — ABSOLUTE RULES:
 - Product must be fully visible within the center band, not cropped
 
 COMPOSITION (content lives only inside the safe zone):
-- Scale everything to fit comfortably — content should feel airy, not cramped or overflowing
-- LEFT SIDE: Compact promotional headline in Portuguese (2–3 short lines max), Ubuntu font, bold/black weight, white or yellow, font size moderate — NOT huge
-- CENTER or LEFT-CENTER: Small discount badge "ATÉ 20% OFF" or "FRETE GRÁTIS" — compact rounded pill or box, red (#dc2626) or yellow, not oversized
-- RIGHT SIDE: Product from reference photo — medium size, perfectly centered vertically, full product visible, soft drop shadow beneath it
-- BOTTOM area (inside safe zone): Small CTA button "Comprar Agora →" pill shape, red or dark, compact size
-- Small text "Mosca Branca Parts" — very subtle, bottom-left corner (inside safe zone)
+- The banner is WIDE and SHORT — think of it like a movie letterbox, not a poster
+- Everything must feel compact and balanced — generous white space, nothing crowded
+- LEFT SIDE: Headline in Portuguese, 2 lines MAX, Ubuntu Bold — font size should be SMALL-TO-MEDIUM relative to banner height (headline height ~15–20% of banner height total)
+- Small badge above headline: "FRETE GRÁTIS" or similar — tiny pill, not oversized
+- Below headline: 1 short subtitle line in small text
+- BOTTOM-LEFT: CTA button "Comprar Agora →" — compact pill, width ~30% of banner
+- RIGHT SIDE: Product, medium size (~40% of banner height), full product visible, centered vertically
+- Leave breathing room — do NOT fill every pixel with content
 
-TYPOGRAPHY:
-- Font: Ubuntu (sans-serif, geometric, clean) — use for all text
-- Headline: Ubuntu Bold or Black weight
-- Body/badge: Ubuntu Regular or Medium
+TYPOGRAPHY SIZES (strict):
+- Badge: very small, ~11–12px equivalent
+- Headline: medium-bold, ~28–34px equivalent — NOT display/hero size
+- Subtitle: small, ~13–14px equivalent
+- CTA button: ~14px, compact padding
+- Font: Ubuntu throughout — Bold for headline, Regular for subtitle
 - All text in PORTUGUESE (Brazil)
 
 BACKGROUND & STYLE:

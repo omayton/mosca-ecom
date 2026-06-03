@@ -272,9 +272,9 @@ function DesktopHtmlBanner({ slide }: { slide: BannerSlide }) {
           )}
 
           <h2
-            className="font-black leading-[1.05] mb-4 tracking-tight"
+            className="font-black leading-[1.1] mb-3 tracking-tight"
             style={{
-              fontSize: 'clamp(1.7rem, 3vw, 2.8rem)',
+              fontSize: 'clamp(1.2rem, 2.1vw, 1.9rem)',
               color: slide.text_color,
               fontFamily: 'Ubuntu, sans-serif',
               textShadow: isDark ? '0 2px 20px rgba(0,0,0,0.5)' : 'none',
@@ -285,7 +285,7 @@ function DesktopHtmlBanner({ slide }: { slide: BannerSlide }) {
 
           {slide.subtitle && (
             <p
-              className="text-[15px] leading-relaxed mb-7 max-w-[400px]"
+              className="text-[13px] leading-relaxed mb-6 max-w-[380px]"
               style={{ color: slide.text_color, opacity: 0.65 }}
             >
               {slide.subtitle}
@@ -294,7 +294,7 @@ function DesktopHtmlBanner({ slide }: { slide: BannerSlide }) {
 
           <a
             href={slide.cta_link || '/loja'}
-            className="inline-flex items-center gap-2.5 font-semibold text-sm px-6 py-3.5 rounded-xl transition-all duration-200 hover:brightness-110 hover:shadow-lg active:scale-95 cursor-pointer min-h-[44px]"
+            className="inline-flex items-center gap-2 font-semibold text-sm px-5 py-3 rounded-xl transition-all duration-200 hover:brightness-110 hover:shadow-lg active:scale-95 cursor-pointer min-h-[44px]"
             style={{
               backgroundColor: slide.accent_color,
               color: '#fff',
