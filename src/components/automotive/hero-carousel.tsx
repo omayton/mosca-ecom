@@ -143,16 +143,24 @@ export function HeroCarousel() {
           <div className="hidden sm:flex flex-shrink-0 w-48 h-52 md:w-72 md:h-72 relative items-center justify-center">
             {slide.product_image_url ? (
               <div className="relative w-full h-full flex items-center justify-center">
+                {/* Soft radial spotlight — ensures any part color is visible */}
+                <div
+                  className="absolute inset-0 rounded-2xl opacity-90"
+                  style={{
+                    background: `radial-gradient(ellipse at center, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 50%, transparent 70%)`,
+                  }}
+                />
+                {/* Accent glow ring */}
+                <div
+                  className="absolute inset-4 rounded-full blur-2xl opacity-15"
+                  style={{ backgroundColor: slide.accent_color }}
+                />
+                {/* Subtle border stage */}
+                <div className="absolute inset-2 rounded-2xl border border-white/[0.06]" />
                 <img
                   src={slide.product_image_url}
                   alt=""
-                  className="max-w-full max-h-full object-contain drop-shadow-2xl rounded-xl"
-                  style={{ mixBlendMode: 'multiply' }}
-                />
-                {/* Glow effect behind product */}
-                <div
-                  className="absolute inset-0 rounded-full blur-3xl opacity-20 -z-10 scale-75"
-                  style={{ backgroundColor: slide.accent_color }}
+                  className="relative z-10 max-w-[85%] max-h-[85%] object-contain drop-shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
                 />
               </div>
             ) : (
