@@ -161,14 +161,8 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    {/* Company badge */}
-                    <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold uppercase tracking-wide ${
-                      index === 0
-                        ? "bg-green-50 text-green-700 ring-1 ring-green-200"
-                        : "bg-zinc-50 text-zinc-600 ring-1 ring-zinc-200"
-                    }`}>
-                      {opt.company?.slice(0, 2) || "??"}
-                    </div>
+                    {/* Company logo */}
+                    <CarrierLogo company={opt.company} />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-zinc-800 truncate">
                         {opt.company || opt.name}
@@ -203,6 +197,55 @@ export function ShippingCalculator({ weight, width, height, length, price }: Pro
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+function CarrierLogo({ company }: { company: string }) {
+  const name = (company || "").toLowerCase()
+
+  if (name.includes("correios")) {
+    return (
+      <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-[#FFDE00] ring-1 ring-[#FFDE00]/30">
+        <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+          <path d="M2 8l10-4 10 4v2L12 14 2 10V8z" fill="#004B93" />
+          <path d="M2 12l10 4 10-4v2l-10 4-10-4v-2z" fill="#004B93" />
+          <path d="M2 16l10 4 10-4v2l-10 4-10-4v-2z" fill="#004B93" />
+        </svg>
+      </div>
+    )
+  }
+
+  if (name.includes("jadlog")) {
+    return (
+      <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-[#ED1C24] ring-1 ring-[#ED1C24]/30">
+        <span className="text-[10px] font-black text-white leading-none">JL</span>
+      </div>
+    )
+  }
+
+  if (name.includes("azul") || name.includes("azul cargo")) {
+    return (
+      <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-[#003B7A] ring-1 ring-[#003B7A]/30">
+        <span className="text-[10px] font-black text-white leading-none">AC</span>
+      </div>
+    )
+  }
+
+  if (name.includes("latam")) {
+    return (
+      <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-[#1B0088] ring-1 ring-[#1B0088]/30">
+        <span className="text-[10px] font-black text-white leading-none">LT</span>
+      </div>
+    )
+  }
+
+  // Fallback
+  return (
+    <div className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-zinc-100 text-zinc-600 ring-1 ring-zinc-200">
+      <span className="text-[10px] font-bold uppercase leading-none">
+        {company?.slice(0, 2) || "??"}
+      </span>
     </div>
   )
 }
