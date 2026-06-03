@@ -275,16 +275,17 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          productName: selectedProduct?.name || '',
           productImageUrl: form.productImageUrl,
-          customPrompt: form.customPrompt,
+          instructions: form.customPrompt,
         })
       })
       if (res.ok) {
         const data = await res.json()
         setForm(prev => ({
           ...prev,
-          desktopImageUrl: data.imageUrl,
-          mobileImageUrl: data.imageUrl,
+          desktopImageUrl: data.url,
+          mobileImageUrl: data.url,
         }))
       } else {
         const data = await res.json()

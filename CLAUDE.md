@@ -150,14 +150,30 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - API: `/api/vehicles/search`, `/api/vehicles/compatibility`
 - Types: `src/lib/vehicle-types.ts`
 
-### Sistema de Banners (IA)
-- Banners dinâmicos gerenciados pelo admin
-- Copy gerada por Claude Haiku (tag, título, subtítulo, CTA)
-- Vinculação com produto (puxa foto automaticamente via `imgUrl()`)
-- Upload de imagem customizada: drag & drop / file picker / URL manual → Supabase Storage via `/api/admin/upload`
-- Templates: Hero, Promoção, Lançamento, Categoria
-- Cores customizáveis (fundo, destaque, texto)
-- Preview ao vivo no formulário
+### Sistema de Banners
+O admin oferece dois modos de criar banners:
+
+**Modo "Imagem Completa":**
+- Seleciona produto → escreve instruções livres ("Banner vermelho com preto, cupom MOSCA10") → botão "Gerar Banner com IA"
+- API `/api/admin/banners/generate-image` usa DALL-E 3 com pre-prompt fixo (1440x480px, estilo premium, produto como hero, sem texto no banner)
+- Download e upload automático pro Supabase Storage
+- Upload manual opcional: desktop (1440x480px) + mobile (375x200px)
+- Título/tag/CTA/colors são opcionais
+
+**Modo "Banner HTML":**
+- Campos tradicionais (tag, título, subtítulo, CTA, cores)
+- Produto selecionado → "Gerar copy com IA" via `/api/admin/banners/generate-copy` (Claude Haiku)
+- Preview ao vivo responsivo
+
+**Exibição no site (hero-carousel.tsx):**
+- Desktop com `desktop_image_url` → imagem full-width (cover, link clicável no CTA)
+- Desktop sem imagem gerada → layout HTML com radial gradient branco (destaque peças escuras)
+- Mobile → sempre layout HTML responsivo (centralizado, texto maior)
+- Fundo fallback: claro (#f4f4f5, #f0fdf4, #fafafa) — peças escuras se destacam
+- Botoes prev/next e dots se adaptam ao fundo (claro/escuro) via `isColorDark()`
+
+**Tabela `banners`:** `product_image_url`, `desktop_image_url`, `mobile_image_url`, `bg_color`, `accent_color`, `text_color`
+**Schema:** `supabase/migrations/2025-06-06_banner_desktop_image.sql`
 
 ### Design System (UI)
 - **Estilo**: e-commerce profissional, clean, high-conversion. Dark header com promo bar vermelha, body em #FAFAFA
@@ -165,12 +181,11 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - **Cores primárias**: red-600 (CTAs, destaques), zinc-950 (header/footer), green (PIX badge/WhatsApp)
 - **Product cards**: rounded-2xl, badge desconto % vermelho, preço PIX + tag verde, hover com shadow-lg + add-to-cart overlay (home carousel)
 - **Promo banners**: 4 cards gradiente (PIX, Parcela, Envio, Garantia) com ícones Lucide
-- **Homepage sections**: Trust bar branca (ícones em círculos red-50) → Promo banners → Categories grid (emojis) → Product carousels → Testimonials (3 reviews, estrelas) → Footer
+- **Homepage sections**: Trust bar branca (icones em circulos red-50) -> Promo banners -> Categories grid (Lucide icons) -> Product carousels -> Testimonials (3 reviews, estrelas) -> Footer
 - **Shipping results**: logos de transportadoras (Correios: badge amarelo/azul, Jadlog: vermelho, Azul: azul escuro, fallback: iniciais)
 - **Responsivo**: mobile drawer com busca, WhatsApp CTA, categorias scrollable
 - Carrossel na home busca banners ativos do Supabase (fallback para slides estáticos)
-- `mix-blend-mode: multiply` para remover fundo branco de fotos
-- API: `/api/admin/banners`, `/api/admin/banners/generate-copy`
+- API: `/api/admin/banners`, `/api/admin/banners/generate-copy`, `/api/admin/banners/generate-image`
 
 ### Controle de Estoque
 - Campos: `stock_quantity`, `stock_threshold`, `status`
@@ -292,8 +307,11 @@ NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=...
 MERCADOPAGO_ACCESS_TOKEN=...
 
 # IA (Claude via Vercel AI Gateway)
-VERCEL_AI_GATEWAY_URL=...         # Gateway URL para chamadas IA
+VERCEL_AI_GATEWAY_URL=...         # Gateway URL para chamadAs IA
 ANTHROPIC_API_KEY=...             # API key Anthropic
+
+# Anthropic (DALL-E 3 — geracao de banners)
+OPENAI_API_KEY=...                # API key Anthropic para geracao de banners
 
 # Email (Resend)
 RESEND_API_KEY=...                # API key do Resend para envio de emails
@@ -326,6 +344,7 @@ ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no adm
 - `GET/PATCH /api/admin/stock` — controle estoque
 - `GET/POST/PATCH/DELETE /api/admin/banners` — CRUD banners
 - `POST /api/admin/banners/generate-copy` — gerar copy IA
+- `POST /api/admin/banners/generate-image` — gerar banner com DALL-E 3 (desktop full-image)
 - `GET/POST/PATCH/DELETE /api/admin/coupons` — CRUD cupons
 - `GET/PATCH /api/admin/orders` — pedidos
 - `GET /api/admin/customers` — clientes
@@ -344,6 +363,7 @@ ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no adm
 - [x] ~~Imagens de produtos apontam para URL WordPress~~ — `imgUrl()` trata URLs completas
 - [x] ~~Faturamento no admin mostra dados zerados~~ — API retorna dados reais com trends
 - [x] ~~`next.config.js` remotePatterns falta hostname do Supabase Storage~~ — já configurado
+- [x] ~~Banner com peças escuras somem no fundo~~ — spotlight radial gradient + `desktop_image_url` full-image
 - [ ] Redes sociais no footer da home apontam para `#` (faltam URLs reais)
 - [ ] Página `/politica-de-privacidade` e `/termos-de-uso` precisam de conteúdo real
 - [ ] Melhor Envio token expira em 30 dias — automatizar renovação
