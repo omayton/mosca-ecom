@@ -9,7 +9,9 @@ function ProductCard({ p }: { p: Product }) {
   const pix    = pixPrice(p.price)
   const parcel = installmentPrice(p.price, 3)
   const { addItem } = useCart()
-  const discount = p.oldPrice ? Math.round((1 - p.price / p.oldPrice) * 100) : 5
+  const discount = p.oldPrice && p.oldPrice > p.price
+    ? Math.round((1 - p.price / p.oldPrice) * 100)
+    : null
 
   return (
     <article
@@ -32,11 +34,13 @@ function ProductCard({ p }: { p: Product }) {
         />
 
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
-          <span className="bg-red-600 text-white font-bold leading-none px-2 py-1 rounded-md shadow-sm" style={{ fontSize: "10px" }}>
-            -{discount}%
-          </span>
-        </div>
+        {discount !== null && (
+          <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
+            <span className="bg-red-600 text-white font-bold leading-none px-2 py-1 rounded-md shadow-sm" style={{ fontSize: "10px" }}>
+              -{discount}%
+            </span>
+          </div>
+        )}
 
         {/* Quick actions on hover */}
         <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
