@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Package, Truck, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { ShoppingCart, Clock, Truck, CheckCircle, XCircle, Package } from 'lucide-react'
+import {
+  AdminPage, AdminHeader, AdminFilter, AdminSelect, AdminTable,
+  AdminTableRow, AdminTableCell, OrderStatusBadge, AdminEmptyState, AdminPagination
+} from '@/components/admin/admin-ui'
 
 interface Order {
   id: number
@@ -14,6 +18,10 @@ interface Order {
   payment_method: string | null
   created_at: string
   profiles: { name: string | null } | null
+}
+
+function fmt(n: number) {
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 export default function AdminOrdersPage() {
@@ -61,164 +69,86 @@ export default function AdminOrdersPage() {
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending': return <Clock className="h-4 w-4 text-yellow-500" />
-      case 'confirmed': return <CheckCircle className="h-4 w-4 text-blue-500" />
-      case 'shipped': return <Truck className="h-4 w-4 text-purple-500" />
-      case 'delivered': return <Package className="h-4 w-4 text-green-500" />
-      case 'cancelled': return <XCircle className="h-4 w-4 text-red-500" />
-      default: return <Clock className="h-4 w-4 text-zinc-400" />
-    }
-  }
-
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      shipped: 'bg-purple-100 text-purple-700',
-      delivered: 'bg-green-100 text-green-700',
-      cancelled: 'bg-red-100 text-red-700'
-    }
-    const labels: Record<string, string> = {
-      pending: 'Pendente',
-      confirmed: 'Confirmado',
-      shipped: 'Enviado',
-      delivered: 'Entregue',
-      cancelled: 'Cancelado'
-    }
-    return (
-      <span className={`text-xs font-medium px-2 py-1 rounded-full ${styles[status] || 'bg-zinc-100 text-zinc-700'}`}>
-        {labels[status] || status}
-      </span>
-    )
-  }
+  const statusOptions = [
+    { value: 'pending', label: 'Pendente' },
+    { value: 'confirmed', label: 'Confirmado' },
+    { value: 'shipped', label: 'Enviado' },
+    { value: 'delivered', label: 'Entregue' },
+    { value: 'cancelled', label: 'Cancelado' },
+  ]
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-900">Pedidos</h1>
-          <p className="text-zinc-500 mt-1">{total} pedidos no total</p>
-        </div>
-      </div>
+    <AdminPage>
+      <AdminHeader title="Pedidos" count={total} />
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
-        <select
+      <AdminFilter>
+        <AdminSelect
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
-          className="px-4 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-red-300 cursor-pointer"
+          onChange={(v) => { setStatusFilter(v); setPage(1) }}
+          options={statusOptions}
+          placeholder="Todos os status"
+        />
+      </AdminFilter>
+
+      {!loading && orders.length === 0 ? (
+        <AdminEmptyState
+          icon={ShoppingCart}
+          title="Nenhum pedido encontrado"
+          description="Quando clientes finalizarem compras, os pedidos aparecerão aqui."
+        />
+      ) : (
+        <AdminTable
+          headers={[
+            { label: 'Pedido', width: '100px' },
+            { label: 'Cliente' },
+            { label: 'Total', align: 'right' },
+            { label: 'Status', align: 'center' },
+            { label: 'Data' },
+            { label: 'Ações', align: 'right' },
+          ]}
+          loading={loading}
         >
-          <option value="">Todos os status</option>
-          <option value="pending">Pendente</option>
-          <option value="confirmed">Confirmado</option>
-          <option value="shipped">Enviado</option>
-          <option value="delivered">Entregue</option>
-          <option value="cancelled">Cancelado</option>
-        </select>
-      </div>
+          {orders.map((order) => (
+            <AdminTableRow key={order.id}>
+              <AdminTableCell>
+                <span className="font-semibold text-white">#{order.id}</span>
+              </AdminTableCell>
+              <AdminTableCell>
+                <span className="text-white/60">{order.profiles?.name || 'Cliente'}</span>
+              </AdminTableCell>
+              <AdminTableCell align="right">
+                <div>
+                  <p className="font-semibold text-white">R$ {fmt(order.total)}</p>
+                  {order.shipping_cost && (
+                    <p className="text-[11px] text-white/30">+ R$ {fmt(order.shipping_cost)} frete</p>
+                  )}
+                </div>
+              </AdminTableCell>
+              <AdminTableCell align="center">
+                <OrderStatusBadge status={order.status} />
+              </AdminTableCell>
+              <AdminTableCell>
+                <span className="text-white/40 text-xs">
+                  {new Date(order.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                </span>
+              </AdminTableCell>
+              <AdminTableCell align="right">
+                <select
+                  value={order.status}
+                  onChange={(e) => updateStatus(order.id, e.target.value)}
+                  className="text-xs bg-white/[0.04] border border-white/[0.06] text-white/60 rounded-md px-2 py-1.5 focus:outline-none focus:border-amber-500/30 cursor-pointer"
+                >
+                  {statusOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      )}
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-zinc-50 border-b border-zinc-200">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Pedido</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Cliente</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Total</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Data</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>
-                    <td colSpan={6} className="px-4 py-4">
-                      <div className="h-6 bg-zinc-100 animate-pulse rounded" />
-                    </td>
-                  </tr>
-                ))
-              ) : orders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-zinc-500">
-                    Nenhum pedido encontrado
-                  </td>
-                </tr>
-              ) : (
-                orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-zinc-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(order.status)}
-                        <span className="font-medium text-zinc-900 text-sm">#{order.id}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-zinc-600">
-                      {order.profiles?.name || 'Cliente'}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <p className="font-medium text-zinc-900 text-sm">
-                        R$ {parseFloat(String(order.total)).toFixed(2)}
-                      </p>
-                      {order.shipping_cost && (
-                        <p className="text-xs text-zinc-400">
-                          + R$ {parseFloat(String(order.shipping_cost)).toFixed(2)} frete
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {getStatusBadge(order.status)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-zinc-500">
-                      {new Date(order.created_at).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <select
-                        value={order.status}
-                        onChange={(e) => updateStatus(order.id, e.target.value)}
-                        className="text-xs border border-zinc-200 rounded px-2 py-1 focus:outline-none focus:border-red-300 cursor-pointer"
-                      >
-                        <option value="pending">Pendente</option>
-                        <option value="confirmed">Confirmado</option>
-                        <option value="shipped">Enviado</option>
-                        <option value="delivered">Entregue</option>
-                        <option value="cancelled">Cancelado</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-200">
-            <p className="text-sm text-zinc-500">Página {page} de {totalPages}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg disabled:opacity-50 hover:bg-zinc-50 cursor-pointer"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg disabled:opacity-50 hover:bg-zinc-50 cursor-pointer"
-              >
-                Próxima
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      <AdminPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+    </AdminPage>
   )
 }

@@ -87,10 +87,10 @@ export default function AdminProductsPage() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      available: 'bg-green-100 text-green-700',
-      low_stock: 'bg-yellow-100 text-yellow-700',
-      out_of_stock: 'bg-red-100 text-red-700',
-      discontinued: 'bg-zinc-100 text-zinc-700'
+      available: 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20',
+      low_stock: 'text-amber-400 bg-amber-500/10 border border-amber-500/20',
+      out_of_stock: 'text-red-400 bg-red-500/10 border border-red-500/20',
+      discontinued: 'text-white/40 bg-white/5 border border-white/10'
     }
     const labels: Record<string, string> = {
       available: 'Disponível',
@@ -99,22 +99,22 @@ export default function AdminProductsPage() {
       discontinued: 'Descontinuado'
     }
     return (
-      <span className={`text-xs font-medium px-2 py-1 rounded-full ${styles[status] || styles.available}`}>
+      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md ${styles[status] || styles.available}`}>
         {labels[status] || status}
       </span>
     )
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8 min-h-screen">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900">Produtos</h1>
-          <p className="text-zinc-500 mt-1">{total} produtos cadastrados</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">Produtos</h1>
+          <p className="text-white/30 mt-1 text-sm">{total} produtos cadastrados</p>
         </div>
         <button
           onClick={() => { setEditingProduct(null); setShowForm(true) }}
-          className="flex items-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold px-4 py-2.5 rounded-lg transition-colors cursor-pointer"
         >
           <Plus className="h-5 w-5" />
           Novo Produto
@@ -122,21 +122,21 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="flex flex-wrap gap-3 mb-6">
         <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
           <input
             type="text"
             placeholder="Buscar produto..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            className="w-full pl-10 pr-4 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-red-300"
+            className="w-full pl-10 pr-4 py-2.5 bg-[#111113] border border-white/[0.06] rounded-lg text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-amber-500/30"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
-          className="px-4 py-2.5 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:border-red-300 cursor-pointer"
+          className="px-4 py-2.5 bg-[#111113] border border-white/[0.06] rounded-lg text-sm text-white/80 focus:outline-none focus:border-amber-500/30 cursor-pointer"
         >
           <option value="">Todos os status</option>
           <option value="available">Disponível</option>
@@ -147,40 +147,40 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Products Table */}
-      <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
+      <div className="bg-[#111113] border border-white/[0.06] rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-zinc-50 border-b border-zinc-200">
+            <thead className="border-b border-white/[0.06]">
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Produto</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Categoria</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Preço</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Estoque</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Status</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Ações</th>
+                <th className="text-left px-4 py-3 text-[10px] font-semibold text-white/30 uppercase tracking-wider">Produto</th>
+                <th className="text-left px-4 py-3 text-[10px] font-semibold text-white/30 uppercase tracking-wider">Categoria</th>
+                <th className="text-right px-4 py-3 text-[10px] font-semibold text-white/30 uppercase tracking-wider">Preço</th>
+                <th className="text-center px-4 py-3 text-[10px] font-semibold text-white/30 uppercase tracking-wider">Estoque</th>
+                <th className="text-center px-4 py-3 text-[10px] font-semibold text-white/30 uppercase tracking-wider">Status</th>
+                <th className="text-right px-4 py-3 text-[10px] font-semibold text-white/30 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-white/[0.04]">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={6} className="px-4 py-4">
-                      <div className="h-6 bg-zinc-100 animate-pulse rounded" />
+                    <td colSpan={6} className="px-4 py-3.5">
+                      <div className="h-4 bg-white/[0.04] animate-pulse rounded w-3/4" />
                     </td>
                   </tr>
                 ))
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-zinc-500">
+                  <td colSpan={6} className="px-4 py-12 text-center text-white/30">
                     Nenhum produto encontrado
                   </td>
                 </tr>
               ) : (
                 products.map((product) => (
-                  <tr key={product.id} className="hover:bg-zinc-50 transition-colors">
+                  <tr key={product.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="w-10 h-10 bg-white/[0.04] rounded-lg flex items-center justify-center overflow-hidden">
                           {product.image_file && product.image_file !== 'placeholder' ? (
                             <img
                               src={product.image_file.startsWith('http')
@@ -191,22 +191,22 @@ export default function AdminProductsPage() {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <ImageIcon className="h-5 w-5 text-zinc-400" />
+                            <ImageIcon className="h-5 w-5 text-white/20" />
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-zinc-900 text-sm line-clamp-1">{product.name}</p>
-                          <p className="text-xs text-zinc-400">#{product.id}</p>
+                          <p className="font-medium text-white text-sm line-clamp-1">{product.name}</p>
+                          <p className="text-[11px] text-white/20">#{product.id}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-zinc-600">{product.category}</td>
+                    <td className="px-4 py-3 text-sm text-white/50">{product.category}</td>
                     <td className="px-4 py-3 text-right">
-                      <p className="font-medium text-zinc-900 text-sm">
+                      <p className="font-semibold text-white text-sm">
                         R$ {parseFloat(String(product.price)).toFixed(2)}
                       </p>
                       {product.old_price && (
-                        <p className="text-xs text-zinc-400 line-through">
+                        <p className="text-xs text-white/30 line-through">
                           R$ {parseFloat(String(product.old_price)).toFixed(2)}
                         </p>
                       )}
@@ -216,7 +216,7 @@ export default function AdminProductsPage() {
                         type="number"
                         value={product.stock_quantity}
                         onChange={(e) => handleStockUpdate(product.id, parseInt(e.target.value) || 0)}
-                        className="w-16 text-center border border-zinc-200 rounded px-2 py-1 text-sm"
+                        className="w-16 text-center bg-white/[0.04] border border-white/[0.06] rounded-md px-2 py-1 text-sm text-white focus:outline-none focus:border-amber-500/30"
                         min="0"
                       />
                     </td>
@@ -227,14 +227,14 @@ export default function AdminProductsPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => { setEditingProduct(product); setShowForm(true) }}
-                          className="p-2 text-zinc-400 hover:text-blue-600 transition-colors cursor-pointer"
+                          className="p-2 text-white/30 hover:text-amber-400 transition-colors cursor-pointer"
                           title="Editar"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(product.id)}
-                          className="p-2 text-zinc-400 hover:text-red-600 transition-colors cursor-pointer"
+                          className="p-2 text-white/30 hover:text-red-400 transition-colors cursor-pointer"
                           title="Excluir"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -250,22 +250,22 @@ export default function AdminProductsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-200">
-            <p className="text-sm text-zinc-500">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-white/[0.06]">
+            <p className="text-sm text-white/30">
               Página {page} de {totalPages}
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg disabled:opacity-50 hover:bg-zinc-50 cursor-pointer"
+                className="px-3 py-1.5 text-sm border border-white/[0.06] text-white/40 rounded-lg disabled:opacity-30 hover:bg-white/[0.04] cursor-pointer"
               >
                 Anterior
               </button>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg disabled:opacity-50 hover:bg-zinc-50 cursor-pointer"
+                className="px-3 py-1.5 text-sm border border-white/[0.06] text-white/40 rounded-lg disabled:opacity-30 hover:bg-white/[0.04] cursor-pointer"
               >
                 Próxima
               </button>

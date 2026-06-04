@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { createClient } from "@supabase/supabase-js"
-import { AdminSidebar } from '@/components/admin/admin-sidebar'
+import { AdminLayoutClient } from '@/components/admin/admin-layout-client'
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
   .split(",")
@@ -37,12 +37,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/")
   }
 
-  return (
-    <div className="min-h-screen bg-[#0a0a0b]">
-      <AdminSidebar />
-      <div className="ml-64 min-h-screen">
-        {children}
-      </div>
-    </div>
-  )
+  return <AdminLayoutClient>{children}</AdminLayoutClient>
 }

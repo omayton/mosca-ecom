@@ -1,8 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { ShoppingCart, MessageCircle, Mail, Clock, AlertCircle, CheckCircle } from 'lucide-react'
+import { ShoppingCart, MessageCircle, Mail, Clock, CheckCircle } from 'lucide-react'
 import { fmt } from '@/lib/products'
+import {
+  AdminPage, AdminHeader, AdminCard, AdminSelect, AdminFilter,
+  AdminEmptyState, AdminBadge
+} from '@/components/admin/admin-ui'
 
 interface CartItemData {
   productId: number
@@ -27,7 +31,7 @@ interface AbandonedCart {
 export default function AbandonedCartsPage() {
   const [carts, setCarts] = useState<AbandonedCart[]>([])
   const [loading, setLoading] = useState(true)
-  const [hours, setHours] = useState(2)
+  const [hours, setHours] = useState('2')
   const [sendingId, setSendingId] = useState<string | null>(null)
 
   const fetchCarts = useCallback(async () => {
@@ -51,8 +55,8 @@ export default function AbandonedCartsPage() {
     const diff = Date.now() - new Date(dateStr).getTime()
     const hours = Math.floor(diff / (1000 * 60 * 60))
     const days = Math.floor(hours / 24)
-    if (days > 0) return `Adicionado há ${days}d ${hours % 24}h`
-    return `Adicionado há ${hours}h`
+    if (days > 0) return `${days}d ${hours % 24}h atrás`
+    return `${hours}h atrás`
   }
 
   async function handleRecover(userId: string, channel: 'whatsapp' | 'email') {
@@ -81,59 +85,59 @@ export default function AbandonedCartsPage() {
     }
   }
 
+  const hoursOptions = [
+    { value: '2', label: '2 horas' },
+    { value: '6', label: '6 horas' },
+    { value: '24', label: '24 horas' },
+    { value: '72', label: '3 dias' },
+    { value: '168', label: '7 dias' },
+  ]
+
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-900">Carrinhos Abandonados</h1>
-          <p className="text-zinc-500 mt-1">{carts.length} carrinhos encontrados</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-zinc-600">Abandonados há mais de:</span>
-          <select
-            value={hours}
-            onChange={(e) => setHours(parseInt(e.target.value))}
-            className="border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-300 cursor-pointer"
-          >
-            <option value={2}>2 horas</option>
-            <option value={6}>6 horas</option>
-            <option value={24}>24 horas</option>
-            <option value={72}>3 dias</option>
-            <option value={168}>7 dias</option>
-          </select>
-        </div>
-      </div>
+    <AdminPage>
+      <AdminHeader title="Carrinhos Abandonados" subtitle={`${carts.length} carrinhos encontrados`} />
+
+      <AdminFilter>
+        <AdminSelect
+          value={hours}
+          onChange={setHours}
+          options={hoursOptions}
+          placeholder="Abandonados há mais de"
+        />
+      </AdminFilter>
 
       {loading ? (
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-zinc-200 p-6">
-              <div className="h-20 bg-zinc-100 animate-pulse rounded" />
-            </div>
+            <AdminCard key={i}>
+              <div className="h-24 bg-white/[0.03] animate-pulse rounded-lg" />
+            </AdminCard>
           ))}
         </div>
       ) : carts.length === 0 ? (
-        <div className="bg-white rounded-xl border border-zinc-200 p-12 text-center">
-          <ShoppingCart className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
-          <p className="text-zinc-500">Nenhum carrinho abandonado encontrado</p>
-          <p className="text-zinc-400 text-sm mt-1">Bom sinal! Todos os clientes estão finalizando suas compras.</p>
-        </div>
+        <AdminEmptyState
+          icon={ShoppingCart}
+          title="Nenhum carrinho abandonado"
+          description="Bom sinal! Todos os clientes estão finalizando suas compras."
+        />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {carts.map((cart) => (
-            <div key={cart.userId} className="bg-white rounded-xl border border-zinc-200 p-6">
+            <AdminCard key={cart.userId}>
               <div className="flex items-start justify-between gap-4">
                 {/* Client info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <ShoppingCart className="h-5 w-5 text-red-600" />
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      cart.recovered ? 'bg-emerald-500/10' : 'bg-amber-500/10'
+                    }`}>
+                      <ShoppingCart className={`h-5 w-5 ${cart.recovered ? 'text-emerald-400' : 'text-amber-400'}`} />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-semibold text-zinc-900 truncate">
+                      <p className="font-semibold text-white truncate">
                         {cart.name || 'Cliente sem nome'}
                       </p>
-                      <div className="flex items-center gap-3 text-xs text-zinc-500">
+                      <div className="flex items-center gap-3 text-xs text-white/30">
                         {cart.email && <span>{cart.email}</span>}
                         {cart.phone && <span>{cart.phone}</span>}
                       </div>
@@ -141,67 +145,48 @@ export default function AbandonedCartsPage() {
                   </div>
 
                   {/* Items */}
-                  <div className="bg-zinc-50 rounded-lg p-3 mb-3">
+                  <div className="bg-white/[0.03] border border-white/[0.04] rounded-lg p-3 mb-3">
                     <div className="space-y-1.5">
                       {cart.items.map((item) => (
                         <div key={item.productId} className="flex justify-between text-sm">
-                          <span className="text-zinc-700 truncate flex-1 mr-2">
+                          <span className="text-white/50 truncate flex-1 mr-2">
                             {item.quantity}x {item.name}
                           </span>
-                          <span className="text-zinc-900 font-medium flex-shrink-0">
+                          <span className="text-white font-medium flex-shrink-0">
                             R$ {fmt(item.price * item.quantity)}
                           </span>
                         </div>
                       ))}
                     </div>
-                    <div className="border-t border-zinc-200 mt-2 pt-2 flex justify-between">
-                      <span className="text-sm font-semibold text-zinc-900">Total</span>
-                      <span className="font-bold text-zinc-900">R$ {fmt(cart.total)}</span>
+                    <div className="border-t border-white/[0.06] mt-2 pt-2 flex justify-between">
+                      <span className="text-sm font-semibold text-white/60">Total</span>
+                      <span className="font-bold text-white">R$ {fmt(cart.total)}</span>
                     </div>
                   </div>
 
-                  {/* Time + notification status */}
-                  <div className="flex items-center gap-4 text-xs">
+                  {/* Status */}
+                  <div className="flex items-center gap-3 text-xs">
                     {cart.recovered ? (
-                      <span className="flex items-center gap-1 text-green-600 font-medium">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Recuperado — pedido finalizado
-                      </span>
+                      <AdminBadge label="Recuperado — pedido finalizado" variant="success" />
                     ) : (
                       <>
-                        <span className="flex items-center gap-1 text-amber-600">
+                        <span className="flex items-center gap-1 text-amber-400">
                           <Clock className="h-3.5 w-3.5" />
                           {getTimeAgo(cart.lastUpdate)}
                         </span>
                         {cart.notifications.whatsapp && (
-                          <span className="flex items-center gap-1 text-green-600">
+                          <span className="flex items-center gap-1 text-emerald-400">
                             <CheckCircle className="h-3.5 w-3.5" />
-                            WhatsApp enviado
+                            WhatsApp
                           </span>
                         )}
                         {cart.notifications.email && (
-                          <span className="flex items-center gap-1 text-blue-600">
+                          <span className="flex items-center gap-1 text-blue-400">
                             <CheckCircle className="h-3.5 w-3.5" />
-                            Email enviado
+                            Email
                           </span>
                         )}
                       </>
-                    )}
-                    <span className="flex items-center gap-1 text-amber-600">
-                      <Clock className="h-3.5 w-3.5" />
-                      {getTimeAgo(cart.lastUpdate)}
-                    </span>
-                    {cart.notifications.whatsapp && (
-                      <span className="flex items-center gap-1 text-green-600">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        WhatsApp enviado
-                      </span>
-                    )}
-                    {cart.notifications.email && (
-                      <span className="flex items-center gap-1 text-blue-600">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Email enviado
-                      </span>
                     )}
                   </div>
                 </div>
@@ -211,25 +196,25 @@ export default function AbandonedCartsPage() {
                   <button
                     onClick={() => handleRecover(cart.userId, 'whatsapp')}
                     disabled={sendingId === `${cart.userId}-whatsapp` || !cart.phone || cart.recovered}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium rounded-lg hover:bg-emerald-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <MessageCircle className="h-4 w-4" />
-                    {sendingId === `${cart.userId}-whatsapp` ? 'Abrindo...' : 'WhatsApp'}
+                    {sendingId === `${cart.userId}-whatsapp` ? '...' : 'WhatsApp'}
                   </button>
                   <button
                     onClick={() => handleRecover(cart.userId, 'email')}
                     disabled={sendingId === `${cart.userId}-email` || !cart.email || cart.recovered}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium rounded-lg hover:bg-blue-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <Mail className="h-4 w-4" />
-                    {sendingId === `${cart.userId}-email` ? 'Enviando...' : 'Email'}
+                    {sendingId === `${cart.userId}-email` ? '...' : 'Email'}
                   </button>
                 </div>
               </div>
-            </div>
+            </AdminCard>
           ))}
         </div>
       )}
-    </div>
+    </AdminPage>
   )
 }

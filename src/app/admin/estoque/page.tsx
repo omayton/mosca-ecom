@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AlertTriangle, CheckCircle, XCircle, Package, RefreshCw } from 'lucide-react'
+import { AlertTriangle, CheckCircle, XCircle, Package, RefreshCw, Boxes } from 'lucide-react'
+import {
+  AdminPage, AdminHeader, AdminCard, AdminTable, AdminTableRow,
+  AdminTableCell, AdminBadge, AdminEmptyState, AdminButton
+} from '@/components/admin/admin-ui'
 
 interface StockProduct {
   id: number
@@ -74,67 +78,67 @@ export default function AdminStockPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-900">Controle de Estoque</h1>
-          <p className="text-zinc-500 mt-1">Gerencie a quantidade de cada produto</p>
-        </div>
-        <button
-          onClick={fetchStock}
-          className="flex items-center gap-2 px-4 py-2.5 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Atualizar
-        </button>
-      </div>
+    <AdminPage>
+      <AdminHeader title="Controle de Estoque" subtitle="Gerencie a quantidade de cada produto">
+        <AdminButton variant="secondary" onClick={fetchStock}>
+          <RefreshCw className="h-4 w-4" /> Atualizar
+        </AdminButton>
+      </AdminHeader>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-zinc-200 p-4 flex items-center gap-3">
-          <Package className="h-8 w-8 text-blue-500" />
-          <div>
-            <p className="text-2xl font-bold text-zinc-900">{stats.total}</p>
-            <p className="text-xs text-zinc-500">Total</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <AdminCard>
+          <div className="flex items-center gap-3">
+            <Package className="h-7 w-7 text-blue-400/60" />
+            <div>
+              <p className="text-xl font-bold text-white">{stats.total}</p>
+              <p className="text-[10px] text-white/30 uppercase tracking-wider">Total</p>
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-xl border border-green-200 p-4 flex items-center gap-3">
-          <CheckCircle className="h-8 w-8 text-green-500" />
-          <div>
-            <p className="text-2xl font-bold text-zinc-900">{stats.available}</p>
-            <p className="text-xs text-zinc-500">Disponível</p>
+        </AdminCard>
+        <AdminCard>
+          <div className="flex items-center gap-3">
+            <CheckCircle className="h-7 w-7 text-emerald-400/60" />
+            <div>
+              <p className="text-xl font-bold text-white">{stats.available}</p>
+              <p className="text-[10px] text-white/30 uppercase tracking-wider">Disponível</p>
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-xl border border-yellow-200 p-4 flex items-center gap-3">
-          <AlertTriangle className="h-8 w-8 text-yellow-500" />
-          <div>
-            <p className="text-2xl font-bold text-zinc-900">{stats.lowStock}</p>
-            <p className="text-xs text-zinc-500">Estoque Baixo</p>
+        </AdminCard>
+        <AdminCard>
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-7 w-7 text-amber-400/60" />
+            <div>
+              <p className="text-xl font-bold text-amber-400">{stats.lowStock}</p>
+              <p className="text-[10px] text-white/30 uppercase tracking-wider">Estoque Baixo</p>
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-xl border border-red-200 p-4 flex items-center gap-3">
-          <XCircle className="h-8 w-8 text-red-500" />
-          <div>
-            <p className="text-2xl font-bold text-zinc-900">{stats.outOfStock}</p>
-            <p className="text-xs text-zinc-500">Esgotado</p>
+        </AdminCard>
+        <AdminCard>
+          <div className="flex items-center gap-3">
+            <XCircle className="h-7 w-7 text-red-400/60" />
+            <div>
+              <p className="text-xl font-bold text-red-400">{stats.outOfStock}</p>
+              <p className="text-[10px] text-white/30 uppercase tracking-wider">Esgotado</p>
+            </div>
           </div>
-        </div>
+        </AdminCard>
       </div>
 
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-6">
-        {[
+        {([
           { key: 'all', label: 'Todos' },
           { key: 'low', label: 'Estoque Baixo' },
           { key: 'out', label: 'Esgotados' },
-        ].map((tab) => (
+        ] as const).map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setFilter(tab.key as any)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+            onClick={() => setFilter(tab.key)}
+            className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               filter === tab.key
-                ? 'bg-red-600 text-white'
-                : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                : 'text-white/40 border border-white/[0.06] hover:text-white/70'
             }`}
           >
             {tab.label}
@@ -143,106 +147,85 @@ export default function AdminStockPage() {
       </div>
 
       {/* Stock Table */}
-      <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-zinc-50 border-b border-zinc-200">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Produto</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Categoria</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Quantidade</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Alerta</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Status</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-zinc-500 uppercase">Ações Rápidas</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>
-                    <td colSpan={6} className="px-4 py-4">
-                      <div className="h-6 bg-zinc-100 animate-pulse rounded" />
-                    </td>
-                  </tr>
-                ))
-              ) : filteredProducts.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-zinc-500">
-                    Nenhum produto encontrado
-                  </td>
-                </tr>
-              ) : (
-                filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-zinc-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-zinc-900 text-sm line-clamp-1">{product.name}</p>
-                      <p className="text-xs text-zinc-400">#{product.id}</p>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-zinc-600">{product.category}</td>
-                    <td className="px-4 py-3 text-center">
-                      <input
-                        type="number"
-                        value={product.stock_quantity}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) || 0
-                          setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock_quantity: val } : p))
-                        }}
-                        onBlur={(e) => updateStock(product.id, parseInt(e.target.value) || 0)}
-                        className="w-20 text-center border border-zinc-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-red-300"
-                        min="0"
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-center text-sm text-zinc-500">
-                      ≤ {product.stock_threshold}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <StatusBadge status={product.status} />
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        {[0, 5, 10, 50, 999].map((qty) => (
-                          <button
-                            key={qty}
-                            onClick={() => updateStock(product.id, qty)}
-                            disabled={saving === product.id}
-                            className={`px-2 py-1 text-xs rounded border transition-colors cursor-pointer ${
-                              product.stock_quantity === qty
-                                ? 'bg-red-600 text-white border-red-600'
-                                : 'border-zinc-200 text-zinc-600 hover:border-red-300'
-                            }`}
-                          >
-                            {qty}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      {!loading && filteredProducts.length === 0 ? (
+        <AdminEmptyState
+          icon={Boxes}
+          title="Nenhum produto encontrado"
+          description="Nenhum produto corresponde ao filtro selecionado."
+        />
+      ) : (
+        <AdminTable
+          headers={[
+            { label: 'Produto' },
+            { label: 'Categoria' },
+            { label: 'Quantidade', align: 'center' },
+            { label: 'Alerta', align: 'center' },
+            { label: 'Status', align: 'center' },
+            { label: 'Ações Rápidas', align: 'center' },
+          ]}
+          loading={loading}
+        >
+          {filteredProducts.map((product) => (
+            <AdminTableRow key={product.id}>
+              <AdminTableCell>
+                <p className="font-medium text-white text-sm line-clamp-1">{product.name}</p>
+                <p className="text-[11px] text-white/20">#{product.id}</p>
+              </AdminTableCell>
+              <AdminTableCell>
+                <span className="text-white/50 text-sm">{product.category}</span>
+              </AdminTableCell>
+              <AdminTableCell align="center">
+                <input
+                  type="number"
+                  value={product.stock_quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0
+                    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock_quantity: val } : p))
+                  }}
+                  onBlur={(e) => updateStock(product.id, parseInt(e.target.value) || 0)}
+                  className="w-20 text-center bg-white/[0.04] border border-white/[0.06] rounded-md px-2 py-1.5 text-sm text-white focus:outline-none focus:border-amber-500/30"
+                  min="0"
+                />
+              </AdminTableCell>
+              <AdminTableCell align="center">
+                <span className="text-white/30 text-sm">≤ {product.stock_threshold}</span>
+              </AdminTableCell>
+              <AdminTableCell align="center">
+                <StockBadge status={product.status} />
+              </AdminTableCell>
+              <AdminTableCell align="center">
+                <div className="flex items-center justify-center gap-1">
+                  {[0, 5, 10, 50].map((qty) => (
+                    <button
+                      key={qty}
+                      onClick={() => updateStock(product.id, qty)}
+                      disabled={saving === product.id}
+                      className={`px-2 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
+                        product.stock_quantity === qty
+                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                          : 'border-white/[0.06] text-white/40 hover:border-amber-500/20 hover:text-amber-400'
+                      }`}
+                    >
+                      {qty}
+                    </button>
+                  ))}
+                </div>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      )}
+    </AdminPage>
   )
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    available: 'bg-green-100 text-green-700',
-    low_stock: 'bg-yellow-100 text-yellow-700',
-    out_of_stock: 'bg-red-100 text-red-700',
-    discontinued: 'bg-zinc-100 text-zinc-700'
+function StockBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; variant: 'success' | 'warning' | 'error' | 'neutral' }> = {
+    available: { label: 'Disponível', variant: 'success' },
+    low_stock: { label: 'Baixo', variant: 'warning' },
+    out_of_stock: { label: 'Esgotado', variant: 'error' },
+    discontinued: { label: 'Descontinuado', variant: 'neutral' },
   }
-  const labels: Record<string, string> = {
-    available: 'Disponível',
-    low_stock: 'Baixo',
-    out_of_stock: 'Esgotado',
-    discontinued: 'Descontinuado'
-  }
-  return (
-    <span className={`text-xs font-medium px-2 py-1 rounded-full ${styles[status] || styles.available}`}>
-      {labels[status] || status}
-    </span>
-  )
+  const item = map[status] || map.available
+  return <AdminBadge label={item.label} variant={item.variant} />
 }
