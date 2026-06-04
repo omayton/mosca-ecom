@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ShoppingCart, Check, Minus, Plus, Zap } from "lucide-react"
 import { useCart } from "@/contexts/cart-context"
 import { useRouter } from "next/navigation"
+import { trackAddToCart } from "@/lib/analytics"
 
 interface AddToCartProps {
   productId: number
@@ -23,6 +24,7 @@ export function AddToCart({ productId, name, price, imageFile, slug }: AddToCart
     for (let i = 0; i < qty; i++) {
       addItem({ productId, name, price, imageFile, slug })
     }
+    trackAddToCart({ name, id: productId, price, quantity: qty })
     setState("added")
     setTimeout(() => setState("idle"), 2500)
   }

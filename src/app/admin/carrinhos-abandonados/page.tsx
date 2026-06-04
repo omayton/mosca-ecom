@@ -21,6 +21,7 @@ interface AbandonedCart {
   total: number
   lastUpdate: string
   notifications: { whatsapp?: string; email?: string }
+  recovered?: boolean
 }
 
 export default function AbandonedCartsPage() {
@@ -50,8 +51,8 @@ export default function AbandonedCartsPage() {
     const diff = Date.now() - new Date(dateStr).getTime()
     const hours = Math.floor(diff / (1000 * 60 * 60))
     const days = Math.floor(hours / 24)
-    if (days > 0) return `${days}d ${hours % 24}h atrás`
-    return `${hours}h atrás`
+    if (days > 0) return `Adicionado há ${days}d ${hours % 24}h`
+    return `Adicionado há ${hours}h`
   }
 
   async function handleRecover(userId: string, channel: 'whatsapp' | 'email') {
@@ -161,6 +162,31 @@ export default function AbandonedCartsPage() {
 
                   {/* Time + notification status */}
                   <div className="flex items-center gap-4 text-xs">
+                    {cart.recovered ? (
+                      <span className="flex items-center gap-1 text-green-600 font-medium">
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Recuperado — pedido finalizado
+                      </span>
+                    ) : (
+                      <>
+                        <span className="flex items-center gap-1 text-amber-600">
+                          <Clock className="h-3.5 w-3.5" />
+                          {getTimeAgo(cart.lastUpdate)}
+                        </span>
+                        {cart.notifications.whatsapp && (
+                          <span className="flex items-center gap-1 text-green-600">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            WhatsApp enviado
+                          </span>
+                        )}
+                        {cart.notifications.email && (
+                          <span className="flex items-center gap-1 text-blue-600">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            Email enviado
+                          </span>
+                        )}
+                      </>
+                    )}
                     <span className="flex items-center gap-1 text-amber-600">
                       <Clock className="h-3.5 w-3.5" />
                       {getTimeAgo(cart.lastUpdate)}
@@ -184,7 +210,7 @@ export default function AbandonedCartsPage() {
                 <div className="flex flex-col gap-2 flex-shrink-0">
                   <button
                     onClick={() => handleRecover(cart.userId, 'whatsapp')}
-                    disabled={sendingId === `${cart.userId}-whatsapp` || !cart.phone}
+                    disabled={sendingId === `${cart.userId}-whatsapp` || !cart.phone || cart.recovered}
                     className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <MessageCircle className="h-4 w-4" />
@@ -192,7 +218,7 @@ export default function AbandonedCartsPage() {
                   </button>
                   <button
                     onClick={() => handleRecover(cart.userId, 'email')}
-                    disabled={sendingId === `${cart.userId}-email` || !cart.email}
+                    disabled={sendingId === `${cart.userId}-email` || !cart.email || cart.recovered}
                     className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
                   >
                     <Mail className="h-4 w-4" />

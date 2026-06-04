@@ -3,56 +3,93 @@
 import Script from "next/script"
 
 /**
- * Google Tag Manager + GA4 integration.
+ * Analytics: Google Analytics 4 + Vercel Web Analytics + Speed Insights
  *
- * Setup:
- * 1. Create GTM container at tagmanager.google.com
- * 2. Inside GTM, configure GA4 tag with your Measurement ID
- * 3. Set NEXT_PUBLIC_GTM_ID env var (e.g., "GTM-XXXXXXX")
- *
- * This component loads GTM which handles GA4, Meta Pixel, and any other tags
- * you configure in the GTM dashboard — no code changes needed for new tags.
+ * GA4 Measurement ID: G-5CRHKEJH7F
+ * Vercel Analytics: carrega automaticamente quando hospedado na Vercel
  */
+
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-5CRHKEJH7F"
+
 export function Analytics() {
-  const gtmId = process.env.NEXT_PUBLIC_GTM_ID
-
-  if (!gtmId) return null
-
   return (
     <>
-      {/* Google Tag Manager */}
+      {/* Google Analytics 4 (gtag.js) */}
       <Script
-        id="gtm-script"
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+        strategy="afterInteractive"
+      />
+      <Script
+        id="ga4-config"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','${gtmId}');
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}', {
+              page_title: document.title,
+              send_page_view: true
+            });
           `,
         }}
       />
-      {/* GTM noscript fallback */}
-      <noscript>
-        <iframe
-          src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
-          height="0"
-          width="0"
-          style={{ display: "none", visibility: "hidden" }}
-        />
-      </noscript>
+
+      {/* Vercel Web Analytics (privacy-friendly, no cookies) */}
+      <Script
+        src="/_vercel/insights/script.js"
+        strategy="afterInteractive"
+      />
+
+      {/* Vercel Speed Insights */}
+      <Script
+        src="/_vercel/speed-insights/script.js"
+        strategy="afterInteractive"
+      />
     </>
   )
 }
 
 /**
- * Push events to GTM dataLayer.
- * Use this to track e-commerce events (add_to_cart, purchase, etc.)
+ * Track custom events to GA4.
+ * Use para e-commerce: add_to_cart, purchase, view_item, etc.
  */
 export function trackEvent(event: string, data?: Record<string, any>) {
-  if (typeof window !== "undefined" && (window as any).dataLayer) {
-    (window as any).dataLayer.push({ event, ...data })
+  if (typeof window !== "undefined" && (window as any).gtag) {
+    (window as any).gtag("event", event, data)
   }
+}
+
+/**
+ * Track e-commerce: adicionar ao carrinho
+ */
+export function trackAddToCart(item: { id: number; name: string; price: number; quantity: number }) {
+  trackEvent("add_to_cart", {
+    currency: "BRL",
+    value: item.price * item.quantity,
+    items: [{ item_id: String(item.id), item_name: item.name, price: item.price, quantity: item.quantity }],
+  })
+}
+
+/**
+ * Track e-commerce: compra finalizada
+ */
+export function trackPurchase(orderId: number, total: number, items: { id: number; name: string; price: number; quantity: number }[]) {
+  trackEvent("purchase", {
+    transaction_id: String(orderId),
+    currency: "BRL",
+    value: total,
+    items: items.map((i) => ({ item_id: String(i.id), item_name: i.name, price: i.price, quantity: i.quantity })),
+  })
+}
+
+/**
+ * Track e-commerce: visualização de produto
+ */
+export function trackViewItem(item: { id: number; name: string; price: number }) {
+  trackEvent("view_item", {
+    currency: "BRL",
+    value: item.price,
+    items: [{ item_id: String(item.id), item_name: item.name, price: item.price }],
+  })
 }

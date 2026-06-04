@@ -10,6 +10,7 @@ import { ProductImage } from "@/components/product-image"
 import { ProductGallery } from "@/components/product/product-gallery"
 import { ProductCoupons } from "@/components/product/product-coupons"
 import { ProductReviews } from "@/components/product/product-reviews"
+import { ProductTracker } from "@/components/product/product-tracker"
 
 export const revalidate = 60
 
@@ -84,6 +85,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         }}
       />
 
+      <ProductTracker name={product.name} id={product.id} price={product.price} category={product.category} />
       <TopHeader />
 
       {/* Breadcrumb */}

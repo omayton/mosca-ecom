@@ -9,8 +9,9 @@ function getSupabase() {
   )
 }
 
-// Vercel Cron: runs every hour to send abandoned cart notifications
-// Configure in vercel.json: { "crons": [{ "path": "/api/cron/abandoned-cart", "schedule": "0 * * * *" }] }
+// Vercel Cron: runs daily at 9am to send abandoned cart notifications
+// Configure in vercel.json: { "crons": [{ "path": "/api/cron/abandoned-cart", "schedule": "0 9 * * *" }] }
+// Max 3 notifications per user (email + whatsapp), then stops if not recovered
 export async function GET(req: NextRequest) {
   // Verify cron secret to prevent unauthorized calls
   const authHeader = req.headers.get('authorization')
@@ -26,8 +27,8 @@ export async function GET(req: NextRequest) {
 
     const { data: cartData, error: cartError } = await supabase
       .from('cart_items')
-      .select('user_id, product_id, quantity, updated_at, products(name, price)')
-      .lt('updated_at', cutoff)
+      .select('user_id, product_id, quantity, first_added_at, products(name, price)')
+      .lt('first_added_at', cutoff)
 
     if (cartError) throw cartError
     if (!cartData || cartData.length === 0) {
@@ -44,19 +45,33 @@ export async function GET(req: NextRequest) {
 
     const userIds = Object.keys(userCarts)
 
-    // Check who was already notified in the last 24h
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    const { data: recentNotifs } = await supabase
+    // Check notification history per user (max 3 notifications per channel, skip if recovered)
+    const { data: allNotifs } = await supabase
       .from('abandoned_cart_notifications')
-      .select('user_id, channel')
+      .select('user_id, channel, sent_at, recovered')
       .in('user_id', userIds)
-      .gt('sent_at', oneDayAgo)
+      .order('sent_at', { ascending: false })
 
-    const notifiedUsers: Record<string, Set<string>> = {}
-    if (recentNotifs) {
-      for (const n of recentNotifs) {
-        if (!notifiedUsers[n.user_id]) notifiedUsers[n.user_id] = new Set()
-        notifiedUsers[n.user_id].add(n.channel)
+    // Track notification counts per user+channel, and recovered status
+    const notifCounts: Record<string, { email: number; whatsapp: number; recovered: boolean }> = {}
+    if (allNotifs) {
+      for (const n of allNotifs) {
+        if (!notifCounts[n.user_id]) {
+          notifCounts[n.user_id] = { email: 0, whatsapp: 0, recovered: false }
+        }
+        // Count only if not recovered yet
+        if (!n.recovered) {
+          if (n.channel === 'email' && notifCounts[n.user_id].email < 3) {
+            notifCounts[n.user_id].email++
+          }
+          if (n.channel === 'whatsapp' && notifCounts[n.user_id].whatsapp < 3) {
+            notifCounts[n.user_id].whatsapp++
+          }
+        }
+        // If any notification was recovered, mark user as recovered
+        if (n.recovered) {
+          notifCounts[n.user_id].recovered = true
+        }
       }
     }
 
@@ -72,7 +87,7 @@ export async function GET(req: NextRequest) {
       for (const order of recentOrders) {
         const cartItems = userCarts[order.user_id]
         if (cartItems && cartItems.length > 0) {
-          const lastCartUpdate = cartItems[0].updated_at
+          const lastCartUpdate = cartItems[0].first_added_at
           if (new Date(order.created_at) > new Date(lastCartUpdate)) {
             usersWithRecentOrder.add(order.user_id)
           }
@@ -104,6 +119,9 @@ export async function GET(req: NextRequest) {
       // Skip if user completed order after cart
       if (usersWithRecentOrder.has(userId)) continue
 
+      // Skip if already recovered
+      if (notifCounts[userId]?.recovered) continue
+
       const items = userCarts[userId]
       const profile = profileMap[userId]
       const email = emailMap[userId]
@@ -119,8 +137,10 @@ export async function GET(req: NextRequest) {
         quantity: i.quantity,
       }))
 
-      // Send email if not already notified
-      if (email && resendKey && !notifiedUsers[userId]?.has('email')) {
+      const notifCount = notifCounts[userId] || { email: 0, whatsapp: 0, recovered: false }
+
+      // Send email if under 3 notifications total
+      if (email && resendKey && notifCount.email < 3) {
         try {
           const itemsHtml = items.map((i: any) =>
             `<tr>
@@ -197,7 +217,7 @@ export async function GET(req: NextRequest) {
       }
 
       // Record WhatsApp notification (admin will manually send via dashboard link)
-      if (phone && !notifiedUsers[userId]?.has('whatsapp')) {
+      if (phone && notifCount.whatsapp < 3) {
         const cleanPhone = phone.replace(/\D/g, '')
         const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`
 
@@ -208,12 +228,16 @@ export async function GET(req: NextRequest) {
         message += `Finalize sua compra: https://www.moscabrancaparts.com.br/checkout\n\n`
         message += `Alguma dúvida? Estamos aqui para ajudar! 🚗`
 
-        // For WhatsApp, we save the notification and the admin dashboard shows the link
+        // For WhatsApp, we save the notification with the phone number and message
         // Auto-send via WhatsApp Business API could be added later
         await supabase.from('abandoned_cart_notifications').insert({
           user_id: userId,
           channel: 'whatsapp',
-          items_snapshot: [...snapshot, { whatsapp_url: `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}` }],
+          items_snapshot: {
+            items: snapshot,
+            phone: fullPhone,
+            message
+          },
         })
         sentCount++
       }

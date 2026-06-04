@@ -20,12 +20,12 @@ export async function GET(req: NextRequest) {
     const supabase = getSupabase()
     const cutoff = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString()
 
-    // Get cart_items grouped by user, where updated_at is older than cutoff
+    // Get cart_items grouped by user, where first_added_at is older than cutoff
     const { data: cartData, error: cartError } = await supabase
       .from('cart_items')
-      .select('user_id, product_id, quantity, updated_at, products(name, price, image_file, slug)')
-      .lt('updated_at', cutoff)
-      .order('updated_at', { ascending: false })
+      .select('user_id, product_id, quantity, first_added_at, products(name, price, image_file, slug)')
+      .lt('first_added_at', cutoff)
+      .order('first_added_at', { ascending: false })
 
     if (cartError) throw cartError
     if (!cartData || cartData.length === 0) {
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
       for (const order of recentOrders) {
         const cartItems = userCarts[order.user_id]
         if (cartItems && cartItems.length > 0) {
-          const lastCartUpdate = cartItems[0].updated_at
+          const lastCartUpdate = cartItems[0].first_added_at
           if (new Date(order.created_at) > new Date(lastCartUpdate)) {
             usersWithRecentOrder.add(order.user_id)
           }
@@ -84,19 +84,24 @@ export async function GET(req: NextRequest) {
     // Get notifications already sent
     const { data: notifications } = await supabase
       .from('abandoned_cart_notifications')
-      .select('user_id, channel, sent_at')
+      .select('user_id, channel, sent_at, recovered')
       .in('user_id', userIds)
       .order('sent_at', { ascending: false })
 
-    const notifMap: Record<string, { whatsapp?: string; email?: string }> = {}
+    const notifMap: Record<string, { whatsapp?: string; email?: string; recovered?: boolean }> = {}
     if (notifications) {
       for (const n of notifications) {
-        if (!notifMap[n.user_id]) notifMap[n.user_id] = {}
+        if (!notifMap[n.user_id]) {
+          notifMap[n.user_id] = { whatsapp: undefined, email: undefined, recovered: false }
+        }
         if (n.channel === 'whatsapp' && !notifMap[n.user_id].whatsapp) {
           notifMap[n.user_id].whatsapp = n.sent_at
         }
         if (n.channel === 'email' && !notifMap[n.user_id].email) {
           notifMap[n.user_id].email = n.sent_at
+        }
+        if (n.recovered) {
+          notifMap[n.user_id].recovered = true
         }
       }
     }
@@ -113,7 +118,7 @@ export async function GET(req: NextRequest) {
         const items = userCarts[userId]
         const profile = profileMap[userId]
         const total = items.reduce((sum: number, i: any) => sum + (i.products?.price || 0) * i.quantity, 0)
-        const lastUpdate = items[0]?.updated_at
+        const lastUpdate = items[0]?.first_added_at
 
         return {
           userId,
@@ -131,6 +136,7 @@ export async function GET(req: NextRequest) {
           total,
           lastUpdate,
           notifications: notifMap[userId] || {},
+          recovered: notifMap[userId]?.recovered || false,
         }
       })
       .sort((a, b) => new Date(a.lastUpdate).getTime() - new Date(b.lastUpdate).getTime())

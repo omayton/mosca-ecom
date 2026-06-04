@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/require-admin'
-// @ts-expect-error sharp is an optional native dependency (available on Vercel)
-import sharp from 'sharp'
+
+// sharp is loaded dynamically — available on Vercel but may not be installed locally
+async function getSharp() {
+  try {
+    // @ts-ignore sharp may not be installed locally
+    const mod = await import('sharp')
+    return mod.default || mod
+  } catch {
+    return null
+  }
+}
 
 // Banner ratio: full width × max 480px → ~3:1
 // gpt-image-1 only supports 1536x1024 (1.5:1), so we crop to 1536x512 (exact 3:1)
@@ -123,15 +132,23 @@ ABSOLUTE RULES:
     }
 
     // Crop to exact banner ratio (3:1) — center crop from the generated 1536x1024
-    const croppedBuffer = await sharp(buffer)
-      .resize({
-        width: BANNER_W,
-        height: BANNER_H,
-        fit: 'cover',
-        position: 'centre',
-      })
-      .png()
-      .toBuffer()
+    const sharpLib = await getSharp()
+    let croppedBuffer: Buffer
+
+    if (sharpLib) {
+      croppedBuffer = await sharpLib(buffer)
+        .resize({
+          width: BANNER_W,
+          height: BANNER_H,
+          fit: 'cover',
+          position: 'centre',
+        })
+        .png()
+        .toBuffer()
+    } else {
+      // Fallback: upload sem crop se sharp não disponível
+      croppedBuffer = buffer
+    }
 
     const supabase = getSupabase()
     const filePath = `banners/banner-ai-${Date.now()}.png`

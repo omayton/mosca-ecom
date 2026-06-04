@@ -143,6 +143,20 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
   }
 
+  // Mark abandoned cart notifications as recovered (non-blocking)
+  try {
+    const { error: recoveredErr } = await auth.client
+      .from("abandoned_cart_notifications")
+      .update({ recovered: true })
+      .eq("user_id", user.id)
+      .eq("recovered", false)
+    if (recoveredErr) {
+      console.error("[checkout] failed to mark notifications as recovered:", recoveredErr)
+    }
+  } catch (recoveredErr: any) {
+    console.error("[checkout] error marking recovered:", recoveredErr?.message || recoveredErr)
+  }
+
   // Send order confirmation email (non-blocking)
   try {
     const customerName = user.user_metadata?.name || "Cliente"

@@ -10,6 +10,7 @@ import { OrderSummary } from "@/components/checkout/order-summary"
 import { PaymentForm } from "@/components/checkout/payment-form"
 import { TopHeader } from "@/components/automotive/top-header"
 import { ArrowLeft, Lock, Shield, CreditCard } from "lucide-react"
+import { trackBeginCheckout, trackPurchase } from "@/lib/analytics"
 
 export default function CheckoutClient() {
   const router = useRouter()
@@ -109,6 +110,16 @@ export default function CheckoutClient() {
 
       setOrderId(data.orderId)
       setOrderTotal(data.total)
+
+      // Rastrear início de checkout
+      const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
+      trackBeginCheckout(data.total, items.map(i => ({
+        name: i.name,
+        id: i.productId,
+        price: i.price,
+        quantity: i.quantity,
+      })))
+
       setStep("review")
     } catch {
       setError("Erro de conexão. Tente novamente.")
@@ -118,6 +129,20 @@ export default function CheckoutClient() {
   }
 
   function handlePaymentSuccess() {
+    // Rastrear compra
+    if (orderId && orderTotal > 0) {
+      trackPurchase({
+        transactionId: orderId,
+        value: orderTotal,
+        shipping: shipping?.price || 0,
+        items: items.map(i => ({
+          name: i.name,
+          id: i.productId,
+          price: i.price,
+          quantity: i.quantity,
+        })),
+      })
+    }
     clearCart()
     router.push(`/pedido/${orderId}?status=approved`)
   }

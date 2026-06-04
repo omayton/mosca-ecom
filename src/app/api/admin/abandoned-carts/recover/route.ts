@@ -60,7 +60,9 @@ export async function POST(req: NextRequest) {
     await supabase.from('abandoned_cart_notifications').insert({
       user_id: userId,
       channel,
-      items_snapshot: snapshot,
+      items_snapshot: channel === 'whatsapp'
+        ? { items: snapshot, phone: null, message: null }
+        : snapshot,
     })
 
     if (channel === 'whatsapp') {
