@@ -7,6 +7,13 @@ const nextConfig = {
       { protocol: 'https', hostname: 'mcaxtwztzfrytxtkgdxh.supabase.co' },
     ],
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = config.externals || []
+      config.externals.push('sharp')
+    }
+    return config
+  },
   async headers() {
     return [
       {

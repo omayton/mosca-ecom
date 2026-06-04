@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Plus, Search, Edit2, Trash2, Image as ImageIcon, Package } from 'lucide-react'
 import Link from 'next/link'
 import { ImageUpload } from '@/components/admin/image-upload'
+import { ProductImagesUpload } from '@/components/admin/product-images-upload'
 
 interface Product {
   id: number
@@ -297,7 +298,6 @@ function ProductFormModal({ product, onClose, onSave }: {
     oldPrice: product?.old_price?.toString() || '',
     category: product?.category || '',
     categorySlug: product?.category_slug || '',
-    imageFile: product?.image_file || '',
     description: product?.description || '',
     weight: product?.weight || '',
     dimensions: product?.dimensions || '',
@@ -305,7 +305,29 @@ function ProductFormModal({ product, onClose, onSave }: {
     stockQuantity: product?.stock_quantity?.toString() || '999',
     stockThreshold: product?.stock_threshold?.toString() || '10',
   })
+  const [images, setImages] = useState<{ id: number; url: string; altText: string; sortOrder: number }[]>([])
+  const [imagesLoaded, setImagesLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // Carregar imagens do produto ao abrir o modal
+  useEffect(() => {
+    if (product?.id) {
+      fetch(`/api/admin/product-images?productId=${product.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.images) {
+            setImages(data.images)
+          }
+          setImagesLoaded(true)
+        })
+        .catch((err) => {
+          console.error('Erro ao carregar imagens:', err)
+          setImagesLoaded(true)
+        })
+    } else {
+      setImagesLoaded(true)
+    }
+  }, [product])
 
   const generateSlug = (name: string) => {
     return name
@@ -329,7 +351,6 @@ function ProductFormModal({ product, onClose, onSave }: {
         oldPrice: form.oldPrice ? parseFloat(form.oldPrice) : null,
         category: form.category,
         categorySlug: form.categorySlug || generateSlug(form.category),
-        imageFile: form.imageFile || 'placeholder',
         description: form.description,
         weight: form.weight || null,
         dimensions: form.dimensions || null,
@@ -465,14 +486,15 @@ function ProductFormModal({ product, onClose, onSave }: {
             </div>
 
             <div className="md:col-span-2">
-              <ImageUpload
-                currentImage={form.imageFile && form.imageFile !== 'placeholder'
-                  ? (form.imageFile.startsWith('http') ? form.imageFile : `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/${form.imageFile}`)
-                  : undefined
-                }
-                productId={product?.id}
-                onUpload={(url) => setForm({ ...form, imageFile: url })}
-              />
+              {imagesLoaded ? (
+                <ProductImagesUpload
+                  productId={product?.id || 0}
+                  images={images}
+                  onChange={setImages}
+                />
+              ) : (
+                <div className="text-center py-8 text-zinc-500">Carregando imagens...</div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">

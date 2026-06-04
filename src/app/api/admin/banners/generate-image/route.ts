@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/lib/require-admin'
+// @ts-expect-error sharp is an optional native dependency (available on Vercel)
 import sharp from 'sharp'
 
 // Banner ratio: full width × max 480px → ~3:1

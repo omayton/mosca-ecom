@@ -17,6 +17,11 @@ interface ProductRow {
   featured: boolean
 }
 
+async function getProductMainImageURL(productId: number): Promise<string> {
+  const mainImage = await getMainProductImage(productId)
+  return mainImage?.url || ""
+}
+
 function rowToProduct(row: ProductRow): Product {
   return {
     id: row.id,
@@ -26,7 +31,7 @@ function rowToProduct(row: ProductRow): Product {
     oldPrice: row.old_price ?? undefined,
     category: row.category,
     categorySlug: row.category_slug,
-    imageFile: row.image_file,
+    imageFile: row.image_file, // Mantido para compatibilidade, mas será substituído
     description: row.description ?? "",
     weight: row.weight ?? undefined,
     dimensions: row.dimensions ?? undefined,
@@ -56,7 +61,16 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     if (error.code === "PGRST116") return null
     throw error
   }
-  return rowToProduct(data as ProductRow)
+
+  const product = rowToProduct(data as ProductRow)
+
+  // Buscar imagem principal
+  const mainImageURL = await getProductMainImageURL(product.id)
+  if (mainImageURL) {
+    return { ...product, imageFile: mainImageURL }
+  }
+
+  return product
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
@@ -67,7 +81,17 @@ export async function getFeaturedProducts(): Promise<Product[]> {
     .order("id")
 
   if (error) throw error
-  return (data as ProductRow[]).map(rowToProduct)
+  const products = (data as ProductRow[]).map(rowToProduct)
+
+  // Buscar imagens principais para cada produto
+  const productsWithImages = await Promise.all(
+    products.map(async (p) => ({
+      ...p,
+      imageFile: await getProductMainImageURL(p.id) || p.imageFile, // Usa imagem principal ou fallback
+    }))
+  )
+
+  return productsWithImages
 }
 
 export async function getRecentProducts(limit = 12): Promise<Product[]> {
@@ -78,7 +102,17 @@ export async function getRecentProducts(limit = 12): Promise<Product[]> {
     .limit(limit)
 
   if (error) throw error
-  return (data as ProductRow[]).map(rowToProduct)
+  const products = (data as ProductRow[]).map(rowToProduct)
+
+  // Buscar imagens principais
+  const productsWithImages = await Promise.all(
+    products.map(async (p) => ({
+      ...p,
+      imageFile: await getProductMainImageURL(p.id) || p.imageFile,
+    }))
+  )
+
+  return productsWithImages
 }
 
 export async function getDiscountProducts(limit = 12): Promise<Product[]> {
@@ -90,7 +124,17 @@ export async function getDiscountProducts(limit = 12): Promise<Product[]> {
     .limit(limit)
 
   if (error) throw error
-  return (data as ProductRow[]).map(rowToProduct)
+  const products = (data as ProductRow[]).map(rowToProduct)
+
+  // Buscar imagens principais
+  const productsWithImages = await Promise.all(
+    products.map(async (p) => ({
+      ...p,
+      imageFile: await getProductMainImageURL(p.id) || p.imageFile,
+    }))
+  )
+
+  return productsWithImages
 }
 
 export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {
@@ -153,4 +197,84 @@ export async function getProductImages(productId: number): Promise<ProductImage[
     altText: row.alt_text,
     sortOrder: row.sort_order,
   }))
+}
+
+export async function getMainProductImage(productId: number): Promise<ProductImage | null> {
+  const { data, error } = await supabase
+    .from("product_images")
+    .select("id, url, alt_text, sort_order")
+    .eq("product_id", productId)
+    .eq("sort_order", 0)
+    .limit(1)
+    .single()
+
+  if (error || !data) return null
+  return {
+    id: data.id,
+    url: data.url,
+    altText: data.alt_text || "",
+    sortOrder: data.sort_order,
+  }
+}
+
+export async function addProductImage(
+  productId: number,
+  url: string,
+  altText: string = "",
+  sortOrder: number = 0
+): Promise<ProductImage | null> {
+  const { data, error } = await supabase
+    .from("product_images")
+    .insert({ product_id: productId, url, alt_text: altText, sort_order: sortOrder })
+    .select("id, url, alt_text, sort_order")
+    .single()
+
+  if (error) {
+    console.error("Erro ao adicionar imagem:", error)
+    return null
+  }
+
+  return {
+    id: data.id,
+    url: data.url,
+    altText: data.alt_text || "",
+    sortOrder: data.sort_order,
+  }
+}
+
+export async function updateProductImage(
+  imageId: number,
+  updates: { altText?: string; sortOrder?: number }
+): Promise<boolean> {
+  const updateData: any = {}
+  if (updates.altText !== undefined) updateData.alt_text = updates.altText
+  if (updates.sortOrder !== undefined) updateData.sort_order = updates.sortOrder
+
+  const { error } = await supabase
+    .from("product_images")
+    .update(updateData)
+    .eq("id", imageId)
+
+  return !error
+}
+
+export async function deleteProductImage(imageId: number): Promise<boolean> {
+  const { error } = await supabase
+    .from("product_images")
+    .delete()
+    .eq("id", imageId)
+
+  return !error
+}
+
+export async function reorderProductImages(
+  productId: number,
+  imageOrders: { id: number; sortOrder: number }[]
+): Promise<boolean> {
+  const updates = imageOrders.map(({ id, sortOrder }) =>
+    supabase.from("product_images").update({ sort_order: sortOrder }).eq("id", id)
+  )
+
+  const results = await Promise.all(updates)
+  return results.every((r) => !r.error)
 }
