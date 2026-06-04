@@ -5,11 +5,11 @@ import Script from "next/script"
 /**
  * Analytics: Google Analytics 4 + Vercel Web Analytics + Speed Insights
  *
- * GA4 Measurement ID: G-7FEY4JEZY4
+ * GA4 Measurement ID: G-5CRHKEJH7F
  * Vercel Analytics: carrega automaticamente quando hospedado na Vercel
  */
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-7FEY4JEZY4"
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-5CRHKEJH7F"
 
 export function Analytics() {
   return (
