@@ -31,7 +31,16 @@ export async function POST(req: NextRequest) {
   })
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
+    // Translate Supabase email validation errors to Portuguese
+    let message = error.message
+    if (message.toLowerCase().includes("invalid") && message.toLowerCase().includes("email")) {
+      message = "E-mail inválido ou não aceito pelo sistema. Tente outro endereço de e-mail."
+    } else if (message.toLowerCase().includes("already registered") || message.toLowerCase().includes("already been registered")) {
+      message = "Este e-mail já está cadastrado. Faça login ou use outro e-mail."
+    } else if (message.toLowerCase().includes("password")) {
+      message = "Senha muito fraca. Use pelo menos 6 caracteres."
+    }
+    return NextResponse.json({ error: message }, { status: 400 })
   }
 
   if (data.session) {
