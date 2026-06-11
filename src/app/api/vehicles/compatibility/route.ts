@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getProducts } from '@/lib/products-db'
 import { createClient } from '@supabase/supabase-js'
+
+export const dynamic = 'force-dynamic'
 import type {
   CompatibleProduct,
   CompatibilityResponse,

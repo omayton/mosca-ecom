@@ -27,6 +27,7 @@ function fmt(n: number) {
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [apiError, setApiError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -34,6 +35,7 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = useCallback(async () => {
     setLoading(true)
+    setApiError(null)
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -41,14 +43,17 @@ export default function AdminOrdersPage() {
         ...(statusFilter && { status: statusFilter })
       })
       const res = await fetch(`/api/admin/orders?${params}`)
-      if (res.ok) {
-        const data = await res.json()
-        setOrders(data.orders)
-        setTotalPages(data.totalPages)
-        setTotal(data.total)
+      const data = await res.json()
+      if (!res.ok) {
+        setApiError(`Erro ${res.status}: ${data.error || 'Falha ao buscar pedidos'}`)
+        return
       }
+      setOrders(data.orders)
+      setTotalPages(data.totalPages)
+      setTotal(data.total)
     } catch (err) {
       console.error('Failed to fetch orders:', err)
+      setApiError('Erro de rede ao buscar pedidos')
     } finally {
       setLoading(false)
     }
@@ -90,7 +95,14 @@ export default function AdminOrdersPage() {
         />
       </AdminFilter>
 
-      {!loading && orders.length === 0 ? (
+      {apiError ? (
+        <div className="m-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <p className="text-red-400 text-sm font-mono">{apiError}</p>
+          <p className="text-white/40 text-xs mt-1">
+            Verifique se a variável <code className="text-amber-400">ADMIN_EMAILS</code> no Vercel contém o email com que você está logado.
+          </p>
+        </div>
+      ) : !loading && orders.length === 0 ? (
         <AdminEmptyState
           icon={ShoppingCart}
           title="Nenhum pedido encontrado"

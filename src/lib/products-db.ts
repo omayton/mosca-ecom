@@ -168,6 +168,13 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
 }
 
 export async function getAllSlugs(): Promise<string[]> {
+  // Guard: if Supabase URL not configured (e.g. local build without .env.local),
+  // fall back to the static product list so generateStaticParams doesn't crash.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    const { PRODUCTS } = await import("./products")
+    return PRODUCTS.map((p) => p.slug)
+  }
+
   const { data, error } = await supabase
     .from("products")
     .select("slug")

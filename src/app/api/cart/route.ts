@@ -69,18 +69,39 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabase()
 
-    // Delete existing items for this user
-    await supabase.from('cart_items').delete().eq('user_id', user.id)
+    // Fetch existing items to preserve their first_added_at timestamps
+    const { data: existing } = await supabase
+      .from('cart_items')
+      .select('product_id, first_added_at')
+      .eq('user_id', user.id)
 
-    // Insert new items
+    const existingMap = new Map(
+      (existing || []).map((e: any) => [e.product_id, e.first_added_at])
+    )
+
+    const newProductIds = items.map((i: { productId: number }) => i.productId)
+
+    // Delete items removed from the cart
+    const removedIds = Array.from(existingMap.keys()).filter((id) => !newProductIds.includes(id))
+    if (removedIds.length > 0) {
+      await supabase.from('cart_items').delete()
+        .eq('user_id', user.id)
+        .in('product_id', removedIds)
+    }
+
+    // Upsert: INSERT new with timestamp, UPDATE existing quantity only
     if (items.length > 0) {
       const rows = items.map((item: { productId: number; quantity: number }) => ({
         user_id: user.id,
         product_id: item.productId,
         quantity: item.quantity,
+        // Preserve original timestamp for existing items; set now() for new ones
+        first_added_at: existingMap.get(item.productId) ?? new Date().toISOString(),
       }))
 
-      const { error } = await supabase.from('cart_items').insert(rows)
+      const { error } = await supabase.from('cart_items').upsert(rows, {
+        onConflict: 'user_id,product_id',
+      })
       if (error) throw error
     }
 
