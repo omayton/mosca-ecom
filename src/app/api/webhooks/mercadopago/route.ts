@@ -70,7 +70,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true })
     }
 
-    const payment = await getPayment(String(paymentId))
+    let payment: any
+    try {
+      payment = await getPayment(String(paymentId))
+    } catch (fetchErr: any) {
+      // Payment not found (e.g. test simulation with fake ID) — ignore gracefully
+      console.warn("[webhook] payment not found or MP error:", fetchErr.message)
+      return NextResponse.json({ ok: true })
+    }
 
     const orderId = payment.external_reference
     if (!orderId) {
