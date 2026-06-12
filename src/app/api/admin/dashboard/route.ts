@@ -16,7 +16,13 @@ export async function GET() {
   try {
     const supabase = getSupabase()
     const now = new Date()
-    const todayStr = now.toISOString().split('T')[0]
+
+    // Use Brazil timezone (UTC-3) for "today" boundaries
+    const BRT_OFFSET = -3 * 60 // minutes
+    const nowBRT = new Date(now.getTime() + BRT_OFFSET * 60 * 1000)
+    const todayStr = nowBRT.toISOString().split('T')[0] // e.g. "2026-06-12" in BRT
+    // Start of today in UTC (midnight BRT = 03:00 UTC)
+    const todayStartUTC = new Date(todayStr + 'T03:00:00.000Z').toISOString()
 
     // 7 days ago
     const weekAgo = new Date(now)
@@ -27,6 +33,9 @@ export async function GET() {
     const twoWeeksAgo = new Date(now)
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
     const twoWeeksAgoStr = twoWeeksAgo.toISOString()
+
+    // Statuses that represent paid/fulfilled orders (count toward revenue)
+    const PAID_STATUSES = ['confirmed', 'shipped', 'delivered']
 
     const [
       productsRes,
@@ -42,7 +51,7 @@ export async function GET() {
       supabase.from('orders').select('id', { count: 'exact', head: true }),
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('products').select('id', { count: 'exact', head: true }).lte('stock_quantity', 10).gt('stock_quantity', 0),
-      supabase.from('orders').select('total, status').gte('created_at', todayStr),
+      supabase.from('orders').select('total, status').gte('created_at', todayStartUTC),
       supabase.from('orders').select('total, status, created_at').gte('created_at', weekAgoStr),
       supabase.from('orders').select('total, status').gte('created_at', twoWeeksAgoStr).lt('created_at', weekAgoStr),
       supabase.from('orders').select('id, total, status, created_at, shipping_method').order('created_at', { ascending: false }).limit(5),
@@ -53,41 +62,46 @@ export async function GET() {
     const prevWeekOrders = prevWeekOrdersRes.data || []
     const recentOrders = recentOrdersRes.data || []
 
-    // Revenue calculations (only confirmed orders)
+    // Revenue = confirmed + shipped + delivered (all paid statuses)
     const revenueToday = todayOrders
-      .filter(o => o.status === 'confirmed')
+      .filter(o => PAID_STATUSES.includes(o.status))
       .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0)
 
     const revenueWeek = weekOrders
-      .filter(o => o.status === 'confirmed')
+      .filter(o => PAID_STATUSES.includes(o.status))
       .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0)
 
     const revenuePrevWeek = prevWeekOrders
-      .filter(o => o.status === 'confirmed')
+      .filter(o => PAID_STATUSES.includes(o.status))
       .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0)
 
-    // Calculate real trend percentage
     const revenueTrend = revenuePrevWeek > 0
       ? Math.round(((revenueWeek - revenuePrevWeek) / revenuePrevWeek) * 100)
       : revenueWeek > 0 ? 100 : 0
 
-    const ordersThisWeek = weekOrders.length
-    const ordersPrevWeek = prevWeekOrders.length
+    // Orders count: exclude cancelled (pending = awaiting payment, still valid)
+    const ordersThisWeek = weekOrders.filter(o => o.status !== 'cancelled').length
+    const ordersPrevWeek = prevWeekOrders.filter(o => o.status !== 'cancelled').length
     const ordersTrend = ordersPrevWeek > 0
       ? Math.round(((ordersThisWeek - ordersPrevWeek) / ordersPrevWeek) * 100)
       : ordersThisWeek > 0 ? 100 : 0
 
-    // Daily breakdown for chart (last 7 days)
+    // Daily breakdown for chart — use BRT date for each order
     const dailyRevenue: { date: string; revenue: number; orders: number }[] = []
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(now)
+      const d = new Date(nowBRT)
       d.setDate(d.getDate() - i)
       const dateStr = d.toISOString().split('T')[0]
-      const dayOrders = weekOrders.filter(o => o.created_at?.startsWith(dateStr))
+      // Convert each order's created_at to BRT date for grouping
+      const dayOrders = weekOrders.filter(o => {
+        if (!o.created_at) return false
+        const orderBRT = new Date(new Date(o.created_at).getTime() + BRT_OFFSET * 60 * 1000)
+        return orderBRT.toISOString().split('T')[0] === dateStr
+      })
       const dayRevenue = dayOrders
-        .filter(o => o.status === 'confirmed')
+        .filter(o => PAID_STATUSES.includes(o.status))
         .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0)
-      dailyRevenue.push({ date: dateStr, revenue: dayRevenue, orders: dayOrders.length })
+      dailyRevenue.push({ date: dateStr, revenue: dayRevenue, orders: dayOrders.filter(o => o.status !== 'cancelled').length })
     }
 
     const hasData = (productsRes.count || 0) > 0 || (totalOrdersRes.count || 0) > 0
