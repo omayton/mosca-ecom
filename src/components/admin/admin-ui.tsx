@@ -193,11 +193,11 @@ export function AdminTable({ headers, children, loading, rows = 5 }: AdminTableP
 }
 
 // ─── AdminTableRow ──────────────────────────────────────────────────────────
-export function AdminTableRow({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
+export function AdminTableRow({ children, onClick, className }: { children: ReactNode; onClick?: () => void; className?: string }) {
   return (
     <tr
       onClick={onClick}
-      className={`hover:bg-white/[0.02] transition-colors ${onClick ? 'cursor-pointer' : ''}`}
+      className={`hover:bg-white/[0.02] transition-colors ${onClick ? 'cursor-pointer' : ''} ${className || ''}`}
     >
       {children}
     </tr>
