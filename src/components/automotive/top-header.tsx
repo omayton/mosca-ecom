@@ -112,7 +112,7 @@ export function TopHeader() {
             {/* Logo */}
             <a href="/" aria-label="Mosca Branca Parts — Página inicial" className="flex-shrink-0">
               <Image
-                src="https://www.moscabrancaparts.com.br/wp-content/uploads/2025/02/moscabranca-768x412.png"
+                src="/logo.svg" unoptimized
                 alt="Mosca Branca Parts"
                 width={140}
                 height={75}
@@ -269,7 +269,7 @@ export function TopHeader() {
           >
             <div className="flex items-center justify-between px-5 h-16 border-b border-zinc-800/80">
               <Image
-                src="https://www.moscabrancaparts.com.br/wp-content/uploads/2025/02/moscabranca-768x412.png"
+                src="/logo.svg" unoptimized
                 alt="Mosca Branca Parts"
                 width={120}
                 height={64}

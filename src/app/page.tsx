@@ -46,7 +46,7 @@ export default async function Home() {
                 "@type": "Organization",
                 name: "Mosca Branca Parts",
                 url: "https://www.moscabrancaparts.com.br",
-                logo: "https://www.moscabrancaparts.com.br/wp-content/uploads/2025/02/moscabranca-768x412.png",
+                logo: "/logo.svg",
                 contactPoint: {
                   "@type": "ContactPoint",
                   telephone: "+55-34-99936-5936",
@@ -162,7 +162,7 @@ export default async function Home() {
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
               <Image
-                src="https://www.moscabrancaparts.com.br/wp-content/uploads/2025/02/moscabranca-768x412.png"
+                src="/logo.svg" unoptimized
                 alt="Mosca Branca Parts"
                 width={160}
                 height={86}
