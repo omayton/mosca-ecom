@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from('orders')
-      .select('*, profiles:user_id(name)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -32,12 +32,33 @@ export async function GET(req: NextRequest) {
       query = query.eq('status', status)
     }
 
-    const { data, error, count } = await query
-
+    const { data: orders, error, count } = await query
     if (error) throw error
 
+    // Fetch customer names separately to avoid FK join issues
+    const userIds = [...new Set((orders || []).map((o: any) => o.user_id).filter(Boolean))]
+    let profileMap: Record<string, string> = {}
+
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name, full_name')
+        .in('id', userIds)
+
+      if (profiles) {
+        for (const p of profiles) {
+          profileMap[p.id] = p.name || p.full_name || 'Cliente'
+        }
+      }
+    }
+
+    const enriched = (orders || []).map((o: any) => ({
+      ...o,
+      profiles: { name: profileMap[o.user_id] || null },
+    }))
+
     return NextResponse.json({
-      orders: data,
+      orders: enriched,
       total: count || 0,
       page,
       limit,
