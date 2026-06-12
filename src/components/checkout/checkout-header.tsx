@@ -9,7 +9,7 @@ export function CheckoutHeader() {
       <div className="container mx-auto px-4 flex items-center justify-between h-14">
         <a href="/" aria-label="Mosca Branca Parts — Página inicial">
           <Image
-            src="/logo.svg" unoptimized
+            src="/images/05/bannermosca-600x180.png" unoptimized
             alt="Mosca Branca Parts"
             width={120}
             height={64}

@@ -46,7 +46,7 @@ export default async function Home() {
                 "@type": "Organization",
                 name: "Mosca Branca Parts",
                 url: "https://www.moscabrancaparts.com.br",
-                logo: "/logo.svg",
+                logo: 'https://www.moscabrancaparts.com.br/images/05/bannermosca.png',
                 contactPoint: {
                   "@type": "ContactPoint",
                   telephone: "+55-34-99936-5936",
@@ -162,7 +162,7 @@ export default async function Home() {
             {/* Brand */}
             <div className="col-span-2 md:col-span-1">
               <Image
-                src="/logo.svg" unoptimized
+                src="/images/05/bannermosca-600x180.png" unoptimized
                 alt="Mosca Branca Parts"
                 width={160}
                 height={86}

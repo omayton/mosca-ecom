@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     description: 'Encontre peças automotivas raras e de difícil localização. Envio para todo o Brasil.',
     images: [
       {
-        url: '/logo.svg',
+        url: 'https://www.moscabrancaparts.com.br/images/05/bannermosca.png',
         width: 768,
         height: 412,
         alt: 'Mosca Branca Parts',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Mosca Branca Parts — Peças Automotivas Raras',
     description: 'Encontre peças automotivas raras e de difícil localização. Envio para todo o Brasil.',
-    images: ['/logo.svg'],
+    images: ['https://www.moscabrancaparts.com.br/images/05/bannermosca.png'],
   },
   robots: {
     index: true,
