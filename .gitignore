@@ -23,5 +23,16 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 .env*
-public/images/04/
+
+# Product images — ignore all sizes EXCEPT 400x400 (used in cards)
 public/images/04.zip
+public/images/04/*.zip
+public/images/04/*-50x50.*
+public/images/04/*-100x100.*
+public/images/04/*-150x150.*
+public/images/04/*-300x300.*
+public/images/04/*-600x600.*
+public/images/04/*-768x768.*
+public/images/04/*-1024x*.*
+public/images/04/*-1536x*.*
+# Keep originals (no size suffix) — higher quality for product pages
