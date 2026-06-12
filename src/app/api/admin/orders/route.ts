@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     // Fetch customer names separately to avoid FK join issues
-    const userIds = [...new Set((orders || []).map((o: any) => o.user_id).filter(Boolean))]
+    const userIds = Array.from(new Set((orders || []).map((o: any) => o.user_id).filter(Boolean)))
     let profileMap: Record<string, string> = {}
 
     if (userIds.length > 0) {
