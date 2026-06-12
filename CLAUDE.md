@@ -22,6 +22,10 @@ npm run lint     # ESLint (next lint)
 npm run start    # Serve o build de produção localmente
 ```
 
+> **Build local:** requer `.env.local` com `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+> Sem elas, o build falha em páginas que chamam Supabase durante static generation.
+> Para obter as vars: `vercel env pull .env.local` (puxa do ambiente development do Vercel).
+
 ## Arquitetura
 
 ### Páginas Institucionais
@@ -56,8 +60,8 @@ npm run start    # Serve o build de produção localmente
 
 **Tabelas:**
 - `products` — catálogo (com stock_quantity, stock_threshold, status)
-- `profiles` — dados do usuário (extends auth.users)
-- `cart_items` — carrinho persistente
+- `profiles` — dados do usuário: `id`, `name`, `phone`, `address_json`, `created_at` (**não tem `email` nem `full_name`**)
+- `cart_items` — carrinho persistente (tem coluna `first_added_at` para detecção de carrinho abandonado)
 - `orders` — pedidos
 - `order_items` — itens dos pedidos
 - `banners` — banners do carrossel da home
@@ -71,14 +75,26 @@ npm run start    # Serve o build de produção localmente
 **Seed:** `supabase/seed.sql` (20 produtos iniciais)
 **Migrations:** `supabase/migrations/` (stock, coupons, banners, cache, analytics, storage)
 
+**Trigger `handle_new_user`:** ao criar usuário, insere `id` + `name` (de `raw_user_meta_data->>'name'`) no profiles.
+O trigger foi corrigido — versão anterior só inserida o `id`, deixando `name = NULL`.
+SQL para retroativamente preencher nomes:
+```sql
+UPDATE public.profiles p
+SET name = COALESCE(
+  (SELECT raw_user_meta_data->>'name' FROM auth.users WHERE id = p.id),
+  (SELECT raw_user_meta_data->>'full_name' FROM auth.users WHERE id = p.id)
+)
+WHERE p.name IS NULL;
+```
+
 ### Supabase clients (3 variantes — usar a correta)
-- `src/lib/supabase.ts` — singleton genérico sem auth. Usar em server components e `products-db.ts` queries.
+- `src/lib/supabase.ts` — **lazy singleton via Proxy** (client criado apenas no primeiro uso, não no import). Usar em server components e `products-db.ts` queries.
 - `src/lib/supabase-browser.ts` — singleton `"use client"` (export: `supabaseBrowser`). Usar em client components que precisam de Supabase diretamente.
 - `src/lib/supabase-server.ts` — cria client com `cookies()` para ler sessão do usuário. Usar em API routes e server components que precisam do user autenticado (`getUser()`, `createServerSupabase()`).
 
 ### Catálogo — dual data source
 O catálogo tem duas fontes de dados que coexistem:
-- `src/lib/products-db.ts` — queries async ao Supabase (fonte primária, usada pelas pages)
+- `src/lib/products-db.ts` — queries async ao Supabase (fonte primária, usada pelas pages). `getAllSlugs()` tem fallback para o array estático quando `NEXT_PUBLIC_SUPABASE_URL` não está disponível (build local).
 - `src/lib/products.ts` — array estático `PRODUCTS[]` + helpers de formatação (`pixPrice`, `installmentPrice`, `fmt`, `parseWeight`, `parseDimensions`, `imgUrl`, `getProductBySlug`, `getRelated`)
 
 As pages usam `products-db.ts` para dados. Os helpers de formatação e a interface `Product` vivem em `products.ts`. O array estático `PRODUCTS` é legado/fallback — novos produtos vão apenas no Supabase.
@@ -96,6 +112,7 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - Pages de auth: `src/app/(auth)/login/`, `src/app/(auth)/registro/`, `src/app/(auth)/redefinir-senha/`, `src/app/(auth)/esqueci-senha/`
 - **Admin protegido:** `requireAdmin()` helper (`src/lib/require-admin.ts`) verifica cookie + ADMIN_EMAILS em TODAS as API routes admin
 - Middleware também bloqueia `/admin` UI para não-admins via ADMIN_EMAILS env var
+- **"Confirm email" está DESATIVADO** no Supabase (Sign In/Providers) para evitar rejeição de domínios corporativos brasileiros. SMTP customizado via Resend configurado para evitar rate limits.
 
 ### Carrinho
 - `CartProvider` (`src/contexts/cart-context.tsx`) wraps o app no root layout (é o único provider no layout — não há header/footer compartilhado, cada page inclui `<TopHeader />` individualmente)
@@ -108,15 +125,17 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 ### Carrinho Abandonado
 - Cron job via Vercel: `GET /api/cron/abandoned-cart` — roda 1x/dia às 9h (`vercel.json` — Hobby plan limit)
 - Protegido por `CRON_SECRET` (header `Authorization: Bearer {secret}`)
-- Detecta carrinhos com `updated_at` > 2 horas sem checkout
+- Detecta carrinhos via coluna `first_added_at` na tabela `cart_items`
+- **O sync do carrinho usa UPSERT** (não mais DELETE+INSERT) para preservar `first_added_at` original — coluna essencial para detecção de abandono
 - Envia email de recuperação via Resend (`src/lib/email.ts`)
 - Admin: `/admin/carrinhos-abandonados` — painel para visualizar e gerenciar
-- Tabela `cart_items` já usada — filtra por tempo de inatividade
+- Tabela `cart_items` tem unique constraint em `(user_id, product_id)` para o upsert funcionar
 
 ### Email (Resend)
 - `src/lib/email.ts` — wrapper para Resend API
 - Graceful fallback: se `RESEND_API_KEY` não configurada, loga warning e retorna false
-- Usado pelo cron de carrinho abandonado
+- Usado pelo cron de carrinho abandonado e confirmação de pedido
+- **SMTP customizado configurado no Supabase** (smtp.resend.com:465, user: resend) para eliminar rate limits e aceitar qualquer domínio de e-mail
 
 ### Audit Log
 - `src/lib/audit-log.ts` — registra ações admin na tabela `admin_audit_log`
@@ -136,9 +155,10 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - Step 2 (Frete): `src/components/checkout/shipping-selector.tsx` — reutiliza `/api/shipping/calculate`, agrega itens em pacote
 - Step 3 (Pagamento): `src/components/checkout/payment-form.tsx` — tabs Cartão/PIX inline
   - Cartão: SDK JS do MercadoPago tokeniza no client → `POST /api/payments` processa
-  - PIX: `POST /api/payments` gera QR code → exibe na página
+  - PIX: `POST /api/payments` gera QR code → exibe na página com countdown 15min
 - Flow: endereço → frete → `POST /api/checkout` (cria pedido) → mostra payment form → pagamento → redirect `/pedido/{id}`
 - `src/lib/mercadopago.ts` — helpers `createCardPayment`, `createPixPayment`, `getPayment` (REST API direta, sem SDK Node)
+- **Webhook configurado** no painel MercadoPago (Modo Produção): `https://www.moscabrancaparts.com.br/api/webhooks/mercadopago` com eventos "Pagamentos" e "Alertas de fraude"
 
 ### Busca por Veículo (IA)
 - Botão "Buscar com veículo" no header
@@ -154,11 +174,10 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 O admin oferece dois modos de criar banners:
 
 **Modo "Imagem Completa":**
-- Seleciona produto → escreve instruções livres ("Banner vermelho com preto, cupom MOSCA10") → botão "Gerar Banner com IA"
-- API `/api/admin/banners/generate-image` usa DALL-E 3 com pre-prompt fixo (1440x480px, estilo premium, produto como hero, sem texto no banner)
+- Seleciona produto → escreve instruções livres → botão "Gerar Banner com IA"
+- API `/api/admin/banners/generate-image` usa DALL-E 3 com pre-prompt fixo (1440x480px)
 - Download e upload automático pro Supabase Storage
 - Upload manual opcional: desktop (1440x480px) + mobile (375x200px)
-- Título/tag/CTA/colors são opcionais
 
 **Modo "Banner HTML":**
 - Campos tradicionais (tag, título, subtítulo, CTA, cores)
@@ -167,33 +186,21 @@ O admin oferece dois modos de criar banners:
 
 **Exibição no site (hero-carousel.tsx):**
 - Desktop com `desktop_image_url` → imagem full-width (cover, link clicável no CTA)
-- Desktop sem imagem gerada → layout HTML com radial gradient branco (destaque peças escuras)
-- Mobile → sempre layout HTML responsivo (centralizado, texto maior)
-- Fundo fallback: claro (#f4f4f5, #f0fdf4, #fafafa) — peças escuras se destacam
-- Botoes prev/next e dots se adaptam ao fundo (claro/escuro) via `isColorDark()`
+- Desktop sem imagem gerada → layout HTML com radial gradient branco
+- Mobile → sempre layout HTML responsivo
 
 **Tabela `banners`:** `product_image_url`, `desktop_image_url`, `mobile_image_url`, `bg_color`, `accent_color`, `text_color`
-**Schema:** `supabase/migrations/2025-06-06_banner_desktop_image.sql`
 
 ### Design System (UI)
 - **Estilo**: e-commerce profissional, clean, high-conversion. Dark header com promo bar vermelha, body em #FAFAFA
-- **Font**: Ubuntu (300/400/500/700) via `next/font/google`, var `--font-ubuntu`
+- **Fontes**: Inter (`--font-inter`) — body/UI | Barlow Condensed (`--font-barlow`) — preços/títulos hero
 - **Cores primárias**: red-600 (CTAs, destaques), zinc-950 (header/footer), green (PIX badge/WhatsApp)
-- **Product cards**: rounded-2xl, badge desconto % vermelho, preço PIX + tag verde, hover com shadow-lg + add-to-cart overlay (home carousel)
-- **Promo banners**: 4 cards gradiente (PIX, Parcela, Envio, Garantia) com ícones Lucide
-- **Homepage sections**: Trust bar branca (icones em circulos red-50) -> Promo banners -> Categories grid (Lucide icons) -> Product carousels -> Testimonials (3 reviews, estrelas) -> Footer
-- **Shipping results**: logos de transportadoras (Correios: badge amarelo/azul, Jadlog: vermelho, Azul: azul escuro, fallback: iniciais)
+- **Product cards**: rounded-2xl, badge desconto % vermelho, preço PIX + tag verde, hover com shadow-lg + add-to-cart overlay
 - **Responsivo**: mobile drawer com busca, WhatsApp CTA, categorias scrollable
-- Carrossel na home busca banners ativos do Supabase (fallback para slides estáticos)
-- API: `/api/admin/banners`, `/api/admin/banners/generate-copy`, `/api/admin/banners/generate-image`
 
 ### Controle de Estoque
 - Campos: `stock_quantity`, `stock_threshold`, `status`
-- Status automático via trigger PostgreSQL:
-  - `available`: stock > threshold
-  - `low_stock`: 0 < stock <= threshold
-  - `out_of_stock`: stock = 0
-  - `discontinued`: manual
+- Status automático via trigger PostgreSQL: `available` / `low_stock` / `out_of_stock` / `discontinued`
 - API: `/api/admin/stock` (GET/PATCH)
 
 ### Sistema de Cupons
@@ -204,49 +211,38 @@ O admin oferece dois modos de criar banners:
 
 ### Painel Admin (`/admin`)
 - **Layout:** Dark theme (#0a0a0b) com sidebar fixa e accent âmbar
-- **Dashboard:** `/admin` — métricas REAIS (receita semanal, trend vs semana anterior, gráfico diário, últimos pedidos, estoque baixo). Nenhum dado fake/hardcoded.
-- **Banners:** `/admin/banners` — CRUD com preview ao vivo + geração IA
-- **Produtos:** `/admin/produtos` — CRUD, busca, filtros, upload de imagem
-- **Estoque:** `/admin/estoque` — controle visual, botões rápidos, filtros por status
-- **Cupons:** `/admin/cupons` — criar/editar, ativar/desativar, cards com stats
-- **Carrinhos Abandonados:** `/admin/carrinhos-abandonados` — visualizar e recuperar carrinhos
-- **Pedidos:** `/admin/pedidos` — listar, filtrar, atualizar status
-- **Clientes:** `/admin/clientes` — lista, busca, endereço, contagem pedidos
-- **Avaliações:** `/admin/avaliacoes` — moderação de reviews de produtos
-- **Categorias:** `/admin/categorias` — gerenciamento de categorias
-- **Relatórios:** `/admin/relatorios` — relatórios do negócio
-- **Analytics IA:** `/admin/analytics` — custos, tokens, cache hits (tabela: `ai_usage_analytics`)
-- **Segurança:** Todas as APIs admin usam `requireAdmin()` — verifica cookie de sessão + email na lista ADMIN_EMAILS
+- **Dashboard:** métricas REAIS (receita semanal, trend, gráfico diário, últimos pedidos, estoque baixo)
+- **Pedidos:** `/admin/pedidos`
+  - Lista com nome do cliente (busca em `profiles.name` → fallback `auth.users.user_metadata.name` → fallback email prefix)
+  - Botão **"Ver"** em cada linha abre `OrderDetailModal` (painel lateral) com: cliente (nome/email/telefone/CPF), endereço completo, itens com imagem/preço/link, pagamento e frete detalhados, alteração de status inline
+  - API detalhe: `GET /api/admin/orders/[id]`
+- **Banners, Produtos, Estoque, Cupons, Carrinhos, Clientes, Avaliações, Categorias, Relatórios, Analytics IA**
+- **Segurança:** `requireAdmin()` em todas as APIs — se retornar 403, a página exibe erro vermelho em vez de tabela vazia (facilita diagnóstico)
+- **AdminTableRow** aceita prop `className` opcional
 
 ### Upload de Imagens
 - Supabase Storage bucket: `product-images`
-- Drag & drop ou clique para upload
-- Validação: JPG, PNG, WebP, GIF (máx 5MB)
-- Preview em tempo real
+- Drag & drop ou clique para upload (JPG, PNG, WebP, GIF — máx 5MB)
 - API: `/api/admin/upload` (POST/DELETE)
 - Componente: `src/components/admin/image-upload.tsx`
 
 ### Pedidos e Conta do Usuário
 - Confirmação: `src/app/pedido/[id]/page.tsx` — server component, mostra status do pagamento
-- Área do usuário: `src/app/minha-conta/` com layout + sidebar
-  - Perfil: `src/app/minha-conta/page.tsx` — edita nome, telefone, endereço (via `PATCH /api/profile`)
-  - Pedidos: `src/app/minha-conta/pedidos/page.tsx` — lista pedidos
-  - Detalhe: `src/app/minha-conta/pedidos/[id]/page.tsx` — pedido completo
-  - Alterar Senha: `src/app/minha-conta/senha/page.tsx` — troca senha via Supabase Auth
-- Webhook: `POST /api/webhooks/mercadopago` — recebe IPN, atualiza status do pedido via service role key
+- Área do usuário: `src/app/minha-conta/` com layout + sidebar (perfil, pedidos, senha)
+- Webhook MercadoPago: `POST /api/webhooks/mercadopago`
+  - Valida assinatura HMAC-SHA256 via `MERCADOPAGO_WEBHOOK_SECRET`
+  - Chama `getPayment(id)` para buscar status real — **ID fake em simulações é tratado graciosamente (retorna 200)**
+  - Atualiza `orders.status`: `approved → confirmed`, `rejected/cancelled → cancelled`
+  - Envia email de confirmação/rejeição via Resend
 
 ### Componentes UI
-- `src/components/automotive/` — componentes de página (header, hero-carousel, product section, promo banners, add-to-cart)
+- `src/components/automotive/` — header, hero-carousel, product section, promo banners, add-to-cart
 - `src/components/cart/` — drawer, button, item, summary
-- `src/components/auth/` — login-form, register-form, auth-status (dropdown com Minha conta, Pedidos, Sair)
+- `src/components/auth/` — login-form, register-form, auth-status
 - `src/components/checkout/` — address-form, checkout-steps, shipping-selector, order-summary, payment-form
 - `src/components/vehicle/` — autocomplete, results, search-button, search-dropdown
-- `src/components/admin/` — admin-sidebar, image-upload
-- `src/components/analytics/` — ai-dashboard
-- `src/components/cep/` — cep-modal (modal de CEP no header)
-- `src/components/footer.tsx` — footer global reutilizável (institucional, conta, contato, WhatsApp)
-- `src/components/ui/` — primitivos base (button, card) usando class-variance-authority
-- `src/components/ui-ux-pro-max/` — componentes gerados pela skill UI/UX Pro Max
+- `src/components/admin/` — admin-sidebar, image-upload, **order-detail-modal** (novo)
+- `src/components/footer.tsx`, `src/components/product-image.tsx`, `src/components/shipping-calculator.tsx`
 
 ## Design System
 
@@ -269,21 +265,16 @@ O admin oferece dois modos de criar banners:
 | Borders | white/[0.06] |
 | Accent | amber-400/500 (gradients) |
 | Text | white/90 (primary), white/40 (secondary) |
-| Active nav | amber glow + left bar indicator |
 
 ### Tipografia
-
 - **Inter** (`font-inter`, `--font-inter`) — body, labels, UI
 - **Barlow Condensed** (`font-barlow`, `--font-barlow`) — preços, títulos hero
 
 ### Princípios visuais
-
 - Bordas sutis (zinc-100), sombras leves (shadow-sm/md)
-- Badges tintados: `bg-red-50 text-red-700` (não fundo sólido)
-- Hover: escurecimento de borda + shadow-md (sem translate-y)
+- Hover: escurecimento de borda + shadow-md
 - Cantos: rounded-xl em cards, rounded-lg em inputs/botões
-- Transições: 200-300ms, ease-out
-- Touch targets: min 44x44px
+- Transições: 200-300ms, ease-out — Touch targets: min 44x44px
 - Ícones: Lucide React (nunca emojis como ícones)
 - `cursor-pointer` em todo elemento clicável
 
@@ -305,144 +296,142 @@ MELHOR_ENVIO_CEP_ORIGEM=38190000
 # MercadoPago
 NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY=...
 MERCADOPAGO_ACCESS_TOKEN=...
+MERCADOPAGO_WEBHOOK_SECRET=...    # validação de assinatura HMAC no webhook
 
-# IA (Claude via Vercel AI Gateway)
-VERCEL_AI_GATEWAY_URL=...         # Gateway URL para chamadAs IA
-ANTHROPIC_API_KEY=...             # API key Anthropic
-
-# Anthropic (DALL-E 3 — geracao de banners)
-OPENAI_API_KEY=...                # API key Anthropic para geracao de banners
+# IA
+VERCEL_AI_GATEWAY_URL=...
+ANTHROPIC_API_KEY=...
+OPENAI_API_KEY=...                # para geração de banners com DALL-E 3
 
 # Email (Resend)
-RESEND_API_KEY=...                # API key do Resend para envio de emails
+RESEND_API_KEY=...
 EMAIL_FROM=Mosca Branca Parts <noreply@moscabrancaparts.com.br>
 
 # Cron
-CRON_SECRET=...                   # secret para proteger endpoints de cron (Vercel Cron)
+CRON_SECRET=...                   # header Authorization: Bearer {secret}
 
 # App
 NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br
-ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no admin (comma-separated)
+ADMIN_EMAILS=email1@example.com,email2@example.com
 ```
 
 ## API Routes
 
 ### Públicas
 - `GET /api/vehicles/search?q=` — busca veículos (Fipe + fallback)
-- `POST /api/vehicles/compatibility` — análise IA de compatibilidade
+- `POST /api/vehicles/compatibility` — análise IA de compatibilidade (`export const dynamic = 'force-dynamic'`)
 - `POST /api/shipping/calculate` — cálculo de frete
 - `GET /api/address/cep?cep=` — consulta CEP (ViaCEP)
-- `POST /api/payments` — processar pagamento
+- `POST /api/payments` — processar pagamento (PIX ou cartão)
 - `POST /api/checkout` — criar pedido
-- `POST /api/webhooks/mercadopago` — IPN webhook
-- `GET/POST /api/cart` — sync carrinho (usuários logados)
-- `GET /api/cron/abandoned-cart` — cron job notificação carrinho abandonado (protegido por CRON_SECRET)
+- `POST /api/webhooks/mercadopago` — IPN webhook (sem auth — middleware exclui esse path)
+- `GET/POST/DELETE /api/cart` — sync carrinho (usuários logados)
+- `GET /api/categories` — categorias públicas (`export const dynamic = 'force-dynamic'`)
+- `GET /api/cron/abandoned-cart` — cron job (protegido por CRON_SECRET)
 
 ### Admin
 - `GET /api/admin/dashboard` — métricas gerais
 - `GET/POST/PATCH/DELETE /api/admin/products` — CRUD produtos
 - `GET/PATCH /api/admin/stock` — controle estoque
-- `GET/POST/PATCH/DELETE /api/admin/banners` — CRUD banners
-- `POST /api/admin/banners/generate-copy` — gerar copy IA
-- `POST /api/admin/banners/generate-image` — gerar banner com DALL-E 3 (desktop full-image)
+- `GET/POST/PATCH/DELETE /api/admin/banners` — CRUD banners + geração IA
 - `GET/POST/PATCH/DELETE /api/admin/coupons` — CRUD cupons
-- `GET/PATCH /api/admin/orders` — pedidos
+- `GET/PATCH /api/admin/orders` — lista pedidos (enriquecido com nome do cliente)
+- `GET /api/admin/orders/[id]` — detalhe completo do pedido (itens, cliente, endereço, pagamento)
 - `GET /api/admin/customers` — clientes
 - `POST/DELETE /api/admin/upload` — upload imagens
 - `GET /api/analytics/ai-usage` — analytics IA
-- `GET/POST/PATCH/DELETE /api/categories` — CRUD categorias
-- `GET/POST /api/reviews` — avaliações de produtos
 
 ## Bugs Conhecidos / TODO
 
 - [x] ~~`/loja` não existe como rota~~ — criada e funcional
-- [x] ~~Menu de categorias não é clicável~~ — dropdown de departamentos funcional
-- [x] ~~"Informe CEP" no header não funciona~~ — CepModal funcional
-- [x] ~~Admin não tem autenticação~~ — `requireAdmin()` em todas as APIs
-- [x] ~~Busca do header não tem funcionalidade real~~ — redireciona para `/loja?busca=`
+- [x] ~~Menu de categorias não é clicável~~ — dropdown funcional
+- [x] ~~"Informe CEP" não funciona~~ — CepModal funcional
+- [x] ~~Admin sem autenticação~~ — `requireAdmin()` em todas as APIs
+- [x] ~~Admin mostra tabela vazia sem erro~~ — exibe mensagem de erro real (incluindo 403/500)
+- [x] ~~Pedidos sem nome do cliente~~ — busca via profiles + auth.users metadata
+- [x] ~~Sem detalhe de pedido no admin~~ — OrderDetailModal com itens, cliente, endereço, pagamento
+- [x] ~~Carrinho abandonado nunca detectava nada~~ — cart sync usa UPSERT preservando `first_added_at`
+- [x] ~~Webhook MercadoPago retornava 500 em simulações~~ — trata ID fake graciosamente
+- [x] ~~Webhook retornava 307 (redirect)~~ — URL configurada com `www.` no painel do MP
+- [x] ~~Email "invalid" ao registrar domínios corporativos~~ — Confirm email desativado + SMTP Resend
+- [x] ~~Mensagens de erro do Supabase Auth em inglês~~ — traduzidas para português no register
 - [x] ~~Imagens de produtos apontam para URL WordPress~~ — `imgUrl()` trata URLs completas
-- [x] ~~Faturamento no admin mostra dados zerados~~ — API retorna dados reais com trends
-- [x] ~~`next.config.js` remotePatterns falta hostname do Supabase Storage~~ — já configurado
-- [x] ~~Banner com peças escuras somem no fundo~~ — spotlight radial gradient + `desktop_image_url` full-image
-- [ ] Redes sociais no footer da home apontam para `#` (faltam URLs reais)
-- [ ] Página `/politica-de-privacidade` e `/termos-de-uso` precisam de conteúdo real
-- [ ] Melhor Envio token expira em 30 dias — automatizar renovação
-- [ ] Reviews de produto: formulário público de avaliação não existe ainda (só admin modera)
-- [ ] Busca por veículo: ainda não integrada ao header (componente existe mas não aparece)
+- [x] ~~Banner com peças escuras somem no fundo~~ — spotlight radial gradient + `desktop_image_url`
+- [x] ~~Trigger `handle_new_user` não salvava nome~~ — corrigido para salvar de `raw_user_meta_data`
+- [ ] Redes sociais no footer apontam para `#` (faltam URLs reais)
+- [ ] Páginas `/politica-de-privacidade` e `/termos-de-uso` precisam de conteúdo real
+- [ ] Melhor Envio token expira em 30 dias — renovação manual necessária
+- [ ] Reviews de produto: formulário público não existe (só admin modera)
+- [ ] Busca por veículo: componente existe mas não integrado ao header
 
 ## Gotchas
 
-### Vercel build & env vars
-- **NUNCA** instanciar Supabase client no top-level de API routes — o Next.js avalia esses módulos em build time e as env vars podem não existir. Usar padrão lazy: `function getSupabase() { return createClient(...) }` e chamar dentro do handler.
-- `NEXT_PUBLIC_*` vars são inlined pelo bundler em server components/pages (funcionam no top-level de `src/lib/supabase.ts`), mas **não** em API routes durante "page data collection".
-- Todas as env vars devem estar configuradas no Vercel dashboard (Settings → Environment Variables) para Production e Preview.
-- Pages que usam `useSearchParams()` precisam de `<Suspense>` boundary para evitar prerender errors.
-- Pages protegidas por auth que são `"use client"` precisam de wrapper server component com `export const dynamic = "force-dynamic"`.
+### TypeScript / Build
+- **NUNCA usar `[...new Set()]`** — usar `Array.from(new Set(...))`. O tsconfig tem `target: "es5"` que não suporta iteração de Set com spread.
+- **NUNCA instanciar Supabase no top-level de API routes** — usar padrão lazy `function getSupabase() { return createClient(...) }`. API routes que importam `products-db.ts` (que usa o singleton) devem ter `export const dynamic = 'force-dynamic'`.
+- `supabase.ts` usa Proxy para lazy singleton — o client só é criado no primeiro uso, não no import.
+- `getAllSlugs()` em `products-db.ts` tem fallback para array estático quando `NEXT_PUBLIC_SUPABASE_URL` não está disponível (build local sem `.env.local`).
+- Pages com `useSearchParams()` precisam de `<Suspense>` boundary.
 
-### Dados e APIs
-- `products.ts` has `parseWeight(str)` and `parseDimensions(str)` helpers that convert human-readable strings ("0,5 kg", "30×20×15 cm") to numeric values for the shipping API. Defaults when missing: weight=0.3kg, dimensions=16×10×10cm
-- Supabase columns use `snake_case`, TypeScript interfaces use `camelCase` — the `rowToProduct()` mapper in `products-db.ts` handles conversion
-- MercadoPago integration uses direct REST API calls (`src/lib/mercadopago.ts`), not the official Node SDK
-- The middleware matcher excludes `/api/shipping`, `/api/webhooks`, and `/api/cron` — these must remain unauthenticated for external callbacks
+### Profiles table
+- Schema: `id`, `name`, `phone`, `address_json`, `created_at` — **NÃO TEM** `email`, `full_name`, `updated_at`
+- `name` pode ser NULL — trigger anterior não salvava o nome. Para buscar nome do cliente, sempre checar:
+  1. `profiles.name`
+  2. `auth.users.user_metadata.name`
+  3. `auth.users.user_metadata.full_name`
+  4. Prefixo do email como último recurso
+
+### Admin — erros silenciosos
+- Se `requireAdmin()` retorna 403, a API retorna erro JSON. A UI exibe banner vermelho com o erro real.
+- Se ADMIN_EMAILS não contém o email do usuário logado → 403 em todas as rotas admin.
+- Verificar: Vercel → Settings → Environment Variables → `ADMIN_EMAILS`
 
 ### Carrinho
-- Cart state lives in localStorage + Supabase `cart_items` (dual persistence)
-- Anonymous users: localStorage only. Logged-in users: merge on mount, debounced sync to server via `/api/cart`
-- O `CartDrawer` é renderizado dentro do `TopHeader` — qualquer página que precise do carrinho deve incluir `<TopHeader />`
-- Badge do carrinho usa `loaded` do CartContext para evitar hydration mismatch
+- Cart state: localStorage + Supabase `cart_items` (dual persistence)
+- Sync usa UPSERT com `onConflict: 'user_id,product_id'` — **preserva `first_added_at`**
+- Usuários anônimos: apenas localStorage
+- O `CartDrawer` está dentro do `TopHeader` — páginas sem TopHeader não têm carrinho
+
+### MercadoPago Webhook
+- URL configurada no painel MP (Modo Produção): `https://www.moscabrancaparts.com.br/api/webhooks/mercadopago`
+- Eventos marcados: Pagamentos + Alertas de fraude
+- ID fake em simulações (`123456`) → `getPayment()` falha → retorna 200 OK graciosamente
+- Pedido permanece `pending` até webhook confirmar (`approved → confirmed`)
+- Pagamento via PIX aparece como `bank_transfer` no campo `payment_method`
 
 ### RLS Supabase
-- A tabela `order_items` precisa de policy de INSERT (não apenas SELECT) para o checkout funcionar
-- Banners: policy pública para SELECT (is_active = true), service_role para ALL
-- Coupons: policy pública para SELECT (is_active = true), service_role para ALL
+- `order_items` precisa de policy INSERT além de SELECT para o checkout funcionar
+- Banners/Coupons: policy pública SELECT (is_active = true), service_role para ALL
 
 ### Imagens de Produtos
-- Imagens podem vir de 2 fontes:
-  - URL completa (Supabase Storage): `https://mcaxtwztzfrytxtkgdxh.supabase.co/storage/v1/...`
-  - Nome de arquivo legado (WordPress): prefixado com `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/`
-- Lógica em `imgUrl()`: se `file.startsWith('http')` → usar direto, senão → prefixar com URL WordPress
-- Upload novo vai para Supabase Storage (bucket `product-images`)
-- `next.config.js` remotePatterns inclui `moscabrancaparts.com.br` e `mcaxtwztzfrytxtkgdxh.supabase.co` para `next/image` otimizado
-
-### Rate Limiting
-- `src/lib/rate-limit.ts` — rate limiter in-memory com lazy cleanup (sem setInterval/timer leak)
-- Cleanup ativa apenas quando store > 100 entries e a cada 60s
-- Usado em APIs sensíveis (login, registro)
-
-### SEO
-- Root layout: metadata completo com `title.template`, Open Graph, Twitter Cards, robots
-- Produto: metadata dinâmico com OG image, preço na description
-- Home: Schema.org Organization + WebSite com SearchAction
-- Sitemap: `src/app/sitemap.ts` — gera URLs de páginas estáticas + todos os produtos dinâmicos
-- `robots.ts`: permite indexação completa
+- Supabase Storage: URL completa → usar direto
+- WordPress legado: prefixado com `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/`
+- `imgUrl()` detecta automaticamente via `file.startsWith('http')`
+- `next.config.js` remotePatterns: `moscabrancaparts.com.br` e `mcaxtwztzfrytxtkgdxh.supabase.co`
 
 ### Proxy/Network (Desenvolvimento)
-- Claude Code configura proxy HTTP (localhost:53280) que bloqueia `git push` e `vercel --prod`
-- Solução: abrir terminal separado, rodar `unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy` e então `git push origin main`
-- Deploy é automático na Vercel ao push para main
+- Claude Code configura proxy HTTP (localhost:53280) que bloqueia `git push`
+- Solução: terminal separado → `unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy` → `git push origin main`
+- Deploy automático na Vercel ao push para main
 
 ## Convenções
 
 - Componentes client: `"use client"` no topo
 - Páginas com dados do Supabase: async + `revalidate = 60`
 - Imports com `@/` alias (mapeia para `src/`)
-- `cn()` helper (clsx + tailwind-merge) em `src/lib/utils.ts` para merge de classes
-- Commits em inglês, prefixo convencional: `feat:`, `fix:`, `style:`, `docs:`
-- Nunca push direto em main sem `npm run build` passar
-- Container max-width: 1280px, centrado, padding responsivo (definido em `tailwind.config.ts`)
-- Imagens externas: domínio `moscabrancaparts.com.br` e Supabase (configurado em `next.config.js` remotePatterns)
-- Fontes carregadas via `next/font/google` no root layout, expostas como CSS variables
-- Admin: dark theme, accent amber, sidebar fixa 64px colapsável
-- IA: sempre Claude Haiku para custo baixo, com fallback se API falhar
+- `cn()` helper (clsx + tailwind-merge) em `src/lib/utils.ts`
+- Commits: inglês, prefixo convencional (`feat:`, `fix:`, `style:`, `docs:`)
+- **Nunca push sem `npm run build` passar localmente** (ou verificar que não há erros TypeScript)
+- Container max-width: 1280px, centrado, padding responsivo
+- Admin: dark theme, accent amber, sidebar fixa
 
-## Checklist pré-entrega
+## Checklist pré-deploy
 
-- `cursor-pointer` em elementos clicáveis
-- Hover com transição suave (150-300ms)
-- Contraste texto 4.5:1 mínimo
-- Focus states visíveis
-- Responsivo: 375px, 768px, 1024px, 1440px
-- Sem scroll horizontal no mobile
-- Build passa sem erros (`npm run build`)
-- Imagens com fallback se URL quebrada
-- APIs com try/catch e fallback graceful
+- [ ] `npm run build` passa sem erros TypeScript
+- [ ] `Array.from(new Set(...))` — nunca spread em Set
+- [ ] Supabase client lazy em API routes (`function getSupabase()`)
+- [ ] `cursor-pointer` em elementos clicáveis
+- [ ] Hover com transição suave (150-300ms)
+- [ ] Responsivo: 375px, 768px, 1024px, 1440px
+- [ ] APIs com try/catch e fallback graceful
+- [ ] Imagens com fallback se URL quebrada
