@@ -35,26 +35,41 @@ export async function GET(req: NextRequest) {
     const { data: orders, error, count } = await query
     if (error) throw error
 
-    // Fetch customer names separately to avoid FK join issues
+    // Fetch customer names: profiles table + auth.users metadata as fallback
+    // Note: the DB trigger only saves `id` to profiles, not the name.
+    // The name lives in auth.users.user_metadata.name — fetch both sources.
     const userIds = Array.from(new Set((orders || []).map((o: any) => o.user_id).filter(Boolean)))
-    let profileMap: Record<string, string> = {}
+    const nameMap: Record<string, string> = {}
 
     if (userIds.length > 0) {
+      // 1. Try profiles table first (populated when user updates their profile)
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, name, full_name')
+        .select('id, name, phone')
         .in('id', userIds)
 
       if (profiles) {
         for (const p of profiles) {
-          profileMap[p.id] = p.name || p.full_name || 'Cliente'
+          if (p.name) nameMap[p.id] = p.name
         }
+      }
+
+      // 2. For users without a name in profiles, fetch from auth.users metadata
+      const missing = userIds.filter(id => !nameMap[id])
+      for (const uid of missing) {
+        try {
+          const { data } = await supabase.auth.admin.getUserById(uid)
+          if (data?.user) {
+            const meta = data.user.user_metadata
+            nameMap[uid] = meta?.name || meta?.full_name || data.user.email?.split('@')[0] || 'Cliente'
+          }
+        } catch { /* ignore individual failures */ }
       }
     }
 
     const enriched = (orders || []).map((o: any) => ({
       ...o,
-      profiles: { name: profileMap[o.user_id] || null },
+      profiles: { name: nameMap[o.user_id] || null },
     }))
 
     return NextResponse.json({

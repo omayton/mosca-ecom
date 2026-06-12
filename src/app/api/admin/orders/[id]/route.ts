@@ -42,21 +42,19 @@ export async function GET(
       .select('*, products(name, image_file, slug, category)')
       .eq('order_id', orderId)
 
-    // Fetch customer profile
+    // Fetch customer — profiles only has: id, name, phone, address_json
+    // Name may be null (trigger doesn't copy it), fall back to auth.users metadata
     let customer = { name: 'Cliente', email: '', phone: '' }
     if (order.user_id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name, full_name, phone, email')
-        .eq('id', order.user_id)
-        .single()
+      const [{ data: profile }, { data: authData }] = await Promise.all([
+        supabase.from('profiles').select('name, phone').eq('id', order.user_id).single(),
+        supabase.auth.admin.getUserById(order.user_id),
+      ])
 
-      // Also get email from auth.users
-      const { data: authUser } = await supabase.auth.admin.getUserById(order.user_id)
-
+      const meta = authData?.user?.user_metadata || {}
       customer = {
-        name: profile?.name || profile?.full_name || authUser?.user?.user_metadata?.name || 'Cliente',
-        email: profile?.email || authUser?.user?.email || '',
+        name: profile?.name || meta.name || meta.full_name || authData?.user?.email?.split('@')[0] || 'Cliente',
+        email: authData?.user?.email || '',
         phone: profile?.phone || order.address_json?.telefone || '',
       }
     }
