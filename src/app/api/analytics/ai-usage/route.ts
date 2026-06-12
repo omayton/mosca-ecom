@@ -43,26 +43,25 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      // Table might not exist yet — return empty data gracefully
-      if (error.code === '42P01' || error.message?.includes('does not exist')) {
-        return NextResponse.json({
-          period,
-          startDate: startDate.toISOString(),
-          endDate: new Date().toISOString(),
-          summary: {
-            totalRequests: 0,
-            totalTokens: 0,
-            totalCostUsd: 0,
-            cacheHitRate: 0,
-            fallbackRate: 0,
-            avgResponseTimeMs: 0,
-            modelUsage: {},
-          },
-          topVehicles: [],
-          data: [],
-        })
-      }
-      throw error
+      // Return empty data for any Supabase error (table missing, schema mismatch, etc.)
+      console.warn('[ai-usage] Supabase error (returning empty):', error.code, error.message)
+      return NextResponse.json({
+        period,
+        startDate: startDate.toISOString(),
+        endDate: new Date().toISOString(),
+        summary: {
+          totalRequests: 0,
+          totalTokens: 0,
+          totalCostUsd: 0,
+          cacheHitRate: 0,
+          fallbackRate: 0,
+          avgResponseTimeMs: 0,
+          modelUsage: {},
+        },
+        topVehicles: [],
+        data: [],
+        _tableError: error.message,
+      })
     }
 
     const rows = analytics || []
