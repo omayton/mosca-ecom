@@ -51,12 +51,16 @@ export async function GET(req: NextRequest) {
       .select('id, name, phone')
       .in('id', userIds)
 
-    // Get emails from auth.users via admin API
+    // Get emails + names from auth.users via admin API
     const { data: authUsers } = await supabase.auth.admin.listUsers()
     const emailMap: Record<string, string> = {}
+    const metaNameMap: Record<string, string> = {}
     if (authUsers?.users) {
       for (const u of authUsers.users) {
         if (u.email) emailMap[u.id] = u.email
+        const meta = u.user_metadata || {}
+        const name = meta.name || meta.full_name
+        if (name) metaNameMap[u.id] = name
       }
     }
 
@@ -122,7 +126,7 @@ export async function GET(req: NextRequest) {
 
         return {
           userId,
-          name: profile?.name || null,
+          name: profile?.name || metaNameMap[userId] || emailMap[userId]?.split('@')[0] || null,
           email: emailMap[userId] || null,
           phone: profile?.phone || null,
           items: items.map((i: any) => ({
