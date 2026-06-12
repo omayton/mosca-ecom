@@ -5,6 +5,7 @@ import { CartProvider } from '@/contexts/cart-context'
 import { CookieConsent } from '@/components/cookie-consent'
 import { Analytics } from '@/components/analytics'
 import { PreloaderRemover } from '@/components/preloader'
+import { PageTracker } from '@/components/page-tracker'
 
 const ubuntu = Ubuntu({
   subsets: ['latin'],
@@ -147,6 +148,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <PreloaderRemover />
         <Analytics />
+        <PageTracker />
         <CartProvider>{children}</CartProvider>
         <CookieConsent />
       </body>
