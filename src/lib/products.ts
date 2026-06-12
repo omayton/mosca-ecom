@@ -17,16 +17,18 @@ export interface Product {
   stockStatus?: 'available' | 'low_stock' | 'out_of_stock' | 'discontinued'
 }
 
-// Legacy WordPress URL — mantida para compatibilidade, mas as imagens
-// podem não existir mais. Preferir sempre product_images do Supabase.
-export const WP_IMG = "https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/"
+// Images served locally from /public/images/04/ (downloaded from WordPress)
+// No hotlink issues — 100% self-hosted on Vercel CDN.
+export const LOCAL_IMG  = "/images/04/"
+export const WP_IMG     = "https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/" // fallback
 export const PLACEHOLDER = "/images/placeholder-product.svg"
 
 export function imgUrl(file: string): string {
   if (!file || file === "placeholder") return PLACEHOLDER
+  // Full URL (Supabase Storage or external) — use as-is
   if (file.startsWith("http")) return file
-  // Se é nome de arquivo legado (sem URL), tenta usar do Supabase Storage primeiro
-  // Mas como não temos como saber a URL sem query, usamos placeholder
+  // Legacy WordPress filename — serve from local /public/images/04/
+  if (file.trim()) return `${LOCAL_IMG}${file}`
   return PLACEHOLDER
 }
 
