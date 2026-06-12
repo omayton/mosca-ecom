@@ -19,7 +19,7 @@ import {
   Star,
   AlertCircle
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -39,11 +39,12 @@ const navItems = [
 interface AdminSidebarProps {
   mobileOpen?: boolean
   onMobileClose?: () => void
+  collapsed?: boolean
+  onCollapse?: () => void
 }
 
-export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
+export function AdminSidebar({ mobileOpen, onMobileClose, collapsed = false, onCollapse }: AdminSidebarProps) {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
 
   // Close mobile sidebar on navigation
   useEffect(() => {
@@ -102,11 +103,11 @@ export function AdminSidebar({ mobileOpen, onMobileClose }: AdminSidebarProps) {
 
           {/* Collapse button desktop */}
           <button
-            onClick={() => setCollapsed(!collapsed)}
-            className={`p-1.5 rounded-md hover:bg-white/[0.06] transition-colors text-white/40 hover:text-white/70 hidden lg:block cursor-pointer ${collapsed ? '!hidden' : ''}`}
-            aria-label="Recolher menu"
+            onClick={onCollapse}
+            className="p-1.5 rounded-md hover:bg-white/[0.06] transition-colors text-white/40 hover:text-white/70 hidden lg:flex items-center justify-center cursor-pointer"
+            aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className={`h-4 w-4 transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`} />
           </button>
         </div>
 

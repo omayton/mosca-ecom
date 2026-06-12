@@ -6,10 +6,16 @@ import { AdminSidebar } from './admin-sidebar'
 
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
     <div className="min-h-screen bg-[#0a0a0b]">
-      <AdminSidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
+      <AdminSidebar
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+        collapsed={collapsed}
+        onCollapse={() => setCollapsed(!collapsed)}
+      />
 
       {/* Mobile header */}
       <div className="fixed top-0 left-0 right-0 h-[64px] bg-[#0a0a0b] border-b border-white/[0.06] flex items-center px-4 z-30 lg:hidden">
@@ -28,8 +34,8 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="lg:ml-64 min-h-screen pt-[64px] lg:pt-0">
+      {/* Main content — margin follows sidebar width */}
+      <div className={`min-h-screen pt-[64px] lg:pt-0 transition-all duration-300 ${collapsed ? 'lg:ml-[72px]' : 'lg:ml-64'}`}>
         {children}
       </div>
     </div>
