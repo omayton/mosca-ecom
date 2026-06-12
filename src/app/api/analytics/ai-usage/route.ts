@@ -36,8 +36,9 @@ export async function GET(req: NextRequest) {
         startDate.setDate(startDate.getDate() - 7)
     }
 
+    // Table is named 'ai_analytics' (not 'ai_usage_analytics')
     const { data: analytics, error } = await supabase
-      .from('ai_usage_analytics')
+      .from('ai_analytics')
       .select('*')
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false })
