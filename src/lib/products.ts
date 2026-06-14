@@ -25,8 +25,15 @@ export const PLACEHOLDER = "/images/placeholder-product.svg"
 
 export function imgUrl(file: string): string {
   if (!file || file === "placeholder") return PLACEHOLDER
-  // Full URL (Supabase Storage or external) — use as-is
-  if (file.startsWith("http")) return file
+  // Supabase Storage URL — use as-is
+  if (file.startsWith("http")) {
+    // WordPress URL — extract filename and serve locally (WP blocks hotlinking with 403)
+    if (file.includes("moscabrancaparts.com.br/wp-content/uploads/")) {
+      const match = file.match(/\/([^/]+\.(jpg|jpeg|png|webp))/i)
+      if (match) return `${LOCAL_IMG}${match[1]}`
+    }
+    return file
+  }
   // Legacy WordPress filename — serve from local /public/images/04/
   if (file.trim()) return `${LOCAL_IMG}${file}`
   return PLACEHOLDER
