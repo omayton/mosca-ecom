@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Star, BadgeCheck } from "lucide-react"
+import { Star, BadgeCheck, MessageSquare } from "lucide-react"
+import { ReviewFormModal } from "./review-form-modal"
 
 interface Review {
   id: number
@@ -20,6 +21,7 @@ interface ReviewStats {
 
 interface ProductReviewsProps {
   productId: number
+  productName: string
 }
 
 function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) {
@@ -51,10 +53,11 @@ function formatDate(dateStr: string) {
   return date.toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" })
 }
 
-export function ProductReviews({ productId }: ProductReviewsProps) {
+export function ProductReviews({ productId, productName }: ProductReviewsProps) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [stats, setStats] = useState<ReviewStats>({ count: 0, avgRating: 0 })
   const [loading, setLoading] = useState(true)
+  const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
     async function fetchReviews() {
@@ -72,23 +75,51 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
     fetchReviews()
   }, [productId])
 
+  async function reloadReviews() {
+    try {
+      const res = await fetch(`/api/reviews?productId=${productId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setReviews(data.reviews || [])
+        setStats(data.stats || { count: 0, avgRating: 0 })
+      }
+    } catch {}
+  }
+
   if (loading) return null
-  if (reviews.length === 0) return null
 
   return (
     <div className="mt-12 pt-8 border-t border-zinc-100">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="font-bold text-zinc-900 text-lg">Avaliações</h2>
-        <div className="flex items-center gap-2">
-          <StarRating rating={Math.round(stats.avgRating)} size="sm" />
-          <span className="text-sm text-zinc-600 font-medium">
-            {stats.avgRating.toFixed(1)} ({stats.count} {stats.count === 1 ? "avaliação" : "avaliações"})
-          </span>
+        <div>
+          <h2 className="font-bold text-zinc-900 text-lg">Avaliações</h2>
+          {stats.count > 0 && (
+            <div className="flex items-center gap-2 mt-1">
+              <StarRating rating={Math.round(stats.avgRating)} size="sm" />
+              <span className="text-sm text-zinc-600 font-medium">
+                {stats.avgRating.toFixed(1)} ({stats.count} {stats.count === 1 ? "avaliação" : "avaliações"})
+              </span>
+            </div>
+          )}
         </div>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Avaliar produto
+        </button>
       </div>
 
-      <div className="space-y-4">
-        {reviews.map((review) => (
+      {reviews.length === 0 ? (
+        <div className="text-center py-12 bg-zinc-50/60 rounded-xl border border-zinc-100">
+          <Star className="h-12 w-12 text-zinc-200 mx-auto mb-4" />
+          <p className="text-zinc-600 mb-2">Seja o primeiro a avaliar este produto!</p>
+          <p className="text-sm text-zinc-400">Sua opinião ajuda outros clientes.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map((review) => (
           <div
             key={review.id}
             className="bg-zinc-50/60 border border-zinc-100 rounded-xl p-4"
@@ -127,7 +158,16 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
+
+      <ReviewFormModal
+        productId={productId}
+        productName={productName}
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSuccess={reloadReviews}
+      />
     </div>
   )
 }

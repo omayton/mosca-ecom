@@ -112,10 +112,10 @@ export function TopHeader() {
             {/* Logo */}
             <a href="/" aria-label="Mosca Branca Parts — Página inicial" className="flex-shrink-0">
               <Image
-                src="/images/05/bannermosca-600x180.png" unoptimized
+                src="/images/moscabrancalogo.svg"
                 alt="Mosca Branca Parts"
                 width={140}
-                height={75}
+                height={44}
                 className="h-11 w-auto object-contain"
                 priority
               />

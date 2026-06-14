@@ -276,7 +276,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
           </div>
 
           {/* Reviews */}
-          <ProductReviews productId={product.id} />
+          <ProductReviews productId={product.id} productName={product.name} />
         </div>
 
         {/* Related products */}

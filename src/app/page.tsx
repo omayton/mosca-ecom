@@ -178,7 +178,7 @@ export default async function Home() {
               {/* Social */}
               <div className="flex items-center gap-3">
                 {[
-                  { icon: Instagram, label: "Instagram", href: "#" },
+                  { icon: Instagram, label: "Instagram", href: "https://www.instagram.com/moscabrancaparts/" },
                   { icon: Facebook,  label: "Facebook",  href: "#" },
                   { icon: Youtube,   label: "YouTube",   href: "#" },
                 ].map(({ icon: Icon, label, href }) => (
