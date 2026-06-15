@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import Image from "next/image"
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react"
 
 interface BannerSlide {
@@ -133,7 +134,7 @@ export function HeroCarousel() {
               zIndex: isActive ? 2 : 1,
             }}
           >
-            <SlideRenderer slide={s} />
+            <SlideRenderer slide={s} priority={i === 0} />
           </div>
         )
       })}
@@ -202,7 +203,7 @@ function NavButton({ direction, onClick, isDark }: { direction: 'prev' | 'next';
   )
 }
 
-function SlideRenderer({ slide }: { slide: BannerSlide }) {
+function SlideRenderer({ slide, priority = false }: { slide: BannerSlide; priority?: boolean }) {
   const hasDesktopImage = !!slide.desktop_image_url
 
   return (
@@ -212,12 +213,15 @@ function SlideRenderer({ slide }: { slide: BannerSlide }) {
     >
       {/* Desktop */}
       <div className="hidden md:flex w-full h-full items-center relative">
-        {/* AI image as background — HTML overlays on top */}
+        {/* Background image — optimized via next/image (priority on first slide for LCP) */}
         {hasDesktopImage && (
-          <img
+          <Image
             src={slide.desktop_image_url!}
             alt=""
             aria-hidden="true"
+            fill
+            sizes="100vw"
+            priority={priority}
             className="absolute inset-0 w-full h-full object-cover"
           />
         )}
@@ -330,16 +334,16 @@ function DesktopHtmlBanner({ slide, hasBackground = false }: { slide: BannerSlid
               className="absolute inset-8 blur-3xl opacity-30 rounded-full"
               style={{ backgroundColor: slide.accent_color }}
             />
-            <img
-              src={slide.product_image_url!}
-              alt=""
-              className="relative z-10 object-contain"
-              style={{
-                maxWidth: '85%',
-                maxHeight: '85%',
-                filter: 'drop-shadow(0 8px 40px rgba(0,0,0,0.7))',
-              }}
-            />
+            <div className="relative z-10" style={{ width: '85%', height: '85%' }}>
+              <Image
+                src={slide.product_image_url!}
+                alt=""
+                fill
+                sizes="(max-width: 768px) 50vw, 360px"
+                className="object-contain"
+                style={{ filter: 'drop-shadow(0 8px 40px rgba(0,0,0,0.7))' }}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -402,10 +406,12 @@ function MobileLayout({ slide }: { slide: BannerSlide }) {
   if (hasDesktopImage) {
     return (
       <div className="w-full h-full relative overflow-hidden flex items-center">
-        <img
+        <Image
           src={slide.desktop_image_url!}
           alt=""
           aria-hidden
+          fill
+          sizes="100vw"
           className="absolute inset-0 w-full h-full object-cover object-right"
         />
         {/* Scrim gradiente — cobre 60% da esquerda */}
@@ -446,10 +452,12 @@ function MobileLayout({ slide }: { slide: BannerSlide }) {
             className="absolute inset-6 blur-2xl opacity-20 rounded-full"
             style={{ backgroundColor: slide.accent_color }}
           />
-          <img
+          <Image
             src={slide.product_image_url}
             alt=""
-            className="relative z-10 object-contain w-full h-full"
+            fill
+            sizes="(max-width: 768px) 38vw, 0px"
+            className="relative z-10 object-contain"
             style={{ filter: 'drop-shadow(0 4px 24px rgba(0,0,0,0.75))' }}
           />
         </div>

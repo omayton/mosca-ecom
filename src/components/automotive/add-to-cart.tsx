@@ -12,9 +12,11 @@ interface AddToCartProps {
   price: number
   imageFile: string
   slug: string
+  weight?: string
+  dimensions?: string
 }
 
-export function AddToCart({ productId, name, price, imageFile, slug }: AddToCartProps) {
+export function AddToCart({ productId, name, price, imageFile, slug, weight, dimensions }: AddToCartProps) {
   const [state, setState] = useState<"idle" | "added">("idle")
   const [qty, setQty] = useState(1)
   const { addItem } = useCart()
@@ -22,7 +24,7 @@ export function AddToCart({ productId, name, price, imageFile, slug }: AddToCart
 
   function handleAddToCart() {
     for (let i = 0; i < qty; i++) {
-      addItem({ productId, name, price, imageFile, slug })
+      addItem({ productId, name, price, imageFile, slug, weight, dimensions })
     }
     trackAddToCart({ name, id: productId, price, quantity: qty })
     setState("added")
@@ -31,7 +33,7 @@ export function AddToCart({ productId, name, price, imageFile, slug }: AddToCart
 
   function handleBuyNow() {
     for (let i = 0; i < qty; i++) {
-      addItem({ productId, name, price, imageFile, slug })
+      addItem({ productId, name, price, imageFile, slug, weight, dimensions })
     }
     router.push("/checkout")
   }

@@ -22,6 +22,25 @@ async function getProductMainImageURL(productId: number): Promise<string> {
   return mainImage?.url || ""
 }
 
+// Batch fetch main images for multiple products in a single query (avoids N+1).
+// Returns a map of productId -> image url.
+async function getMainImageURLsForProducts(productIds: number[]): Promise<Record<number, string>> {
+  if (productIds.length === 0) return {}
+  const { data, error } = await supabase
+    .from("product_images")
+    .select("product_id, url")
+    .in("product_id", productIds)
+    .eq("sort_order", 0)
+
+  if (error || !data) return {}
+  const map: Record<number, string> = {}
+  for (const row of data) {
+    // First occurrence wins (sort_order=0 may have dupes; take the earliest by id)
+    if (!map[row.product_id]) map[row.product_id] = row.url
+  }
+  return map
+}
+
 function rowToProduct(row: ProductRow): Product {
   return {
     id: row.id,
@@ -83,15 +102,9 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   if (error) throw error
   const products = (data as ProductRow[]).map(rowToProduct)
 
-  // Buscar imagens principais para cada produto
-  const productsWithImages = await Promise.all(
-    products.map(async (p) => ({
-      ...p,
-      imageFile: await getProductMainImageURL(p.id) || p.imageFile, // Usa imagem principal ou fallback
-    }))
-  )
-
-  return productsWithImages
+  // Buscar imagens principais em batch (1 query, não N+1)
+  const imageMap = await getMainImageURLsForProducts(products.map((p) => p.id))
+  return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
 }
 
 export async function getRecentProducts(limit = 12): Promise<Product[]> {
@@ -104,15 +117,8 @@ export async function getRecentProducts(limit = 12): Promise<Product[]> {
   if (error) throw error
   const products = (data as ProductRow[]).map(rowToProduct)
 
-  // Buscar imagens principais
-  const productsWithImages = await Promise.all(
-    products.map(async (p) => ({
-      ...p,
-      imageFile: await getProductMainImageURL(p.id) || p.imageFile,
-    }))
-  )
-
-  return productsWithImages
+  const imageMap = await getMainImageURLsForProducts(products.map((p) => p.id))
+  return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
 }
 
 export async function getDiscountProducts(limit = 12): Promise<Product[]> {
@@ -126,15 +132,8 @@ export async function getDiscountProducts(limit = 12): Promise<Product[]> {
   if (error) throw error
   const products = (data as ProductRow[]).map(rowToProduct)
 
-  // Buscar imagens principais
-  const productsWithImages = await Promise.all(
-    products.map(async (p) => ({
-      ...p,
-      imageFile: await getProductMainImageURL(p.id) || p.imageFile,
-    }))
-  )
-
-  return productsWithImages
+  const imageMap = await getMainImageURLsForProducts(products.map((p) => p.id))
+  return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
 }
 
 export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {

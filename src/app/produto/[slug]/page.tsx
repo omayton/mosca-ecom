@@ -206,6 +206,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
                   price={product.price}
                   imageFile={product.imageFile}
                   slug={product.slug}
+                  weight={product.weight}
+                  dimensions={product.dimensions}
                 />
               </div>
 

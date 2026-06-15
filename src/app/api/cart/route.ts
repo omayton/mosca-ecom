@@ -33,7 +33,7 @@ export async function GET() {
     const supabase = getSupabase()
     const { data, error } = await supabase
       .from('cart_items')
-      .select('product_id, quantity, products(name, price, image_file, slug)')
+      .select('product_id, quantity, products(name, price, image_file, slug, weight, dimensions)')
       .eq('user_id', user.id)
 
     if (error) throw error
@@ -45,6 +45,8 @@ export async function GET() {
       price: row.products?.price || 0,
       imageFile: row.products?.image_file || '',
       slug: row.products?.slug || '',
+      weight: row.products?.weight || undefined,
+      dimensions: row.products?.dimensions || undefined,
     }))
 
     return NextResponse.json({ items })

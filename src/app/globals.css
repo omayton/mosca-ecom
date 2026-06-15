@@ -32,4 +32,7 @@
       transition-duration: 0.01ms !important;
     }
   }
+
+  /* Skip preloader on subsequent navigations within a session (LCP) */
+  html.no-preloader #preloader { display: none !important; }
 }

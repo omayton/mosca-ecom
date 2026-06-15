@@ -36,7 +36,7 @@ npm run start    # Serve o build de produção localmente
 
 ### Header (`src/components/automotive/top-header.tsx`)
 - Promo bar vermelha (desktop): "5% OFF no PIX • Frete para todo o Brasil • Até 6x sem juros" + links (Sobre, Rastrear, WhatsApp)
-- Barra principal: logo, vehicle search, busca (rounded-xl, fundo dark, ring vermelho no focus), CEP modal, auth status, carrinho
+- Barra principal: logo (`/images/moscabrancalogo.svg` local — antes era URL WordPress que dava 403), vehicle search, busca (rounded-xl, fundo dark, ring vermelho no focus), CEP modal, auth status, carrinho
 - Nav categorias: botão "Departamentos" (LayoutGrid icon) com dropdown + links rápidos p/ 6 primeiras (underline vermelho animado no hover) + pill "Ofertas"
 - Mobile: drawer com busca embutida, WhatsApp como botão verde full-width, backdrop blur
 - `categories` vem de DEFAULT_CATEGORIES ou fetch do Supabase
@@ -101,12 +101,18 @@ WHERE p.name IS NULL;
 
 ### Catálogo — dual data source
 O catálogo tem duas fontes de dados que coexistem:
-- `src/lib/products-db.ts` — queries async ao Supabase (fonte primária, usada pelas pages). `getAllSlugs()` tem fallback para o array estático quando `NEXT_PUBLIC_SUPABASE_URL` não está disponível (build local).
+- `src/lib/products-db.ts` — queries async ao Supabase (fonte primária, usada pelas pages). `getAllSlugs()` tem fallback para o array estático quando `NEXT_PUBLIC_SUPABASE_URL` não está disponível (build local). **Imagens principais buscadas em batch** (`getMainImageURLsForProducts`) — 1 query para N produtos, evita N+1.
 - `src/lib/products.ts` — array estático `PRODUCTS[]` + helpers de formatação (`pixPrice`, `installmentPrice`, `fmt`, `parseWeight`, `parseDimensions`, `imgUrl`, `getProductBySlug`, `getRelated`)
 
 As pages usam `products-db.ts` para dados. Os helpers de formatação e a interface `Product` vivem em `products.ts`. O array estático `PRODUCTS` é legado/fallback — novos produtos vão apenas no Supabase.
 
-**`imgUrl(file)`:** Se `file.startsWith('http')` retorna direto (Supabase Storage), senão prefixa com URL WordPress. Se vazio/placeholder retorna imagem placeholder.
+**`imgUrl(file)`:** Lida com 3 casos de imagem:
+1. **URL Supabase Storage** (inicia com `http`, NÃO é WordPress) → usa direto
+2. **URL WordPress legada** (`moscabrancaparts.com.br/wp-content/uploads/`) → extrai o nome do arquivo e serve de `/images/04/` local (WordPress bloqueia hotlink com 403)
+3. **Nome de arquivo solto** (ex: `br-11134207-...jpg`) → serve de `/images/04/`
+4. Vazio/`"placeholder"` → retorna `PLACEHOLDER`
+
+**Imagens locais:** `public/images/04/` tem 1657 imagens baixadas do WordPress (todas as peças). `public/images/moscabrancalogo.svg` é a logo. Servidas 100% do Vercel CDN.
 
 **`PLACEHOLDER`:** constante com URL do placeholder SVG para produtos sem imagem.
 
@@ -131,14 +137,23 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - Para anônimos: apenas localStorage
 - Drawer lateral abre automaticamente ao adicionar item (`setIsOpen(true)`)
 - Badge com contador no header (desktop e mobile)
+- **`CartItem` carrega `weight` e `dimensions`** (strings, ex: `"0,5 kg"`, `"30x20x15 cm"`) — usados pelo cálculo de frete no checkout. Flui: `AddToCart` → `addItem` → context → `/api/cart` GET busca `products(weight, dimensions)`.
+- **Guards de sync:** o sync debounced é abortado quando `document.hidden` (aba em background, evita multi-aba sobrescrever) e quando `clearedRef` está ativo (evita ressureição do carrinho pós-checkout).
 
 ### Carrinho Abandonado
+**Premissas para um carrinho aparecer como abandonado (TODAS obrigatórias):**
+1. Usuário estava **LOGADO** ao adicionar itens (anônimos só usam localStorage, nunca vão pro banco)
+2. O sync `POST /api/cart` rodou (debounce 1s após mutação, OU merge no mount)
+3. `first_added_at` é mais antigo que **2 horas** (configurável via `?hours=N` no admin)
+4. O usuário **NÃO** fez pedido depois de adicionar (excluído se `order.created_at > first_added_at`)
+
 - Cron job via Vercel: `GET /api/cron/abandoned-cart` — roda 1x/dia às 9h (`vercel.json` — Hobby plan limit)
 - Protegido por `CRON_SECRET` (header `Authorization: Bearer {secret}`)
 - Detecta carrinhos via coluna `first_added_at` na tabela `cart_items`
 - **O sync do carrinho usa UPSERT** (não mais DELETE+INSERT) para preservar `first_added_at` original — coluna essencial para detecção de abandono
 - Envia email de recuperação via Resend (`src/lib/email.ts`)
 - Admin: `/admin/carrinhos-abandonados` — painel para visualizar e gerenciar
+- Diagnóstico: `GET /api/admin/abandoned-carts/debug` — mostra todos os cart_items crus + `wouldShowInAbandoned` para debugar "por que não aparece"
 
 - Tabela `cart_items` tem unique constraint em `(user_id, product_id)` para o upsert funcionar
 - Recovery: `POST /api/admin/abandoned-carts/recover` — envia WhatsApp/link de recuperação
@@ -147,7 +162,6 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - `src/lib/email.ts` — wrapper para Resend API + templates de email
 - Graceful fallback: se `RESEND_API_KEY` não configurada, loga warning e retorna false
 - Usado pelo cron de carrinho abandonado e confirmação de pedido
-=======
 - Usado pelo cron de carrinho abandonado + confirmação de pedido
 - **SMTP customizado configurado no Supabase** (smtp.resend.com:465, user: resend) para eliminar rate limits e aceitar qualquer domínio de e-mail
 
@@ -186,7 +200,6 @@ As pages usam `products-db.ts` para dados. Os helpers de formatação e a interf
 - Flow: endereço → frete → `POST /api/checkout` (cria pedido) → mostra payment form → pagamento → redirect `/pedido/{id}`
 - `src/lib/mercadopago.ts` — helpers `createCardPayment`, `createPixPayment`, `getPayment` (REST API direta, sem SDK Node)
 - **Webhook configurado** no painel MercadoPago (Modo Produção): `https://www.moscabrancaparts.com.br/api/webhooks/mercadopago` com eventos "Pagamentos" e "Alertas de fraude"
-=======
   - PIX: `POST /api/payments` gera QR code → exibe na página, polling de confirmação automático
 - Flow: endereço → frete → `POST /api/checkout` (cria pedido) → mostra payment form → pagamento → redirect `/pedido/{id}`
 - `src/lib/mercadopago.ts` — helpers `createCardPayment`, `createPixPayment`, `getPayment` (REST API direta, sem SDK Node)
@@ -243,7 +256,6 @@ O admin oferece dois modos de criar banners:
 - **Cores primárias**: red-600 (CTAs, destaques), zinc-950 (header/footer), green (PIX badge/WhatsApp)
 
 - **Product cards**: rounded-2xl, badge desconto % vermelho, preço PIX + tag verde, hover com shadow-lg + add-to-cart overlay
-=======
 - **Product cards**: rounded-2xl, badge desconto % vermelho, preço PIX + tag verde, hover com shadow-lg + add-to-cart overlay (home carousel)
 - **Promo banners**: 4 cards gradiente (PIX, Parcela, Envio, Garantia) com ícones Lucide
 - **Homepage sections**: Trust bar branca (icones em circulos red-50) -> Promo banners -> Categories grid (Lucide icons) -> Product carousels -> Testimonials (3 reviews, estrelas) -> Footer
@@ -278,7 +290,6 @@ O admin oferece dois modos de criar banners:
   - Botão **"Ver"** em cada linha abre `OrderDetailModal` (painel lateral) com: cliente (nome/email/telefone/CPF), endereço completo, itens com imagem/preço/link, pagamento e frete detalhados, alteração de status inline
   - API detalhe: `GET /api/admin/orders/[id]`
 - **Banners, Produtos, Estoque, Cupons, Carrinhos, Clientes, Avaliações, Categorias, Relatórios, Analytics IA**
-=======
 - **Dashboard:** `/admin` — métricas REAIS (receita semanal, trend vs semana anterior, gráfico diário, últimos pedidos, estoque baixo). Nenhum dado fake/hardcoded.
 - **Banners:** `/admin/banners` — CRUD com preview ao vivo + geração IA (upload de imagem + DALL-E 3)
 - **Produtos:** `/admin/produtos` — CRUD, busca, filtros, upload de imagem
@@ -310,7 +321,6 @@ O admin oferece dois modos de criar banners:
 - Confirmação: `src/app/pedido/[id]/page.tsx` — server component, mostra status do pagamento
 - Área do usuário: `src/app/minha-conta/` com layout + sidebar (perfil, pedidos, senha)
 - Webhook MercadoPago: `POST /api/webhooks/mercadopago`
-=======
 - Drag & drop ou clique para upload (single e multi-imagem)
 - Validação: JPG, PNG, WebP, GIF (máx 5MB)
 - Preview em tempo real
@@ -341,7 +351,6 @@ O admin oferece dois modos de criar banners:
 - `src/components/vehicle/` — autocomplete, results, search-button, search-dropdown
 - `src/components/admin/` — admin-sidebar, image-upload, **order-detail-modal** (novo)
 - `src/components/footer.tsx`, `src/components/product-image.tsx`, `src/components/shipping-calculator.tsx`
-=======
 - `src/components/auth/` — login-form, register-form, auth-status (dropdown com Minha conta, Pedidos, Sair), user-menu
 - `src/components/checkout/` — address-form, checkout-steps, shipping-selector, order-summary, payment-form, checkout-header
 - `src/components/vehicle/` — autocomplete, results, search-button, search-dropdown
@@ -385,7 +394,6 @@ O admin oferece dois modos de criar banners:
 
 - **Inter** (`font-inter`, `--font-inter`) — body, labels, UI
 - **Barlow Condensed** (`font-barlow`, `--font-barlow`) — preços, títulos hero
-=======
 
 - **Ubuntu** (`--font-ubuntu`) — fonte principal (300/400/500/700), carregada via `next/font/google`
 
@@ -423,7 +431,6 @@ MERCADOPAGO_WEBHOOK_SECRET=...    # validação de assinatura HMAC no webhook
 VERCEL_AI_GATEWAY_URL=...
 ANTHROPIC_API_KEY=...
 OPENAI_API_KEY=...                # para geração de banners com DALL-E 3
-=======
 # IA (Claude via Vercel AI Gateway)
 VERCEL_AI_GATEWAY_URL=...         # Gateway URL para chamadas IA
 ANTHROPIC_API_KEY=...             # API key Anthropic
@@ -443,7 +450,6 @@ CRON_SECRET=...                   # header Authorization: Bearer {secret}
 NEXT_PUBLIC_APP_URL=https://www.moscabrancaparts.com.br
 
 ADMIN_EMAILS=email1@example.com,email2@example.com
-=======
 ADMIN_EMAILS=email1@example.com,email2@example.com   # emails autorizados no admin (comma-separated)
 
 # Analytics
@@ -466,7 +472,6 @@ NEXT_PUBLIC_GA4_ID=G-5CRHKEJH7F      # GA4 Measurement ID
 - `GET/POST/DELETE /api/cart` — sync carrinho (usuários logados)
 - `GET /api/categories` — categorias públicas (`export const dynamic = 'force-dynamic'`)
 - `GET /api/cron/abandoned-cart` — cron job (protegido por CRON_SECRET)
-=======
 - `POST /api/webhooks/mercadopago` — IPN webhook
 - `GET/POST /api/cart` — sync carrinho (usuários logados)
 - `GET/POST /api/profile` — dados do perfil do usuário
@@ -491,10 +496,10 @@ NEXT_PUBLIC_GA4_ID=G-5CRHKEJH7F      # GA4 Measurement ID
 - `POST/DELETE /api/admin/product-images` — upload imagens (multi por produto)
 - `GET /api/analytics/ai-usage` — analytics IA
 
-=======
 - `GET/POST/PATCH/DELETE /api/categories` — CRUD categorias
 - `GET/POST/PATCH/DELETE /api/admin/reviews` — moderação reviews
-- `GET /api/admin/abandoned-carts` — listar carrinhos abandonados
+- `GET /api/admin/abandoned-carts` — listar carrinhos abandonados (suporta `?hours=N`, default 2)
+- `GET /api/admin/abandoned-carts/debug` — diagnóstico cru: mostra todos `cart_items` com timestamps e flag `wouldShowInAbandoned`
 - `POST /api/admin/abandoned-carts/recover` — recuperar carrinho abandonado
 - `GET /api/admin/reports` — relatórios do negócio
 
@@ -516,17 +521,40 @@ NEXT_PUBLIC_GA4_ID=G-5CRHKEJH7F      # GA4 Measurement ID
 - [x] ~~Imagens de produtos apontam para URL WordPress~~ — `imgUrl()` trata URLs completas
 - [x] ~~Banner com peças escuras somem no fundo~~ — spotlight radial gradient + `desktop_image_url`
 - [x] ~~Trigger `handle_new_user` não salvava nome~~ — corrigido para salvar de `raw_user_meta_data`
+- [x] ~~Frete sempre calculava como 0.3kg~~ — `CartItem` carrega `weight`/`dimensions`, `shipping-selector` usa peso real
+- [x] ~~Race condition multi-aba deletava itens do carrinho~~ — guard `document.hidden` no sync
+- [x] ~~Carrinho ressureitava pós-checkout~~ — `clearedRef` + cancela debounce antes do DELETE
+- [x] ~~N+1 queries na home (21 queries por render)~~ — `getMainImageURLsForProducts` batch query
+- [x] ~~Logo dava 403 (URL WordPress)~~ — logo SVG local `/images/moscabrancalogo.svg`
 - [ ] Redes sociais no footer apontam para `#` (faltam URLs reais)
 - [ ] Páginas `/politica-de-privacidade` e `/termos-de-uso` precisam de conteúdo real
 - [ ] Melhor Envio token expira em 30 dias — renovação manual necessária
 - [ ] Reviews de produto: formulário público não existe (só admin modera)
-- [ ] Busca por veículo: componente existe mas não integrado ao header
+- [ ] Busca por veículo: componente existe mas não integrada ao header
 
-=======
-- [ ] Página `/politica-de-privacidade` e `/termos-de-uso` precisam de conteúdo real
-- [ ] Melhor Envio token expira em 30 dias — automatizar renovação
-- [ ] Reviews de produto: formulário público de avaliação não existe ainda (só admin modera)
-- [ ] Busca por veículo: ainda não integrada ao header (componente existe mas não aparece)
+### Roadmap nível Awwwards (revisão de 2026-06-14)
+**Performance (Critical):**
+- [ ] Preloader full-screen bloqueia LCP ~700ms — remover de produção ou restringir ao primeiro paint (`sessionStorage`)
+- [ ] Hero usa `<img>` Unsplash sem `next/image` (sem otimização/AVIF, CLS) — migrar para `next/image` + Storage
+- [ ] `next.config.js` sem `formats: ['image/avif','image/webp']` explícito
+
+**Conversão (High):**
+- [ ] Sem escassez no produto — badge "Últimas N unidades" quando `stock ≤ threshold`
+- [ ] Prova social hardcoded ("Carlos M.") — puxar reviews reais do Supabase + rating ao lado do preço
+- [ ] Frete só aparece no checkout — pré-calcular no drawer (CEP já no header)
+- [ ] Cupom escondido até o step final — mostrar campo no carrinho
+- [ ] Busca por veículo não integrada ao header (diferencial do nicho)
+
+**Design (Awwwards polish):**
+- [ ] Zero scroll reveals / animações de entrada — `IntersectionObserver` + fade-up staggered
+- [ ] Tipografia sem personalidade — 2 fontes (display + UI), escala definida
+- [ ] Product cards com hover fraco — `shadow-sm→shadow-2xl -translate-y-1`
+- [ ] Hero sem Ken Burns — `scale(1.05→1.12)` durante o slide
+- [ ] Design system incompleto no `tailwind.config.ts` (só `fontFamily`) — tokens de cor, shadow, keyframes
+- [ ] Header não reage ao scroll — `backdrop-blur` + shrink
+- [ ] Sem skeletons/empty states — shimmer em vez de flash
+- [ ] Promo banners = template genérico — textura/ruído + mask-image
+- [ ] Footer inconsistente + sem CTA pré-footer (newsletter/WhatsApp)
 
 
 ## Gotchas
@@ -538,7 +566,6 @@ NEXT_PUBLIC_GA4_ID=G-5CRHKEJH7F      # GA4 Measurement ID
 - `getAllSlugs()` em `products-db.ts` tem fallback para array estático quando `NEXT_PUBLIC_SUPABASE_URL` não está disponível (build local sem `.env.local`).
 - Pages com `useSearchParams()` precisam de `<Suspense>` boundary.
 
-=======
 
 ### Vercel build & env vars
 - **NUNCA** instanciar Supabase client no top-level de API routes — o Next.js avalia esses módulos em build time e as env vars podem não existir. Usar padrão lazy: `function getSupabase() { return createClient(...) }` e chamar dentro do handler.
@@ -561,7 +588,6 @@ NEXT_PUBLIC_GA4_ID=G-5CRHKEJH7F      # GA4 Measurement ID
 - Se `requireAdmin()` retorna 403, a API retorna erro JSON. A UI exibe banner vermelho com o erro real.
 - Se ADMIN_EMAILS não contém o email do usuário logado → 403 em todas as rotas admin.
 - Verificar: Vercel → Settings → Environment Variables → `ADMIN_EMAILS`
-=======
 ### Dados e APIs
 - `products.ts` has `parseWeight(str)` and `parseDimensions(str)` helpers that convert human-readable strings ("0,5 kg", "30x20x15 cm") to numeric values for the shipping API. Defaults when missing: weight=0.3kg, dimensions=16x10x10cm
 - Supabase columns use `snake_case`, TypeScript interfaces use `camelCase` — the `rowToProduct()` mapper in `products-db.ts` handles conversion
@@ -587,7 +613,6 @@ NEXT_PUBLIC_GA4_ID=G-5CRHKEJH7F      # GA4 Measurement ID
 - ID fake em simulações (`123456`) → `getPayment()` falha → retorna 200 OK graciosamente
 - Pedido permanece `pending` até webhook confirmar (`approved → confirmed`)
 - Pagamento via PIX aparece como `bank_transfer` no campo `payment_method`
-=======
 - Badge do carrinho usa `loaded` do CartContext para evitar hydration mismatch
 
 
@@ -608,7 +633,6 @@ NEXT_PUBLIC_GA4_ID=G-5CRHKEJH7F      # GA4 Measurement ID
 - `imgUrl()` detecta automaticamente via `file.startsWith('http')`
 - `next.config.js` remotePatterns: `moscabrancaparts.com.br` e `mcaxtwztzfrytxtkgdxh.supabase.co`
 
-=======
 
 ### Rate Limiting
 - `src/lib/rate-limit.ts` — rate limiter in-memory com lazy cleanup (sem setInterval/timer leak)

@@ -66,7 +66,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={ubuntu.variable}>
       <body className="font-ubuntu antialiased">
-        {/* Preloader — HTML/CSS puro para renderizar instantaneamente */}
+        {/* Skip preloader on subsequent navigations within a session (LCP) */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(sessionStorage.getItem('mb-preloader-shown')==='1'){document.documentElement.classList.add('no-preloader')}}catch(e){}` }} />
+        {/* Preloader — HTML/CSS puro para renderizar instantaneamente (só 1x por sessão) */}
         <div
           id="preloader"
           style={{

@@ -28,8 +28,13 @@ function aggregatePackage(items: CartItem[]) {
   let totalPrice = 0
 
   for (const item of items) {
-    const w = parseWeight(undefined)
+    const w = parseWeight(item.weight)
+    const dims = parseDimensions(item.dimensions)
     totalWeight += w * item.quantity
+    // Largest dimension wins (single package model)
+    if (dims.width > maxWidth) maxWidth = dims.width
+    if (dims.height > maxHeight) maxHeight = dims.height
+    if (dims.length > maxLength) maxLength = dims.length
     totalPrice += item.price * item.quantity
   }
 

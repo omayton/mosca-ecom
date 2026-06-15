@@ -65,7 +65,7 @@ function ProductCard({ p }: { p: Product }) {
           <button
             onClick={(e) => {
               e.preventDefault()
-              addItem({ productId: p.id, name: p.name, price: p.price, imageFile: p.imageFile, slug: p.slug })
+              addItem({ productId: p.id, name: p.name, price: p.price, imageFile: p.imageFile, slug: p.slug, weight: p.weight, dimensions: p.dimensions })
             }}
             className="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >

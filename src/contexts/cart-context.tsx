@@ -9,6 +9,8 @@ export interface CartItem {
   imageFile: string
   quantity: number
   slug: string
+  weight?: string
+  dimensions?: string
 }
 
 interface CartContextType {
@@ -50,6 +52,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialSyncDone = useRef(false)
+  const clearedRef = useRef(false)
 
   useEffect(() => {
     const localItems = loadFromStorage()
@@ -106,9 +109,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     saveToStorage(items)
 
     if (!isLoggedIn || !initialSyncDone.current) return
+    // Skip sync if tab is hidden (prevents multi-tab overwriting each other's carts)
+    if (typeof document !== "undefined" && document.hidden) return
+    // A new mutation means the cart is no longer "cleared"
+    clearedRef.current = false
 
     if (syncTimer.current) clearTimeout(syncTimer.current)
     syncTimer.current = setTimeout(() => {
+      // Abort if cleared while debouncing (prevents cart resurrection after checkout)
+      if (clearedRef.current) return
       fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,6 +154,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const clearCart = useCallback(() => {
+    clearedRef.current = true
+    if (syncTimer.current) clearTimeout(syncTimer.current)
     setItems([])
     if (isLoggedIn) {
       fetch("/api/cart", { method: "DELETE" }).catch(() => {})
