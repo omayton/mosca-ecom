@@ -108,9 +108,13 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Cart POST error:', error)
-    return NextResponse.json({ error: 'Erro ao sincronizar carrinho' }, { status: 500 })
+    // Retorna o erro real do Supabase (code + message) para diagnóstico no client
+    return NextResponse.json(
+      { error: error?.message || 'Erro ao sincronizar carrinho', code: error?.code },
+      { status: 500 }
+    )
   }
 }
 

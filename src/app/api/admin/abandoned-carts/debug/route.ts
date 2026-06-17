@@ -11,75 +11,104 @@ function getSupabase() {
   )
 }
 
-// Diagnóstico: mostra TODOS os cart_items crus, sem filtro de tempo
+// Diagnóstico DEFINITIVO: testa o UPSERT real e mostra o erro exato.
+// Roda server-side com o admin logado + service role (contorna o client).
 export async function GET() {
   const auth = await requireAdmin()
   if (auth.error) return auth.error
 
-  try {
-    const supabase = getSupabase()
+  const supabase = getSupabase()
+  const adminId = auth.user.id
+  const report: Record<string, any> = { steps: [] }
 
-    // 1. Todos os cart_items crus
-    const { data: allCarts, error } = await supabase
-      .from('cart_items')
-      .select('user_id, product_id, quantity, first_added_at')
-      .order('first_added_at', { ascending: false })
+  // 1. Colunas da tabela (via select * limit 1)
+  const { data: sample, error: sampleErr } = await supabase
+    .from('cart_items')
+    .select('*')
+    .limit(1)
+    .maybeSingle()
+  report.steps.push({
+    step: '1. schema',
+    columns: sample ? Object.keys(sample) : null,
+    sampleError: sampleErr?.message || null,
+    hasFirstAddedAt: sample ? 'first_added_at' in sample : false,
+  })
 
-    if (error) {
-      return NextResponse.json({ step: 'cart_items query', error: error.message }, { status: 500 })
-    }
+  // 2. Contagem atual
+  const { count } = await supabase
+    .from('cart_items')
+    .select('*', { count: 'exact', head: true })
+  report.totalCartItems = count ?? 0
 
-    // 2. Agrupar por user
-    const byUser: Record<string, { count: number; oldest: string; newest: string }> = {}
-    for (const row of allCarts || []) {
-      const uid = row.user_id
-      if (!byUser[uid]) byUser[uid] = { count: 0, oldest: row.first_added_at, newest: row.first_added_at }
-      byUser[uid].count++
-      if (new Date(row.first_added_at) < new Date(byUser[uid].oldest)) byUser[uid].oldest = row.first_added_at
-      if (new Date(row.first_added_at) > new Date(byUser[uid].newest)) byUser[uid].newest = row.first_added_at
-    }
+  // 3. TESTE DE UPSERT REAL (produto 1, qty 1) — simula exatamente o /api/cart POST
+  const ts = new Date().toISOString()
+  const { data: upsertData, error: upsertErr } = await supabase
+    .from('cart_items')
+    .upsert(
+      [{ user_id: adminId, product_id: 1, quantity: 1, first_added_at: ts }],
+      { onConflict: 'user_id,product_id' }
+    )
+    .select()
+  report.steps.push({
+    step: '3. upsert test (productId=1, admin user)',
+    success: !upsertErr,
+    error: upsertErr ? { message: upsertErr.message, code: upsertErr.code, details: upsertErr.details } : null,
+    rowsAffected: upsertData?.length ?? 0,
+  })
 
-    // 3. Buscar emails dos usuários
-    const userIds = Object.keys(byUser)
-    let emailMap: Record<string, string> = {}
-    if (userIds.length > 0) {
-      const { data: authUsers } = await supabase.auth.admin.listUsers()
-      if (authUsers?.users) {
-        for (const u of authUsers.users) {
-          if (u.email) emailMap[u.id] = u.email
-        }
-      }
-    }
+  // 4. Confirmar se gravou
+  const { data: verify } = await supabase
+    .from('cart_items')
+    .select('user_id, product_id, quantity, first_added_at')
+    .eq('user_id', adminId)
+    .eq('product_id', 1)
+  report.steps.push({
+    step: '4. verify persistence',
+    found: verify?.length ?? 0,
+    row: verify?.[0] || null,
+  })
 
-    // 4. Verificar tabela de notificações
-    const { data: notifs, error: notifErr } = await supabase
-      .from('abandoned_cart_notifications')
-      .select('user_id, channel, sent_at, recovered')
-
-    // 5. Calcular tempo desde cada carrinho
-    const now = Date.now()
-    const summary = userIds.map(uid => {
-      const info = byUser[uid]
-      const ageHours = ((now - new Date(info.oldest).getTime()) / (1000 * 60 * 60)).toFixed(1)
-      return {
-        userId: uid,
-        email: emailMap[uid] || 'sem email',
-        itemCount: info.count,
-        oldestItem: info.oldest,
-        ageHours: Number(ageHours),
-        wouldShowInAbandoned: Number(ageHours) >= 2,
-      }
-    })
-
-    return NextResponse.json({
-      totalCartItems: allCarts?.length || 0,
-      uniqueUsers: userIds.length,
-      notificationsTable: notifErr ? `ERRO: ${notifErr.message}` : `${notifs?.length || 0} notificações`,
-      users: summary,
-      cutoff2h: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
-      now: new Date(now).toISOString(),
-    })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message, stack: error.stack }, { status: 500 })
+  // 5. Limpar o item de teste
+  if (verify && verify.length > 0) {
+    await supabase.from('cart_items').delete().eq('user_id', adminId).eq('product_id', 1)
+    report.steps.push({ step: '5. cleanup test item', deleted: true })
   }
+
+  // 6. Todos os carts agrupados por user (para o painel)
+  const { data: allCarts } = await supabase
+    .from('cart_items')
+    .select('user_id, product_id, quantity, first_added_at')
+    .order('first_added_at', { ascending: false })
+
+  const byUser: Record<string, any> = {}
+  for (const row of allCarts || []) {
+    if (!byUser[row.user_id]) byUser[row.user_id] = { count: 0, oldest: row.first_added_at }
+    byUser[row.user_id].count++
+    if (new Date(row.first_added_at) < new Date(byUser[row.user_id].oldest)) byUser[row.user_id].oldest = row.first_added_at
+  }
+
+  // emails
+  const userIds = Object.keys(byUser)
+  let emailMap: Record<string, string> = {}
+  if (userIds.length > 0) {
+    const { data: authUsers } = await supabase.auth.admin.listUsers()
+    for (const u of authUsers?.users || []) if (u.email) emailMap[u.id] = u.email
+  }
+
+  const now = Date.now()
+  report.users = userIds.map(uid => {
+    const ageHours = ((now - new Date(byUser[uid].oldest).getTime()) / 36e5).toFixed(1)
+    return { userId: uid, email: emailMap[uid] || '?', itemCount: byUser[uid].count, ageHours: Number(ageHours), wouldShowInAbandoned: Number(ageHours) >= 2 }
+  })
+
+  // DIAGNÓSTICO FINAL
+  report.diagnostico = upsertErr
+    ? `❌ UPSERT FALHOU: ${upsertErr.message} (code ${upsertErr.code}). Esse é o motivo dos carrinhos não persistirem.`
+    : (verify && verify.length > 0)
+      ? `✅ UPSERT FUNCIONA — o servidor grava no banco corretamente. Se o painel está vazio, o problema está no CLIENT (itens adicionados deslogados, ou sync não dispara).`
+      : '⚠️ Upsert não errou mas item não apareceu — possível problema de RLS ou constraint.'
+
+  return new NextResponse(JSON.stringify(report, null, 2), {
+    headers: { 'content-type': 'application/json' },
+  })
 }

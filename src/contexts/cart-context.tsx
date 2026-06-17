@@ -45,6 +45,25 @@ function saveToStorage(items: CartItem[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
 }
 
+// Sincroniza o carrinho pro servidor. Erros são logados (não engolidos) para diagnóstico.
+async function syncCartToServer(items: CartItem[]) {
+  try {
+    const res = await fetch("/api/cart", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })) }),
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      // eslint-disable-next-line no-console
+      console.error("[cart-sync] FALHOU", res.status, body)
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("[cart-sync] erro de rede", e)
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -79,11 +98,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 saveToStorage(merged)
               } else if (localItems.length > 0) {
                 setItems(localItems)
-                await fetch("/api/cart", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ items: localItems.map((i) => ({ productId: i.productId, quantity: i.quantity })) }),
-                })
+                await syncCartToServer(localItems)
               }
             } else {
               setItems(localItems)
@@ -118,11 +133,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     syncTimer.current = setTimeout(() => {
       // Abort if cleared while debouncing (prevents cart resurrection after checkout)
       if (clearedRef.current) return
-      fetch("/api/cart", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })) }),
-      }).catch(() => {})
+      syncCartToServer(items)
     }, 1000)
   }, [items, loaded, isLoggedIn])
 
