@@ -1,6 +1,6 @@
 "use client"
 
-import { Heart, ChevronRight, Eye, ShoppingCart } from "lucide-react"
+import { Heart, ChevronRight, Eye, ShoppingCart, Trophy } from "lucide-react"
 import { type Product, imgUrl, pixPrice, installmentPrice, fmt } from "@/lib/products"
 import { ProductImage } from "@/components/product-image"
 import { useCart } from "@/contexts/cart-context"
@@ -160,12 +160,60 @@ function ProductGrid({ products, label }: { products: Product[]; label: string }
   )
 }
 
-export function ProductSection({ featured, recent, discount }: { featured: Product[]; recent: Product[]; discount: Product[] }) {
+export function ProductSection({ featured, recent, discount, bestSellers }: { featured: Product[]; recent: Product[]; discount: Product[]; bestSellers?: Product[] }) {
   return (
     <>
+      {bestSellers && bestSellers.length > 0 && <BestSellersGrid products={bestSellers} />}
       <ProductGrid products={featured} label="Peças em destaque" />
       <ProductGrid products={recent}   label="Adicionadas recentemente" />
       {discount.length > 0 && <ProductGrid products={discount} label="Ofertas especiais" />}
     </>
+  )
+}
+
+function BestSellersGrid({ products }: { products: Product[] }) {
+  const rankColors = ["bg-amber-500", "bg-zinc-400", "bg-amber-700"]
+  const rankLabels = ["1º", "2º", "3º"]
+
+  return (
+    <section aria-label="Mais Vendidos" className="bg-white py-16 border-t border-zinc-100">
+      <div className="container mx-auto px-4 lg:px-6">
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-1">
+            <Trophy className="h-6 w-6 text-amber-500" aria-hidden="true" />
+            <h2 className="font-bold text-zinc-900 text-2xl">Mais Vendidos</h2>
+          </div>
+          <p className="text-zinc-500 text-base mt-1.5">Os favoritos dos nossos clientes</p>
+        </div>
+
+        <div
+          role="list"
+          aria-label="Mais Vendidos"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8"
+        >
+          {products.map((p, i) => (
+            <div key={p.id} role="listitem" className="relative">
+              {/* Ranking badge */}
+              {i < 3 && (
+                <div className={`absolute -top-2.5 -left-2.5 z-10 h-7 w-7 ${rankColors[i]} text-white font-bold text-xs flex items-center justify-center rounded-full shadow-md`}>
+                  {rankLabels[i]}
+                </div>
+              )}
+              <ProductCard p={p} />
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <a
+            href="/loja"
+            className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-base px-10 py-4 min-h-[48px] transition-all duration-200 rounded-xl shadow-sm hover:shadow-md"
+          >
+            Ver todos os produtos
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
+          </a>
+        </div>
+      </div>
+    </section>
   )
 }

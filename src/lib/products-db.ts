@@ -136,6 +136,49 @@ export async function getDiscountProducts(limit = 12): Promise<Product[]> {
   return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
 }
 
+export async function getBestSellers(limit = 8): Promise<Product[]> {
+  // Count quantities sold from order_items, group by product
+  const { data: salesData, error: salesError } = await supabase
+    .from("order_items")
+    .select("product_id, quantity")
+    .not("product_id", "is", null)
+
+  if (salesError || !salesData || salesData.length === 0) {
+    // Fallback: return featured products
+    return getFeaturedProducts()
+  }
+
+  const salesMap: Record<number, number> = {}
+  for (const item of salesData) {
+    if (item.product_id) {
+      salesMap[item.product_id] = (salesMap[item.product_id] || 0) + (item.quantity || 1)
+    }
+  }
+
+  // Sort product IDs by total sold
+  const sortedIds = Object.entries(salesMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([id]) => Number(id))
+    .slice(0, limit)
+
+  if (sortedIds.length === 0) return getFeaturedProducts()
+
+  // Fetch products in ranking order
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .in("id", sortedIds)
+
+  if (error) throw error
+  const products = (data as ProductRow[]).map(rowToProduct)
+
+  // Sort by sales rank
+  products.sort((a, b) => (salesMap[b.id] || 0) - (salesMap[a.id] || 0))
+
+  const imageMap = await getMainImageURLsForProducts(products.map((p) => p.id))
+  return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
+}
+
 export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {
   const { data: sameCategory, error: err1 } = await supabase
     .from("products")
