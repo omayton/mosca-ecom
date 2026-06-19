@@ -94,5 +94,5 @@ function redirectToLogin(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/shipping|api/webhooks).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/shipping|api/webhooks|api/auth/google).*)"],
 }
