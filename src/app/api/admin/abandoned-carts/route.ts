@@ -85,29 +85,33 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Get notifications already sent
-    const { data: notifications } = await supabase
-      .from('abandoned_cart_notifications')
-      .select('user_id, channel, sent_at, recovered')
-      .in('user_id', userIds)
-      .order('sent_at', { ascending: false })
+    // Get notifications already sent (graceful if table doesn't exist)
+    let notifMap: Record<string, { whatsapp?: string; email?: string; recovered?: boolean }> = {}
+    try {
+      const { data: notifications, error: notifError } = await supabase
+        .from('abandoned_cart_notifications')
+        .select('user_id, channel, sent_at, recovered')
+        .in('user_id', userIds)
+        .order('sent_at', { ascending: false })
 
-    const notifMap: Record<string, { whatsapp?: string; email?: string; recovered?: boolean }> = {}
-    if (notifications) {
-      for (const n of notifications) {
-        if (!notifMap[n.user_id]) {
-          notifMap[n.user_id] = { whatsapp: undefined, email: undefined, recovered: false }
-        }
-        if (n.channel === 'whatsapp' && !notifMap[n.user_id].whatsapp) {
-          notifMap[n.user_id].whatsapp = n.sent_at
-        }
-        if (n.channel === 'email' && !notifMap[n.user_id].email) {
-          notifMap[n.user_id].email = n.sent_at
-        }
-        if (n.recovered) {
-          notifMap[n.user_id].recovered = true
+      if (!notifError && notifications) {
+        for (const n of notifications) {
+          if (!notifMap[n.user_id]) {
+            notifMap[n.user_id] = { whatsapp: undefined, email: undefined, recovered: false }
+          }
+          if (n.channel === 'whatsapp' && !notifMap[n.user_id].whatsapp) {
+            notifMap[n.user_id].whatsapp = n.sent_at
+          }
+          if (n.channel === 'email' && !notifMap[n.user_id].email) {
+            notifMap[n.user_id].email = n.sent_at
+          }
+          if (n.recovered) {
+            notifMap[n.user_id].recovered = true
+          }
         }
       }
+    } catch {
+      // Table might not exist yet — continue without notifications
     }
 
     const profileMap: Record<string, any> = {}

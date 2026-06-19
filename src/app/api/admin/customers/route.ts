@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from('profiles')
-      .select('*, orders:orders(count)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -36,8 +36,29 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error
 
+    // Fetch order counts separately to avoid FK dependency issues
+    let orderCounts: Record<string, number> = {}
+    if (data && data.length > 0) {
+      const userIds = data.map((p: any) => p.id)
+      const { data: orderData } = await supabase
+        .from('orders')
+        .select('user_id')
+        .in('user_id', userIds)
+
+      if (orderData) {
+        for (const o of orderData) {
+          orderCounts[o.user_id] = (orderCounts[o.user_id] || 0) + 1
+        }
+      }
+    }
+
+    const customers = (data || []).map((p: any) => ({
+      ...p,
+      orders: [{ count: orderCounts[p.id] || 0 }]
+    }))
+
     return NextResponse.json({
-      customers: data,
+      customers,
       total: count || 0,
       page,
       limit,

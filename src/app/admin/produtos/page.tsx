@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Search, Edit2, Trash2, Image as ImageIcon, Package } from 'lucide-react'
 import Link from 'next/link'
+import { imgUrl } from '@/lib/products'
 import { ImageUpload } from '@/components/admin/image-upload'
 import { ProductImagesUpload } from '@/components/admin/product-images-upload'
 
@@ -183,10 +184,7 @@ export default function AdminProductsPage() {
                         <div className="w-10 h-10 bg-white/[0.04] rounded-lg flex items-center justify-center overflow-hidden">
                           {product.image_file && product.image_file !== 'placeholder' ? (
                             <img
-                              src={product.image_file.startsWith('http')
-                                ? product.image_file
-                                : `https://www.moscabrancaparts.com.br/wp-content/uploads/2026/04/${product.image_file}`
-                              }
+                              src={imgUrl(product.image_file)}
                               alt={product.name}
                               className="w-full h-full object-cover"
                             />

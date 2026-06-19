@@ -35,6 +35,7 @@ export function ProductGallery({ mainImage, productName, images }: ProductGaller
           className="object-contain p-6"
           sizes="(max-width: 768px) 100vw, 50vw"
           priority
+          fallbackSrc={PLACEHOLDER}
         />
 
         {/* Rare badge */}
