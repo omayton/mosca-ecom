@@ -22,13 +22,12 @@ export async function GET(req: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || ''
 
-  const missing = []
-  if (!clientId) missing.push('CLIENT_ID')
-  if (!clientSecret) missing.push('CLIENT_SECRET')
-  if (!supabaseUrl) missing.push('SUPABASE_URL')
-  if (!supabaseAnonKey) missing.push('ANON_KEY')
-
-  if (missing.length > 0) {
+  if (!clientId || !clientSecret || !supabaseUrl || !supabaseAnonKey) {
+    const missing = []
+    if (!clientId) missing.push('CLIENT_ID')
+    if (!clientSecret) missing.push('CLIENT_SECRET')
+    if (!supabaseUrl) missing.push('SUPABASE_URL')
+    if (!supabaseAnonKey) missing.push('ANON_KEY')
     console.error('Missing env vars:', missing.join(', '))
     return NextResponse.redirect(`/login?error=missing_vars_${missing.join('_')}`)
   }
