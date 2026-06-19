@@ -20,11 +20,12 @@ export async function GET(req: NextRequest) {
     const supabase = getSupabase()
     const cutoff = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString()
 
-    // Get cart_items grouped by user, where first_added_at is older than cutoff
+    // Get cart_items grouped by user, where first_added_at (or updated_at as fallback) is older than cutoff
+    // Note: .lt() skips NULL, so we also grab rows where first_added_at IS NULL
     const { data: cartData, error: cartError } = await supabase
       .from('cart_items')
-      .select('user_id, product_id, quantity, first_added_at, products(name, price, image_file, slug)')
-      .lt('first_added_at', cutoff)
+      .select('user_id, product_id, quantity, first_added_at, updated_at, products(name, price, image_file, slug)')
+      .or(`first_added_at.lt.${cutoff},and(first_added_at.is.null,updated_at.lt.${cutoff})`)
       .order('first_added_at', { ascending: false })
 
     if (cartError) throw cartError
@@ -126,7 +127,7 @@ export async function GET(req: NextRequest) {
         const items = userCarts[userId]
         const profile = profileMap[userId]
         const total = items.reduce((sum: number, i: any) => sum + (i.products?.price || 0) * i.quantity, 0)
-        const lastUpdate = items[0]?.first_added_at
+        const lastUpdate = items[0]?.first_added_at || items[0]?.updated_at
 
         return {
           userId,
