@@ -4,12 +4,15 @@ export function GoogleLoginButton() {
   return (
     <a
       href="/api/auth/google"
-      className="w-full flex items-center justify-center gap-3 bg-white border border-zinc-200 text-zinc-800 font-medium text-sm px-6 py-3.5 min-h-[48px] rounded-xl hover:bg-zinc-50 hover:border-zinc-300 transition-all duration-200 cursor-pointer"
+      className="group w-full flex items-center gap-3 bg-white border border-zinc-200 hover:border-zinc-300 hover:shadow-sm text-zinc-700 font-medium text-sm px-5 py-3 min-h-[48px] rounded-xl transition-all duration-200 cursor-pointer"
     >
-      <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-1.25-.58C19.84 9.15 17.74 6.5 15.01 6.5H10.5c-1.47 0-2.84.43-3.91-1.16C5.28 6.09 3.87 8.46 2.28 10.11l5.07 4.92c.08-.68.07-1.36.04-2.04-.03-1.25.88-2.07 2.54-2.48 4.43-2.59 7.03l-2.52.83c.2-.36.68-.83 1.01-1.29L4.37 18.7c-.29.77-.55-1.6-.3-2.13-.03l.37.04c.37.82.62 1.77.52 2.39-.14l1.64-4.1c.38 1.12 1.34 1.77 2.47 1.77h3.04c.01 0 .01 0 .01.02l.25.04c.61.02 1.2.41 2.37.53 3.47l-4.5 5.94c-.07.08-.13-.15-.2-.22a.9.9 0 0 0-.19-.19l-5.72 5.72a.9.9 0 0 0-.19.19l-2.24-2.24a.9.9 0 0 0 .19-.19l5.72-5.72a.9.9 0 0 0 .19-.19.19.19v.39c0 .29.15.55.46.55h6.42c.44 0 .8-.36.8-.8H6.42a.9.9 0 0 0 .19.19v.39a.9.9 0 0 0 .19-.19.19.19L7.23 18.73a.9.9 0 0 0 .19.19c.44.42.84.37 1.55-.37h1.5" fill="#4285F4"/>
+      <svg viewBox="0 0 24 24" className="h-5 w-5 flex-shrink-0" aria-hidden="true">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
       </svg>
-      Entrar com Google
+      <span className="flex-1 text-center">Continuar com Google</span>
     </a>
   )
 }
