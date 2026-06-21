@@ -40,5 +40,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticPages, ...productPages, ...categoryPages]
+  // Blog (índice + posts publicados)
+  const blogIndex: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "daily", priority: 0.7 },
+  ]
+
+  const { data: posts } = await supabase
+    .from("blog_posts")
+    .select("slug, published_at, updated_at")
+    .eq("is_published", true)
+
+  const blogPages: MetadataRoute.Sitemap = (posts || []).map((p: any) => ({
+    url: `${baseUrl}/blog/${p.slug}`,
+    lastModified: p.updated_at ? new Date(p.updated_at) : (p.published_at ? new Date(p.published_at) : new Date()),
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }))
+
+  return [...staticPages, ...blogIndex, ...blogPages, ...productPages, ...categoryPages]
 }

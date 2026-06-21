@@ -19,6 +19,7 @@ export function Footer() {
             <h4 className="font-semibold text-white text-sm mb-3">Institucional</h4>
             <ul className="space-y-2">
               <li><Link href="/sobre" className="text-zinc-500 text-sm hover:text-white transition-colors">Sobre nos</Link></li>
+              <li><Link href="/blog" className="text-zinc-500 text-sm hover:text-white transition-colors">Blog</Link></li>
               <li><Link href="/politica-de-privacidade" className="text-zinc-500 text-sm hover:text-white transition-colors">Politica de Privacidade</Link></li>
               <li><Link href="/termos-de-uso" className="text-zinc-500 text-sm hover:text-white transition-colors">Termos de Uso</Link></li>
             </ul>
