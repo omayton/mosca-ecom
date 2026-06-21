@@ -239,12 +239,13 @@ function SlideRenderer({ slide, priority = false }: { slide: BannerSlide; priori
 function DesktopHtmlBanner({ slide, hasBackground = false }: { slide: BannerSlide; hasBackground?: boolean }) {
   const isDark = hasBackground ? true : isColorDark(slide.bg_color)
   const hasProduct = !!slide.product_image_url && !hasBackground
-  const textColor = hasBackground ? '#ffffff' : slide.text_color
+  // When full image is uploaded without a product, show image only (no text/overlay)
+  const isFullImageOnly = hasBackground && !hasProduct
 
   return (
     <>
-      {/* When AI background image: dark gradient on left so text is readable */}
-      {hasBackground && (
+      {/* Gradient overlay only when there's text to show */}
+      {!isFullImageOnly && hasBackground && (
         <div
           className="absolute inset-0 pointer-events-none z-[1]"
           style={{
@@ -275,53 +276,55 @@ function DesktopHtmlBanner({ slide, hasBackground = false }: { slide: BannerSlid
       )}
 
       <div className="relative z-10 w-full max-w-[1280px] mx-auto px-16 flex items-center gap-12 h-full">
-        {/* Content */}
-        <div className="flex-1 min-w-0 max-w-[520px]">
-          {slide.tag && (
-            <div className="flex items-center gap-2 mb-5">
-              <span
-                className="inline-flex items-center text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full"
-                style={{ backgroundColor: `${slide.accent_color}22`, color: slide.accent_color, border: `1px solid ${slide.accent_color}44` }}
-              >
-                {slide.tag}
-              </span>
-            </div>
-          )}
+        {/* Content — hide when full image without product */}
+        {!isFullImageOnly && (
+          <div className="flex-1 min-w-0 max-w-[520px]">
+            {slide.tag && (
+              <div className="flex items-center gap-2 mb-5">
+                <span
+                  className="inline-flex items-center text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full"
+                  style={{ backgroundColor: `${slide.accent_color}22`, color: slide.accent_color, border: `1px solid ${slide.accent_color}44` }}
+                >
+                  {slide.tag}
+                </span>
+              </div>
+            )}
 
-          <h2
-            className="font-black leading-[1.1] mb-3 tracking-tight"
-            style={{
-              fontSize: 'clamp(1.2rem, 2.1vw, 1.9rem)',
-              color: textColor,
-              fontFamily: 'Ubuntu, sans-serif',
-              textShadow: isDark ? '0 2px 20px rgba(0,0,0,0.5)' : 'none',
-            }}
-          >
-            {slide.title}
-          </h2>
-
-          {slide.subtitle && (
-            <p
-              className="text-[13px] leading-relaxed mb-6 max-w-[380px]"
-              style={{ color: textColor, opacity: 0.75 }}
+            <h2
+              className="font-black leading-[1.1] mb-3 tracking-tight"
+              style={{
+                fontSize: 'clamp(1.2rem, 2.1vw, 1.9rem)',
+                color: '#ffffff',
+                fontFamily: 'Ubuntu, sans-serif',
+                textShadow: isDark ? '0 2px 20px rgba(0,0,0,0.5)' : 'none',
+              }}
             >
-              {slide.subtitle}
-            </p>
-          )}
+              {slide.title}
+            </h2>
 
-          <a
-            href={slide.cta_link || '/loja'}
-            className="inline-flex items-center gap-2 font-semibold text-sm px-5 py-3 rounded-xl transition-all duration-200 hover:brightness-110 hover:shadow-lg active:scale-95 cursor-pointer min-h-[44px]"
-            style={{
-              backgroundColor: slide.accent_color,
-              color: '#fff',
-              boxShadow: `0 4px 24px ${slide.accent_color}44`,
-            }}
-          >
-            {slide.cta_text}
-            <ArrowRight className="h-4 w-4" />
-          </a>
-        </div>
+            {slide.subtitle && (
+              <p
+                className="text-[13px] leading-relaxed mb-6 max-w-[380px]"
+                style={{ color: '#ffffff', opacity: 0.75 }}
+              >
+                {slide.subtitle}
+              </p>
+            )}
+
+            <a
+              href={slide.cta_link || '/loja'}
+              className="inline-flex items-center gap-2 font-semibold text-sm px-5 py-3 rounded-xl transition-all duration-200 hover:brightness-110 hover:shadow-lg active:scale-95 cursor-pointer min-h-[44px]"
+              style={{
+                backgroundColor: slide.accent_color,
+                color: '#fff',
+                boxShadow: `0 4px 24px ${slide.accent_color}44`,
+              }}
+            >
+              {slide.cta_text}
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        )}
 
         {/* Product image — float on background, no container */}
         {hasProduct && (
@@ -401,9 +404,11 @@ function MobileBannerText({ slide, textColor = '#fff' }: { slide: BannerSlide; t
 
 function MobileLayout({ slide }: { slide: BannerSlide }) {
   const hasDesktopImage = !!slide.desktop_image_url
+  const hasProduct = !!slide.product_image_url
+  const isFullImageOnly = hasDesktopImage && !hasProduct
 
   // Variante AI: imagem como fundo, texto sobreposto à esquerda
-  if (hasDesktopImage) {
+  if (hasDesktopImage && !isFullImageOnly) {
     return (
       <div className="w-full h-full relative overflow-hidden flex items-center">
         <Image
@@ -422,6 +427,22 @@ function MobileLayout({ slide }: { slide: BannerSlide }) {
         <div className="relative z-10 px-5 w-[62%]">
           <MobileBannerText slide={slide} />
         </div>
+      </div>
+    )
+  }
+
+  // Full image without product — show image only
+  if (isFullImageOnly) {
+    return (
+      <div className="w-full h-full relative overflow-hidden">
+        <Image
+          src={slide.desktop_image_url!}
+          alt=""
+          aria-hidden
+          fill
+          sizes="100vw"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
       </div>
     )
   }
