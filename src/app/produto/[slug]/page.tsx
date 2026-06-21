@@ -3,7 +3,7 @@ import { TopHeader } from "@/components/automotive/top-header"
 import { Footer } from "@/components/footer"
 import { AddToCart } from "@/components/automotive/add-to-cart"
 import { imgUrl, pixPrice, installmentPrice, fmt, parseWeight, parseDimensions } from "@/lib/products"
-import { getProductBySlug, getRelatedProducts, getAllSlugs, getProductImages, getProductReviewStats } from "@/lib/products-db"
+import { getProductBySlug, getRelatedProducts, getProductImages, getProductReviewStats } from "@/lib/products-db"
 import { Heart, Truck, Shield, RefreshCw, ChevronRight, MessageCircle, Package, CreditCard } from "lucide-react"
 import { ShippingCalculator } from "@/components/shipping-calculator"
 import { ProductImage } from "@/components/product-image"
@@ -12,12 +12,9 @@ import { ProductCoupons } from "@/components/product/product-coupons"
 import { ProductReviews } from "@/components/product/product-reviews"
 import { ProductTracker } from "@/components/product/product-tracker"
 
-export const revalidate = 60
-
-export async function generateStaticParams() {
-  const slugs = await getAllSlugs()
-  return slugs.map((slug) => ({ slug }))
-}
+// Páginas de produto são dinâmicas: o preço muda com ofertas relâmpago ativas,
+// e prerender estático no build falhava ao resolver dados/metadata. Render on-demand.
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const product = await getProductBySlug(params.slug)
@@ -34,7 +31,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     openGraph: {
       title: `${product.name} | Mosca Branca Parts`,
       description: product.description || `${product.name} — ${price} com 5% OFF no PIX.`,
-      images: [{ url: imageUrl, alt: product.name }],
+      images: [{ url: imageUrl, width: 800, height: 600, alt: product.name }],
       type: 'product',
       url: canonical,
     },
