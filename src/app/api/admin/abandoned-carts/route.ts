@@ -20,13 +20,16 @@ export async function GET(req: NextRequest) {
     const supabase = getSupabase()
     const cutoff = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString()
 
-    // Get cart_items grouped by user, where first_added_at (or updated_at as fallback) is older than cutoff
-    // Note: .lt() skips NULL, so we also grab rows where first_added_at IS NULL
+    // Abandoned = no REAL cart activity for more than `hoursAgo`.
+    // `updated_at` is bumped only on genuine cart changes (add/remove/qty),
+    // never on page loads — so it reliably reflects the last time the shopper
+    // touched the cart. Falls back to first_added_at for legacy rows.
+    // .lt() skips NULL, so we OR the NULL case with the first_added_at fallback.
     const { data: cartData, error: cartError } = await supabase
       .from('cart_items')
       .select('user_id, product_id, quantity, first_added_at, updated_at, products(name, price, image_file, slug)')
-      .or(`first_added_at.lt.${cutoff},and(first_added_at.is.null,updated_at.lt.${cutoff})`)
-      .order('first_added_at', { ascending: false })
+      .or(`updated_at.lt.${cutoff},and(updated_at.is.null,first_added_at.lt.${cutoff})`)
+      .order('updated_at', { ascending: false, nullsFirst: false })
 
     if (cartError) throw cartError
     if (!cartData || cartData.length === 0) {
@@ -78,8 +81,11 @@ export async function GET(req: NextRequest) {
       for (const order of recentOrders) {
         const cartItems = userCarts[order.user_id]
         if (cartItems && cartItems.length > 0) {
-          const lastCartUpdate = cartItems[0].first_added_at
-          if (new Date(order.created_at) > new Date(lastCartUpdate)) {
+          // Most recent cart activity for this user
+          const lastActivity = cartItems[0]?.updated_at || cartItems[0]?.first_added_at
+          if (!lastActivity) continue
+          const lastActivityTs = new Date(lastActivity).getTime()
+          if (!Number.isNaN(lastActivityTs) && new Date(order.created_at).getTime() > lastActivityTs) {
             usersWithRecentOrder.add(order.user_id)
           }
         }
@@ -127,7 +133,7 @@ export async function GET(req: NextRequest) {
         const items = userCarts[userId]
         const profile = profileMap[userId]
         const total = items.reduce((sum: number, i: any) => sum + (i.products?.price || 0) * i.quantity, 0)
-        const lastUpdate = items[0]?.first_added_at || items[0]?.updated_at
+        const lastUpdate = items[0]?.updated_at || items[0]?.first_added_at
 
         return {
           userId,

@@ -91,14 +91,18 @@ export async function POST(req: NextRequest) {
         .in('product_id', removedIds)
     }
 
-    // Upsert: INSERT new with timestamp, UPDATE existing quantity only
+    // Upsert: INSERT new with timestamp, UPDATE existing quantity + updated_at
+    const nowIso = new Date().toISOString()
     if (items.length > 0) {
       const rows = items.map((item: { productId: number; quantity: number }) => ({
         user_id: user.id,
         product_id: item.productId,
         quantity: item.quantity,
         // Preserve original timestamp for existing items; set now() for new ones
-        first_added_at: existingMap.get(item.productId) ?? new Date().toISOString(),
+        first_added_at: existingMap.get(item.productId) ?? nowIso,
+        // Always refresh updated_at on a real cart change (last activity).
+        // Set explicitly so we don't depend on a DB trigger existing.
+        updated_at: nowIso,
       }))
 
       const { error } = await supabase.from('cart_items').upsert(rows, {

@@ -64,6 +64,14 @@ async function syncCartToServer(items: CartItem[]) {
   }
 }
 
+// Signature of the cart contents — used to detect REAL changes only.
+// Prevents bumping server `updated_at` on every page load (which would
+// break abandoned-cart detection). Sync only fires when contents actually
+// differ from what was last persisted to the server.
+function cartSignature(items: CartItem[]): string {
+  return items.map((i) => `${i.productId}:${i.quantity}`).sort().join("|")
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -72,6 +80,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialSyncDone = useRef(false)
   const clearedRef = useRef(false)
+  const lastSyncedSig = useRef<string>("")
 
   useEffect(() => {
     const localItems = loadFromStorage()
@@ -87,6 +96,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               const data = await res.json()
               const serverItems: CartItem[] = data.items || []
 
+              let resolved: CartItem[]
               if (serverItems.length > 0) {
                 const merged = [...serverItems]
                 for (const localItem of localItems) {
@@ -94,26 +104,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     merged.push(localItem)
                   }
                 }
-                setItems(merged)
+                resolved = merged
                 saveToStorage(merged)
+                // Only push to server if the merge actually added local items
+                if (resolved.length !== serverItems.length) {
+                  await syncCartToServer(resolved)
+                }
               } else if (localItems.length > 0) {
-                setItems(localItems)
+                resolved = localItems
                 await syncCartToServer(localItems)
+              } else {
+                resolved = []
               }
+              setItems(resolved)
+              // Mark current state as synced so loading the page does NOT
+              // trigger another (no-op) sync that would bump updated_at.
+              lastSyncedSig.current = cartSignature(resolved)
             } else {
               setItems(localItems)
+              lastSyncedSig.current = cartSignature(localItems)
             }
           } catch {
             setItems(localItems)
+            lastSyncedSig.current = cartSignature(localItems)
           }
         } else {
           setItems(localItems)
+          lastSyncedSig.current = cartSignature(localItems)
         }
         initialSyncDone.current = true
         setLoaded(true)
       })
       .catch(() => {
         setItems(localItems)
+        lastSyncedSig.current = cartSignature(localItems)
         initialSyncDone.current = true
         setLoaded(true)
       })
@@ -126,14 +150,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!isLoggedIn || !initialSyncDone.current) return
     // Skip sync if tab is hidden (prevents multi-tab overwriting each other's carts)
     if (typeof document !== "undefined" && document.hidden) return
-    // A new mutation means the cart is no longer "cleared"
+
+    const sig = cartSignature(items)
+    // No-op: contents identical to what the server already has. This is what
+    // stops a plain page visit from refreshing updated_at and hiding the cart
+    // from abandoned-cart detection.
+    if (sig === lastSyncedSig.current) return
+
+    // A real content change means the cart is no longer "cleared"
     clearedRef.current = false
 
     if (syncTimer.current) clearTimeout(syncTimer.current)
     syncTimer.current = setTimeout(() => {
       // Abort if cleared while debouncing (prevents cart resurrection after checkout)
       if (clearedRef.current) return
+      // Re-check signature after debounce in case of rapid changes
+      const currentSig = cartSignature(items)
+      if (currentSig === lastSyncedSig.current) return
       syncCartToServer(items)
+      lastSyncedSig.current = currentSig
     }, 1000)
   }, [items, loaded, isLoggedIn])
 
@@ -167,6 +202,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     clearedRef.current = true
     if (syncTimer.current) clearTimeout(syncTimer.current)
+    lastSyncedSig.current = ""
     setItems([])
     if (isLoggedIn) {
       fetch("/api/cart", { method: "DELETE" }).catch(() => {})

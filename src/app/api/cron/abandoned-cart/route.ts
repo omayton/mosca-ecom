@@ -27,8 +27,9 @@ export async function GET(req: NextRequest) {
 
     const { data: cartData, error: cartError } = await supabase
       .from('cart_items')
-      .select('user_id, product_id, quantity, first_added_at, products(name, price)')
-      .lt('first_added_at', cutoff)
+      .select('user_id, product_id, quantity, first_added_at, updated_at, products(name, price)')
+      .or(`updated_at.lt.${cutoff},and(updated_at.is.null,first_added_at.lt.${cutoff})`)
+      .order('updated_at', { ascending: false, nullsFirst: false })
 
     if (cartError) throw cartError
     if (!cartData || cartData.length === 0) {
@@ -87,8 +88,10 @@ export async function GET(req: NextRequest) {
       for (const order of recentOrders) {
         const cartItems = userCarts[order.user_id]
         if (cartItems && cartItems.length > 0) {
-          const lastCartUpdate = cartItems[0].first_added_at
-          if (new Date(order.created_at) > new Date(lastCartUpdate)) {
+          const lastActivity = cartItems[0]?.updated_at || cartItems[0]?.first_added_at
+          if (!lastActivity) continue
+          const lastActivityTs = new Date(lastActivity).getTime()
+          if (!Number.isNaN(lastActivityTs) && new Date(order.created_at).getTime() > lastActivityTs) {
             usersWithRecentOrder.add(order.user_id)
           }
         }
