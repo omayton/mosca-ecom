@@ -244,6 +244,15 @@ function DesktopHtmlBanner({ slide, hasBackground = false }: { slide: BannerSlid
 
   return (
     <>
+      {/* Full image without product — whole banner clickable */}
+      {isFullImageOnly && (
+        <a
+          href={slide.cta_link || '/loja'}
+          aria-label={slide.title || 'Ver produtos'}
+          className="absolute inset-0 z-[5] cursor-pointer"
+        />
+      )}
+
       {/* Gradient overlay only when there's text to show */}
       {!isFullImageOnly && hasBackground && (
         <div
@@ -431,10 +440,14 @@ function MobileLayout({ slide }: { slide: BannerSlide }) {
     )
   }
 
-  // Full image without product — show image only
+  // Full image without product — show image only, clickable
   if (isFullImageOnly) {
     return (
-      <div className="w-full h-full relative overflow-hidden">
+      <a
+        href={slide.cta_link || '/loja'}
+        aria-label={slide.title || 'Ver produtos'}
+        className="block w-full h-full relative overflow-hidden cursor-pointer"
+      >
         <Image
           src={slide.desktop_image_url!}
           alt=""
@@ -443,7 +456,7 @@ function MobileLayout({ slide }: { slide: BannerSlide }) {
           sizes="100vw"
           className="absolute inset-0 w-full h-full object-cover"
         />
-      </div>
+      </a>
     )
   }
 

@@ -211,6 +211,17 @@ export default async function ProductPage({ params }: { params: { slug: string }
                 />
               </div>
 
+              {/* Shipping calculator — right below buy buttons */}
+              <div className="mb-5">
+                <ShippingCalculator
+                  weight={weightNum}
+                  width={dims.width}
+                  height={dims.height}
+                  length={dims.length}
+                  price={product.price}
+                />
+              </div>
+
               {/* Security seal */}
               <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-4 mb-5">
                 <div className="grid grid-cols-2 gap-3">
@@ -229,15 +240,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
                   ))}
                 </div>
               </div>
-
-              {/* Shipping calculator */}
-              <ShippingCalculator
-                weight={weightNum}
-                width={dims.width}
-                height={dims.height}
-                length={dims.length}
-                price={product.price}
-              />
 
               {/* Specs */}
               {(product.weight || product.dimensions) && (
