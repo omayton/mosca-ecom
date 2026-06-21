@@ -594,24 +594,8 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
                   <span className="text-white/20 ml-2 normal-case font-normal">(1440x480px recomendado)</span>
                 </label>
                 {form.desktopImageUrl ? (
-                  <div className="relative rounded-xl overflow-hidden border border-white/[0.08] group h-32 bg-white/[0.02]">
+                  <div className="relative rounded-xl overflow-hidden border border-white/[0.08] h-32 bg-white/[0.02]">
                     <img src={form.desktopImageUrl} alt="Desktop" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => desktopInputRef.current?.click()}
-                        className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm font-medium text-white hover:bg-white/20 cursor-pointer"
-                      >
-                        Trocar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setForm(prev => ({ ...prev, desktopImageUrl: '' }))}
-                        className="p-2 bg-red-600 rounded-lg text-white hover:bg-red-700 cursor-pointer"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
                     {uploadingDesktop && (
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                         <Loader2 className="h-6 w-6 text-white animate-spin" />
@@ -652,16 +636,8 @@ function BannerFormModal({ banner, products, onClose, onSave }: {
                   <span className="text-white/20 ml-2 normal-case font-normal">(375x200px recomendado)</span>
                 </label>
                 {form.mobileImageUrl ? (
-                  <div className="relative rounded-xl overflow-hidden border border-white/[0.08] group h-32 bg-white/[0.02]">
+                  <div className="relative rounded-xl overflow-hidden border border-white/[0.08] h-32 bg-white/[0.02]">
                     <img src={form.mobileImageUrl} alt="Mobile" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                      <button type="button" onClick={() => mobileInputRef.current?.click()} className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm font-medium text-white hover:bg-white/20 cursor-pointer">
-                        Trocar
-                      </button>
-                      <button type="button" onClick={() => setForm(prev => ({ ...prev, mobileImageUrl: '' }))} className="p-2 bg-red-600 rounded-lg text-white hover:bg-red-700 cursor-pointer">
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
                     {uploadingMobile && (
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                         <Loader2 className="h-6 w-6 text-white animate-spin" />
