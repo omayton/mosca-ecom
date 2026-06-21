@@ -1,6 +1,7 @@
 import { TopHeader }    from "@/components/automotive/top-header"
 import { HeroCarousel } from "@/components/automotive/hero-carousel"
 import { ProductSection } from "@/components/automotive/product-section"
+import { FlashSaleBanner } from "@/components/automotive/flash-sale-banner"
 import { getFeaturedProducts, getRecentProducts, getDiscountProducts, getBestSellers } from "@/lib/products-db"
 import { MessageCircle, Instagram, Facebook, Youtube, Truck, CreditCard, Shield, Package, Percent, Star, Wind, Wrench, LayoutGrid, Armchair, Lock, ToggleLeft } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -109,6 +110,9 @@ export default async function Home() {
           </ul>
         </div>
       </div>
+
+      {/* Flash sale (countdown) — só renderiza se houver campanha ativa */}
+      <FlashSaleBanner />
 
       {/* Categories Grid */}
       <section aria-label="Categorias" className="bg-[#FAFAFA] py-12">

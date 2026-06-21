@@ -66,7 +66,7 @@ export async function getProducts(): Promise<Product[]> {
     .order("id")
 
   if (error) throw error
-  return (data as ProductRow[]).map(rowToProduct)
+  return applyFlashSale((data as ProductRow[]).map(rowToProduct))
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -85,11 +85,11 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 
   // Buscar imagem principal
   const mainImageURL = await getProductMainImageURL(product.id)
-  if (mainImageURL) {
-    return { ...product, imageFile: mainImageURL }
-  }
+  const withImage = mainImageURL ? { ...product, imageFile: mainImageURL } : product
 
-  return product
+  // Aplica desconto da oferta relâmpago ativa (se o produto participar)
+  const { product: priced } = await applyFlashSaleToProduct(withImage)
+  return priced
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
@@ -104,7 +104,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 
   // Buscar imagens principais em batch (1 query, não N+1)
   const imageMap = await getMainImageURLsForProducts(products.map((p) => p.id))
-  return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
+  return applyFlashSale(products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile })))
 }
 
 export async function getRecentProducts(limit = 12): Promise<Product[]> {
@@ -118,7 +118,7 @@ export async function getRecentProducts(limit = 12): Promise<Product[]> {
   const products = (data as ProductRow[]).map(rowToProduct)
 
   const imageMap = await getMainImageURLsForProducts(products.map((p) => p.id))
-  return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
+  return applyFlashSale(products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile })))
 }
 
 export async function getDiscountProducts(limit = 12): Promise<Product[]> {
@@ -133,7 +133,7 @@ export async function getDiscountProducts(limit = 12): Promise<Product[]> {
   const products = (data as ProductRow[]).map(rowToProduct)
 
   const imageMap = await getMainImageURLsForProducts(products.map((p) => p.id))
-  return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
+  return applyFlashSale(products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile })))
 }
 
 export async function getBestSellers(limit = 8): Promise<Product[]> {
@@ -176,7 +176,7 @@ export async function getBestSellers(limit = 8): Promise<Product[]> {
   products.sort((a, b) => (salesMap[b.id] || 0) - (salesMap[a.id] || 0))
 
   const imageMap = await getMainImageURLsForProducts(products.map((p) => p.id))
-  return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
+  return applyFlashSale(products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile })))
 }
 
 export async function getProductReviewStats(productId: number): Promise<{ count: number; avgRating: number }> {
@@ -221,7 +221,97 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
 
   if (err2) throw err2
 
-  return [...sameCatProducts, ...(others as ProductRow[]).map(rowToProduct)]
+  return applyFlashSale([...sameCatProducts, ...(others as ProductRow[]).map(rowToProduct)])
+}
+
+// ──────────────────────────────────────────────────────────────
+// Oferta Relâmpago (Flash Sale)
+// ──────────────────────────────────────────────────────────────
+
+export interface ActiveFlashSale {
+  id: number
+  title: string
+  description: string | null
+  discountPercent: number
+  startsAt: string
+  endsAt: string
+  productIds: Set<number>
+}
+
+// Cache de 30s para evitar bater no banco a cada fetch de produto.
+let flashSaleCache: { data: ActiveFlashSale | null; expires: number } | null = null
+const FLASH_SALE_TTL = 30_000
+
+export async function getActiveFlashSale(): Promise<ActiveFlashSale | null> {
+  if (flashSaleCache && flashSaleCache.expires > Date.now()) {
+    return flashSaleCache.data
+  }
+
+  try {
+    const nowIso = new Date().toISOString()
+    // Campanha ativa = ligada E dentro da janela (início ≤ agora ≤ fim).
+    // Pega a que termina mais cedo (maior urgência no countdown).
+    const { data: sale, error } = await supabase
+      .from("flash_sales")
+      .select("id, title, description, starts_at, ends_at, discount_percent")
+      .eq("is_active", true)
+      .lte("starts_at", nowIso)
+      .gte("ends_at", nowIso)
+      .order("ends_at", { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    if (error || !sale) {
+      flashSaleCache = { data: null, expires: Date.now() + FLASH_SALE_TTL }
+      return null
+    }
+
+    const { data: rows } = await supabase
+      .from("flash_sale_products")
+      .select("product_id")
+      .eq("flash_sale_id", sale.id)
+
+    const result: ActiveFlashSale = {
+      id: sale.id,
+      title: sale.title,
+      description: sale.description,
+      discountPercent: Number(sale.discount_percent) || 0,
+      startsAt: sale.starts_at,
+      endsAt: sale.ends_at,
+      productIds: new Set((rows || []).map((r: { product_id: number }) => r.product_id)),
+    }
+
+    flashSaleCache = { data: result, expires: Date.now() + FLASH_SALE_TTL }
+    return result
+  } catch {
+    flashSaleCache = { data: null, expires: Date.now() + FLASH_SALE_TTL }
+    return null
+  }
+}
+
+// Aplica o desconto da oferta relâmpago a uma lista de produtos.
+// O preço original vira oldPrice (se ainda não existir); price vira o com desconto.
+export async function applyFlashSale(products: Product[]): Promise<Product[]> {
+  const fs = await getActiveFlashSale()
+  if (!fs || fs.productIds.size === 0 || products.length === 0) return products
+  return products.map((p) => {
+    if (!fs.productIds.has(p.id)) return p
+    const discounted = Math.round(p.price * (1 - fs.discountPercent / 100) * 100) / 100
+    return { ...p, oldPrice: p.oldPrice || p.price, price: discounted }
+  })
+}
+
+export async function applyFlashSaleToProduct(product: Product): Promise<{ product: Product; onFlashSale: boolean; flashSale: ActiveFlashSale | null }> {
+  const fs = await getActiveFlashSale()
+  if (!fs || !fs.productIds.has(product.id)) {
+    return { product, onFlashSale: false, flashSale: fs }
+  }
+  const discounted = Math.round(product.price * (1 - fs.discountPercent / 100) * 100) / 100
+  return {
+    product: { ...product, oldPrice: product.oldPrice || product.price, price: discounted },
+    onFlashSale: true,
+    flashSale: fs,
+  }
 }
 
 export async function getAllSlugs(): Promise<string[]> {

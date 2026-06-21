@@ -17,7 +17,8 @@ import {
   Layers,
   BarChart3,
   Star,
-  AlertCircle
+  AlertCircle,
+  Zap
 } from 'lucide-react'
 import { useEffect } from 'react'
 
@@ -28,6 +29,7 @@ const navItems = [
   { href: '/admin/categorias', label: 'Categorias', icon: Layers },
   { href: '/admin/estoque', label: 'Estoque', icon: Boxes },
   { href: '/admin/cupons', label: 'Cupons', icon: Tag },
+  { href: '/admin/ofertas-relampago', label: 'Ofertas Relâmpago', icon: Zap },
   { href: '/admin/avaliacoes', label: 'Avaliações', icon: Star },
   { href: '/admin/clientes', label: 'Clientes', icon: Users },
   { href: '/admin/pedidos', label: 'Pedidos', icon: ShoppingCart },
