@@ -3,7 +3,7 @@ import { TopHeader } from "@/components/automotive/top-header"
 import { Footer } from "@/components/footer"
 import { AddToCart } from "@/components/automotive/add-to-cart"
 import { imgUrl, pixPrice, installmentPrice, fmt, parseWeight, parseDimensions } from "@/lib/products"
-import { getProductBySlug, getRelatedProducts, getAllSlugs, getProductImages } from "@/lib/products-db"
+import { getProductBySlug, getRelatedProducts, getAllSlugs, getProductImages, getProductReviewStats } from "@/lib/products-db"
 import { Heart, Truck, Shield, RefreshCw, ChevronRight, MessageCircle, Package, CreditCard } from "lucide-react"
 import { ShippingCalculator } from "@/components/shipping-calculator"
 import { ProductImage } from "@/components/product-image"
@@ -25,16 +25,18 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   const imageUrl = imgUrl(product.imageFile)
   const price = `R$ ${fmt(product.price)}`
+  const canonical = `https://www.moscabrancaparts.com.br/produto/${product.slug}`
 
   return {
     title: product.name,
     description: product.description || `${product.name} — Peça rara automotiva. ${price} com 5% OFF no PIX. Envio para todo o Brasil.`,
+    alternates: { canonical },
     openGraph: {
       title: `${product.name} | Mosca Branca Parts`,
       description: product.description || `${product.name} — ${price} com 5% OFF no PIX.`,
       images: [{ url: imageUrl, alt: product.name }],
-      type: 'website',
-      url: `https://www.moscabrancaparts.com.br/produto/${product.slug}`,
+      type: 'product',
+      url: canonical,
     },
     twitter: {
       card: 'summary_large_image',
@@ -54,8 +56,11 @@ export default async function ProductPage({ params }: { params: { slug: string }
   const parcel12 = installmentPrice(product.price, 12)
   const related  = await getRelatedProducts(product, 4)
   const productImages = await getProductImages(product.id)
+  const reviewStats   = await getProductReviewStats(product.id)
   const weightNum = parseWeight(product.weight)
   const dims      = parseDimensions(product.dimensions)
+
+  const productUrl = `https://www.moscabrancaparts.com.br/produto/${product.slug}`
 
   return (
     <div className="min-h-screen bg-zinc-50/50">
@@ -69,18 +74,47 @@ export default async function ProductPage({ params }: { params: { slug: string }
             name: product.name,
             description: product.description,
             image: imgUrl(product.imageFile),
+            sku: String(product.id),
             brand: { "@type": "Brand", name: "Mosca Branca Parts" },
             category: product.category,
+            ...(reviewStats.count > 0
+              ? {
+                  aggregateRating: {
+                    "@type": "AggregateRating",
+                    ratingValue: reviewStats.avgRating,
+                    reviewCount: reviewStats.count,
+                    bestRating: 5,
+                    worstRating: 1,
+                  },
+                }
+              : {}),
             offers: {
               "@type": "Offer",
-              url: `https://www.moscabrancaparts.com.br/produto/${product.slug}`,
+              url: productUrl,
               priceCurrency: "BRL",
               price: product.price.toFixed(2),
               availability: product.inStock
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
+              itemCondition: "https://schema.org/NewCondition",
               seller: { "@type": "Organization", name: "Mosca Branca Parts" },
             },
+          }),
+        }}
+      />
+
+      {/* Schema.org BreadcrumbList JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Início", item: "https://www.moscabrancaparts.com.br" },
+              { "@type": "ListItem", position: 2, name: product.category, item: `https://www.moscabrancaparts.com.br/loja?categoria=${product.categorySlug}` },
+              { "@type": "ListItem", position: 3, name: product.name, item: productUrl },
+            ],
           }),
         }}
       />

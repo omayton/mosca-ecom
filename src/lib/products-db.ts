@@ -179,6 +179,21 @@ export async function getBestSellers(limit = 8): Promise<Product[]> {
   return products.map((p) => ({ ...p, imageFile: imageMap[p.id] || p.imageFile }))
 }
 
+export async function getProductReviewStats(productId: number): Promise<{ count: number; avgRating: number }> {
+  const { data, error } = await supabase
+    .from("product_reviews")
+    .select("rating")
+    .eq("product_id", productId)
+    .eq("is_approved", true)
+
+  if (error || !data || data.length === 0) return { count: 0, avgRating: 0 }
+  const sum = data.reduce((acc: number, r: { rating: number }) => acc + r.rating, 0)
+  return {
+    count: data.length,
+    avgRating: Math.round((sum / data.length) * 10) / 10,
+  }
+}
+
 export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {
   const { data: sameCategory, error: err1 } = await supabase
     .from("products")

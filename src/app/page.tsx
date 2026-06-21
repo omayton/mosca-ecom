@@ -25,6 +25,20 @@ const CATEGORIES_GRID: { label: string; slug: string; icon: LucideIcon }[] = [
 
 export const revalidate = 60
 
+export const metadata = {
+  title: "Mosca Branca Parts — Peças Automotivas Raras e de Difícil Localização",
+  description:
+    "Especialistas em peças automotivas raras e de difícil localização. Saídas de ar, tampas, acabamentos, interruptores e componentes. Envio para todo Brasil, garantia de 30 dias e 5% OFF no PIX.",
+  alternates: { canonical: "https://www.moscabrancaparts.com.br" },
+  openGraph: {
+    type: "website",
+    url: "https://www.moscabrancaparts.com.br",
+    title: "Mosca Branca Parts — Peças Automotivas Raras",
+    description:
+      "Peças raras e de difícil localização. Envio para todo Brasil, garantia e 5% OFF no PIX.",
+  },
+}
+
 export default async function Home() {
   const [featured, recent, discount, bestSellers] = await Promise.all([
     getFeaturedProducts(),
