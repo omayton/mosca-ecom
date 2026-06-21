@@ -17,43 +17,61 @@ import { ProductTracker } from "@/components/product/product-tracker"
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const product = await getProductBySlug(params.slug)
-  if (!product) return {}
+  try {
+    const product = await getProductBySlug(params.slug)
+    if (!product) return {}
 
-  const imageUrl = imgUrl(product.imageFile)
-  const price = `R$ ${fmt(product.price)}`
-  const canonical = `https://www.moscabrancaparts.com.br/produto/${product.slug}`
+    const imageUrl = imgUrl(product.imageFile)
+    const price = `R$ ${fmt(product.price)}`
+    const canonical = `https://www.moscabrancaparts.com.br/produto/${product.slug}`
 
-  return {
-    title: product.name,
-    description: product.description || `${product.name} — Peça rara automotiva. ${price} com 5% OFF no PIX. Envio para todo o Brasil.`,
-    alternates: { canonical },
-    openGraph: {
-      title: `${product.name} | Mosca Branca Parts`,
-      description: product.description || `${product.name} — ${price} com 5% OFF no PIX.`,
-      images: [{ url: imageUrl, width: 800, height: 600, alt: product.name }],
-      type: 'product',
-      url: canonical,
-    },
-    twitter: {
-      card: 'summary_large_image',
+    return {
       title: product.name,
-      description: product.description || `${product.name} — ${price}`,
-      images: [imageUrl],
-    },
+      description: product.description || `${product.name} — Peça rara automotiva. ${price} com 5% OFF no PIX. Envio para todo o Brasil.`,
+      alternates: { canonical },
+      openGraph: {
+        title: `${product.name} | Mosca Branca Parts`,
+        description: product.description || `${product.name} — ${price} com 5% OFF no PIX.`,
+        images: [{ url: imageUrl, width: 800, height: 600, alt: product.name }],
+        type: 'product',
+        url: canonical,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: product.name,
+        description: product.description || `${product.name} — ${price}`,
+        images: [imageUrl],
+      },
+    }
+  } catch (e) {
+    console.error('generateMetadata error:', e)
+    return {}
   }
 }
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await getProductBySlug(params.slug)
-  if (!product) notFound()
+  let product, related, productImages, reviewStats
+  try {
+    product = await getProductBySlug(params.slug)
+    if (!product) notFound()
+
+    related = await getRelatedProducts(product, 4).catch(() => [])
+    productImages = await getProductImages(product.id).catch(() => [])
+    reviewStats = await getProductReviewStats(product.id).catch(() => ({ count: 0, avgRating: 0 }))
+  } catch (e: any) {
+    // TEMP DEBUG — mostra o erro real na tela
+    return (
+      <div style={{ padding: 40, fontFamily: 'monospace', whiteSpace: 'pre-wrap', color: 'red' }}>
+        ERRO PRODUTO ({params.slug}):
+        {'\n\n'}{e?.message || String(e)}
+        {'\n\n'}{e?.stack}
+      </div>
+    )
+  }
 
   const pix      = pixPrice(product.price)
   const parcel3  = installmentPrice(product.price, 3)
   const parcel12 = installmentPrice(product.price, 12)
-  const related  = await getRelatedProducts(product, 4)
-  const productImages = await getProductImages(product.id)
-  const reviewStats   = await getProductReviewStats(product.id)
   const weightNum = parseWeight(product.weight)
   const dims      = parseDimensions(product.dimensions)
 
